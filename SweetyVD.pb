@@ -4,7 +4,7 @@
 ;     dependency: SweetyVDmodule.pbi (Sweety Visual Designer Module)
 ;         Author: ChrisR
 ;           Date: 2017-03-14
-;        Version: 1.6
+;        Version: 1.6.1
 ;     PB-Version: 5.4* LTS, 5.5*, 5.60 (x86/x64)
 ;             OS: Windows, Linux, Mac
 ;         Credit: STARGÅTE: Transformation of gadgets at runtime
@@ -12,6 +12,8 @@
 ;  English-Forum:
 ;   French-Forum: http://www.purebasic.fr/french/viewtopic.php?f=3&t=16527
 ;   German-Forum:
+; ---------------------------------------------------------------------------------------
+; v1.6.1: Disable Tootip for TextGadget
 ; ---------------------------------------------------------------------------------------
 
 CompilerIf #PB_Compiler_IsMainFile
@@ -821,6 +823,9 @@ CompilerIf #PB_Compiler_IsMainFile
           SetGadgetText(#CaptionString, \Caption)
           DisableGadget(#CaptionString,#False)
         EndIf
+        If \IdModel = 24
+          DisableGadget(#ToolTipString,#True)
+        EndIf
         SetGadgetText(#ToolTipString, \ToolTip)
         Select Left(\Option1, 5)
           Case "#Mini"
@@ -1501,11 +1506,12 @@ CompilerIf #PB_Compiler_IsMainFile
   ; EnableXP
   ; EnablePurifier
 ; IDE Options = PureBasic 5.60 (Windows - x64)
-; CursorPosition = 6
+; CursorPosition = 20
+; FirstLine = 4
 ; Folding = -----
 ; EnableXP
 ; UseIcon = Include\SweetyVD.ico
-; Executable = SweetyVD.exe
+; Executable = ..\..\..\Temp\SweetyVD-master\SweetyVD.exe
 ; Compiler = PureBasic 5.60 (Windows - x86)
 ; EnablePurifier
 ; IncludeVersionInfo
