@@ -5,7 +5,7 @@ A small Visual Designer Develop in PureBasic to create a PureBasic interface
 
 Author: ChrisR
 
-Date: 2017-03-14
+Date: 2017-03-31
 
 Version: 1.6
 
