@@ -429,7 +429,6 @@ CompilerIf #PB_Compiler_IsMainFile
               Case 12 : IdGadget=ExplorerTreeGadget(#PB_Any, X, Y, \DftWidth, \DftHeight, "")
               Case 13
                 IdGadget=FrameGadget(#PB_Any, X, Y, \DftWidth, \DftHeight, TmpCaption)
-                CloseGadgetList()
               Case 14 : IdGadget=HyperLinkGadget(#PB_Any, X, Y, \DftWidth, \DftHeight, TmpCaption, RGB(0,0,128))
               Case 15   ;We cheat with a Canvas instead of an ImageGadget
                 IdGadget=CanvasGadget(#PB_Any, X, Y, \DftWidth, \DftHeight)
@@ -828,7 +827,7 @@ CompilerIf #PB_Compiler_IsMainFile
                   Case 22, 26, 29   ;ProgressBarGadget, Spin, TackBar: Cosmetic, progression 2/3
                     Mini = Val(Mid(\Option1, 7)) : Maxi = Val(Mid(\Option2, 7))
                     Code +#INDENT+#INDENT+ "SetGadgetState("+ Name + ", " + Str(Mini+(Maxi-Mini)*2/3) + ")" +#CRLF$
-                  Case 7, 13, 21, 24   ;Container
+                  Case 7, 21, 24   ;Container
                     Code +#INDENT+#INDENT+ "CloseGadgetList()" +#CRLF$
                 EndSelect
                 
@@ -1606,6 +1605,8 @@ CompilerIf #PB_Compiler_IsMainFile
       CompilerEndIf
       
 ; IDE Options = PureBasic 5.60 (Windows - x64)
+; CursorPosition = 829
+; FirstLine = 814
 ; Folding = -----
 ; EnableXP
 ; UseIcon = Include\SweetyVD.ico
