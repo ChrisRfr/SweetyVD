@@ -902,8 +902,6 @@ CompilerIf #PB_Compiler_IsMainFile
                   Case 22, 26, 29   ;ProgressBarGadget, SpinGadget, TackBarGadget: Cosmetic, progression 2/3
                     Mini = Val(Mid(\Option1, 7)) : Maxi = Val(Mid(\Option2, 7))
                     Code +INDENT$+INDENT$+ "SetGadgetState("+ Name + ", " + Str(Mini+(Maxi-Mini)*2/3) + ")" +#CRLF$
-                  Case 7, 21, 24   ;ContainerGadget, PanelGadget, ScrollAreaGadget
-                    Code +INDENT$+INDENT$+ "CloseGadgetList()" +#CRLF$
                 EndSelect
 
                 If Left(\FrontColor, 5) <> "#Nooo" And \FrontColor <> ""
@@ -915,6 +913,10 @@ CompilerIf #PB_Compiler_IsMainFile
 
                 If \ToolTip <> "#Nooo"
                   Code +INDENT$+INDENT$+ "GadgetToolTip(" + Name + ", " + #DQUOTE$ + \ToolTip + #DQUOTE$ + ")" +#CRLF$
+                EndIf
+                
+                If \IdModel = 7 Or \IdModel = 21 Or \IdModel = 24   ;ContainerGadget, PanelGadget, ScrollAreaGadget
+                  Code +INDENT$+INDENT$+ "CloseGadgetList()" +#CRLF$
                 EndIf
 
               EndIf
