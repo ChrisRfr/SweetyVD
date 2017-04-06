@@ -3,8 +3,8 @@
 ;    Description: Sweety Visual Designer
 ;     dependency: SweetyVDmodule.pbi (Sweety Visual Designer Module)
 ;         Author: ChrisR
-;           Date: 2017-04-04
-;        Version: 1.8.0
+;           Date: 2017-04-06
+;        Version: 1.8.2
 ;     PB-Version: 5.4* LTS, 5.5*, 5.60 (x86/x64)
 ;             OS: Windows, Linux, Mac
 ;         Credit: STARGÅTE: Transformation of gadgets at runtime
@@ -21,6 +21,9 @@
 ; v1.7.0 2017-04-03: Popup Image Menu + List Gadgets with image added, double-click or drag and drop
 ; ---------------------------------------------------------------------------------------
 ; v1.8.0 2017-04-04: Resize the Window Draw Area with mouse
+; ---------------------------------------------------------------------------------------
+; v1.8.2 2017-04-06: Fixed empty caption.
+;   Choose between constants or #PB_Any when creating the code
 ; ---------------------------------------------------------------------------------------
 
 CompilerIf #PB_Compiler_IsMainFile
@@ -1713,8 +1716,6 @@ CompilerIf #PB_Compiler_IsMainFile
       CompilerEndIf
 
 ; IDE Options = PureBasic 5.60 (Windows - x64)
-; CursorPosition = 1701
-; FirstLine = 1685
 ; Folding = -----
 ; EnableXP
 ; UseIcon = Include\SweetyVD.ico
@@ -1722,11 +1723,11 @@ CompilerIf #PB_Compiler_IsMainFile
 ; Compiler = PureBasic 5.60 (Windows - x86)
 ; EnablePurifier
 ; IncludeVersionInfo
-; VersionField0 = 1.8.0
-; VersionField1 = 1.8.0
+; VersionField0 = 1.8.2
+; VersionField1 = 1.8.2
 ; VersionField3 = SweetyVD.exe
-; VersionField4 = 1.8.0
-; VersionField5 = 1.8.0
+; VersionField4 = 1.8.2
+; VersionField5 = 1.8.2
 ; VersionField6 = Sweety Visual Designer
 ; VersionField7 = SweetyVD.exe
 ; VersionField8 = SweetyVD.exe

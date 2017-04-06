@@ -2,8 +2,8 @@
 ;           Name: SweetyVDmodule
 ;    Description: Sweety Visual Designer Module
 ;         Author: ChrisR
-;           Date: 2017-04-04
-;        Version: 1.8.0
+;           Date: 2017-04-06
+;        Version: 1.8.2
 ;     PB-Version: 5.4* LTS, 5.5*, 5.60 (x86/x64)
 ;             OS: Windows, Linux, Mac
 ;         Credit: STARGÅTE: Transformation of gadgets at runtime
@@ -639,9 +639,7 @@ Module SVDesigner
   EndModule
   
 ; IDE Options = PureBasic 5.60 (Windows - x64)
-; CursorPosition = 457
-; FirstLine = 432
 ; Folding = ----
 ; EnableXP
-; Executable = ..\..\..\Temp\SweetyVD.exe
+; Executable = SweetyVD.exe
 ; EnablePurifier
