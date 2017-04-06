@@ -1,7 +1,9 @@
 # SweetyVD
 SweetyVD (Virtual Designer)
 
-A small Visual Designer Develop in PureBasic to create a PureBasic interface
+A tiny Visual Designer Develop in PureBasic to create PureBasic interface
+
+![Alt text](/ScreenShot/SweetyVD.png?raw=true "SweetyVD")
 
 Author: ChrisR <br />
 Date: 2017-03-31 <br />
