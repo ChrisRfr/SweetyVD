@@ -44,7 +44,6 @@ DeclareModule SVDesigner
   Declare SVD_Callback()
   Declare SVD_WinCallback()
   Declare SelectSVDGadget(Gadget.i)
-  Declare DeleteSVDGadgetFromDragHandle(DragHandle.i)
   Declare DeleteSVDGadget(Gadget.i)
   Declare DisableSVD()
   Declare AddSVDGadget(ParentGadget.i, Gadget.i)
@@ -429,58 +428,44 @@ Module SVDesigner
       EndWith
     EndProcedure
     
-    Procedure DeleteSVDGadgetFromDragHandle(DragHandle.i)
-      Protected *SVDListGadget.SVDGadget
-      If IsGadget(DragHandle) = 0 
-        ProcedureReturn #False
-      EndIf
-      SetActiveGadget(-1)    ;To lost focus before deleting
-      With SVDListGadget()   ;Delete Gadget by calling DeleteSVDGadget. It could be done directly but better to call the same delete procedure
-        ForEach SVDListGadget()
-          If \DragHandle = DragHandle
-            DeleteSVDGadget(\Gadget)
-          EndIf
-        Next
-      EndWith
-    EndProcedure    
-    
     Procedure DeleteSVDGadget(Gadget.i)
       Protected I.i, K.i, *SVDListGadget.SVDGadget
       If IsGadget(Gadget) = 0 
         ProcedureReturn #False
+      Else
+        ForEach SVDListGadget()
+          If SVDListGadget()\Gadget = Gadget
+            With SVDListGadget()
+              For I = 1 To 8
+                If \Handle[I]
+                  UnbindGadgetEvent(\Handle[I], @SVD_Callback())                
+                  SetGadgetData(\Handle[I], #PB_Ignore)
+                  HideGadget(\Handle[I],#True)
+                  ;ResizeGadget(\Handle[I], 0, 0, #PB_Ignore, #PB_Ignore)
+                EndIf
+              Next
+            EndWith
+            ;DragHandle
+            SortStructuredArray(GadgetDragHandleArray(), #PB_Sort_Descending, OffsetOf(GadgetDragHandle\DragHandle), TypeOf(GadgetDragHandle\DragHandle))
+            SortStructuredArray(GadgetDragHandleArray(), #PB_Sort_Descending, OffsetOf(GadgetDragHandle\Gadget), TypeOf(GadgetDragHandle\Gadget))
+            For K = 0 To ArraySize(GadgetDragHandleArray())
+              With GadgetDragHandleArray(K)
+                If \Gadget = Gadget
+                  \Gadget = 0
+                  UnbindGadgetEvent(\DragHandle, @SVD_Callback())                
+                  SetGadgetData(\DragHandle, #PB_Ignore)
+                  HideGadget(\DragHandle,#True)
+                  ;ResizeGadget(\DragHandle, 0, 0, 0, 0)
+                  Break
+                EndIf
+              EndWith
+            Next
+            DeleteElement(SVDListGadget())
+            FreeGadget(Gadget)
+            Break
+          EndIf
+        Next
       EndIf
-      ForEach SVDListGadget()
-        If SVDListGadget()\Gadget = Gadget
-          With SVDListGadget()
-            For I = 1 To 8
-              If \Handle[I]
-                UnbindGadgetEvent(\Handle[I], @SVD_Callback())                
-                SetGadgetData(\Handle[I], #PB_Ignore)
-                HideGadget(\Handle[I],#True)
-                ResizeGadget(\Handle[I], 0, 0, #PB_Ignore, #PB_Ignore)
-              EndIf
-            Next
-          EndWith
-          ;DragHandle
-          SortStructuredArray(GadgetDragHandleArray(), #PB_Sort_Descending, OffsetOf(GadgetDragHandle\DragHandle), TypeOf(GadgetDragHandle\DragHandle))
-          SortStructuredArray(GadgetDragHandleArray(), #PB_Sort_Descending, OffsetOf(GadgetDragHandle\Gadget), TypeOf(GadgetDragHandle\Gadget))
-          For K = 0 To ArraySize(GadgetDragHandleArray())
-            With GadgetDragHandleArray(K)
-              If \Gadget = Gadget
-                \Gadget = 0
-                UnbindGadgetEvent(\DragHandle, @SVD_Callback())                
-                SetGadgetData(\DragHandle, #PB_Ignore)
-                HideGadget(\DragHandle,#True)
-                ResizeGadget(\DragHandle, 0, 0, 0, 0)
-                Break
-              EndIf
-            Next
-          EndWith
-          DeleteElement(SVDListGadget())
-          FreeGadget(Gadget)
-          Break
-        EndIf
-      Next
     EndProcedure
     
     Procedure DisableSVD()
@@ -654,6 +639,9 @@ Module SVDesigner
   EndModule
   
 ; IDE Options = PureBasic 5.60 (Windows - x64)
+; CursorPosition = 457
+; FirstLine = 432
 ; Folding = ----
 ; EnableXP
+; Executable = ..\..\..\Temp\SweetyVD.exe
 ; EnablePurifier
