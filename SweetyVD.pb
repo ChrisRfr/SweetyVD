@@ -201,7 +201,7 @@ CompilerIf #PB_Compiler_IsMainFile
         Declare DrawSelectedImage(IdGadget.i, ImagePath.s)
         Declare ResizeDrawArea(Width.i, Height.i)
         Declare WindowSize()
-        Declare OpenMainWindow(SelectDrawArea.l = 0, X = 0, Y = 0, Width = 800, Height = 540)
+        Declare OpenMainWindow(SelectDrawArea.l = 0, X = 0, Y = 0, Width = 800, Height = 580)
         Declare SVDGadgetTest()
         Declare Exit()
 
@@ -1160,19 +1160,19 @@ CompilerIf #PB_Compiler_IsMainFile
             If DrawMaxHeight > GetGadgetAttribute(#ScrollDrawArea,#PB_ScrollArea_InnerHeight) + ScrollMargin
               DrawMaxHeight = GetGadgetAttribute(#ScrollDrawArea,#PB_ScrollArea_InnerHeight) + ScrollMargin
             EndIf
+            ResizeGadget(#SettingContainer, #PB_Ignore, #PB_Ignore, DrawMaxWidth, #PB_Ignore)
             ResizeGadget(#ScrollDrawArea, #PB_Ignore, #PB_Ignore, DrawMaxWidth, DrawMaxHeight)
-            ;Do not resize #SettingContainer or others Main window Gadget. Gadgets become inaccessible
           EndIf
         EndProcedure
 
-        Procedure OpenMainWindow(SelectDrawArea.l = 0, X = 0, Y = 0, Width = 800, Height = 540)
+        Procedure OpenMainWindow(SelectDrawArea.l = 0, X = 0, Y = 0, Width = 800, Height = 580)
           Protected GadgetObj.i
           OpenWindow(#MainWindow, x, y, width, height, "SweetyVD (Visual Designer)", #PB_Window_SizeGadget | #PB_Window_MinimizeGadget | #PB_Window_MaximizeGadget | #PB_Window_ScreenCentered | #PB_Window_SystemMenu)
           CreatePopupImageMenu(#PopUpMenu)
           ButtonGadget(#EnableSVD, 5, 5, 100, 25, "Enable SVD", #PB_Button_Toggle) : SetGadgetState(#EnableSVD, #True)
           ButtonGadget(#CodeCreate, 115, 5, 100, 25, "Create Code")
 
-          ContainerGadget(#SettingContainer, 220, 5, 520, 30, #PB_Container_Raised) : HideGadget(#SettingContainer,#True)
+          ContainerGadget(#SettingContainer, 220, 5, 570, 30, #PB_Container_Raised) : HideGadget(#SettingContainer,#True)
           TextGadget(#SetDrawSizeText, 10, 4, 30, 20, "Size")
           SpinGadget(#SetDrawWidth, 40, 1, 70, 20, 1, 1920, #PB_Spin_Numeric)
           TextGadget(#SetDrawSizeTextX, 110, 4, 10, 20, "x", #PB_Text_Center)
@@ -1193,8 +1193,8 @@ CompilerIf #PB_Compiler_IsMainFile
           SpinGadget(#PosGadgetHeight, 68, 80, 70, 20, 1, 1020, #PB_Spin_Numeric)
           CloseGadgetList()
 
-          ListIconGadget(#ControlsListIcon, 5, 150, 210, 160, "Common Controls", 186) : HideGadget(#ControlsListIcon,#True)
-          ContainerGadget(#PropertiesContainer, 5, 315, 210, 95, #PB_Container_Raised) : HideGadget(#PropertiesContainer,#True)
+          ListIconGadget(#ControlsListIcon, 5, 150, 210, 180, "Common Controls", 186) : HideGadget(#ControlsListIcon,#True)
+          ContainerGadget(#PropertiesContainer, 5, 335, 210, 95, #PB_Container_Raised) : HideGadget(#PropertiesContainer,#True)
           StringGadget(#CaptionText, 0, 2, 65, 22, "Caption", #PB_String_ReadOnly)
           StringGadget(#CaptionString, 65, 2, 141, 22, "")
           StringGadget(#ToolTipText, 0, 24, 65, 22, "ToolTip", #PB_String_ReadOnly)
@@ -1215,15 +1215,15 @@ CompilerIf #PB_Compiler_IsMainFile
           ButtonImageGadget(#BackColorPick, 180, 70, 22, 18, 0)
           CreateImage(#BackColorImg, 22, 22)
           CloseGadgetList()
-          ListIconGadget(#Constants, 5, 415, 210, 115, "Options (#PB_)", 186, #PB_ListIcon_CheckBoxes) : HideGadget(#Constants,#True)
+          ListIconGadget(#Constants, 5, 435, 210, 135, "Options (#PB_)", 186, #PB_ListIcon_CheckBoxes) : HideGadget(#Constants,#True)
 
           Select SelectDrawArea   ;0=ScrollArea, 1=Container. Possible todo, to see for 2=Canvas ScrollArea
             Case 0
-              ScrollAreaGadget(#ScrollDrawArea, 220, 35, 570, 495, 1930, 1030, 20, #PB_ScrollArea_Single)   ;InnerWidth,InnerHeight + 10 for the resize handle of the drawing window
+              ScrollAreaGadget(#ScrollDrawArea, 220, 35, 570, 535, 1930, 1030, 20, #PB_ScrollArea_Single)   ;InnerWidth,InnerHeight + 10 for the resize handle of the drawing window
             Case 1
-              ContainerGadget(#ScrollDrawArea, 220, 35, 570, 495, #PB_Container_Single)
+              ContainerGadget(#ScrollDrawArea, 220, 35, 570, 535, #PB_Container_Single)
             Default
-              ScrollAreaGadget(#ScrollDrawArea, 220, 35, 570, 495, 1930, 1030, 20, #PB_ScrollArea_Single)
+              ScrollAreaGadget(#ScrollDrawArea, 220, 35, 570, 535, 1930, 1030, 20, #PB_ScrollArea_Single)
           EndSelect
 
           EnableGadgetDrop(#ControlsListIcon, #PB_Drop_Text, #PB_Drag_Copy)
@@ -1682,7 +1682,7 @@ CompilerIf #PB_Compiler_IsMainFile
 
           ModelGadgets:   ;31 Gadgets Models +window Model
           ;"CreateGadget","Order","GadgetType","Width","Height","Name","Caption","Option1","Option2","Option3","FrontColor","BackColor","ToolTip","Constants"
-          Data.s "OpenWindow","0","","520","400","Window","#Text","","","","#Nooo","","#Nooo","Window_SystemMenu(x)|Window_MinimizeGadget(x)|Window_MaximizeGadget(x)|Window_SizeGadget(x)|Window_Invisible|Window_TitleBar|Window_Tool|Window_BorderLess|Window_ScreenCentered(x)|Window_WindowCentered|Window_Maximize|Window_Minimize|Window_NoGadgets"
+          Data.s "OpenWindow","0","","520","480","Window","#Text","","","","#Nooo","","#Nooo","Window_SystemMenu(x)|Window_MinimizeGadget(x)|Window_MaximizeGadget(x)|Window_SizeGadget(x)|Window_Invisible|Window_TitleBar|Window_Tool|Window_BorderLess|Window_ScreenCentered(x)|Window_WindowCentered|Window_Maximize|Window_Minimize|Window_NoGadgets"
           Data.s "ButtonGadget","1","1","100","20","Button","#Text","","","","#Nooo","#Nooo","","Button_Right|Button_Left|Button_Default|Button_MultiLine|Button_Toggle"
           Data.s "ButtonImageGadget","2","19","100","20","ButtonImage","","#Imag:0","","","#Nooo","#Nooo","","Button_Toggle"
           Data.s "CalendarGadget","3","20","220","160","Calendar","","#Date:0","","","#Nooo","#Nooo","","Calendar_Borderless"
