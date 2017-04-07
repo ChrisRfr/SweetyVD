@@ -106,14 +106,14 @@ Module SVDesigner
     
     Procedure DrawGrid(Visible.b, GridSpacing.i=20)
       ;Notes: To display the gadgets after grid drawing (canvas), we need resize the gadgets and the move handles
-      Protected GridBackground.i = RGB(225,230,235), GridColor.i = RGB(204,204,206), DftBackColor.i = $F0F0F0
+      Protected GridBackground.i = RGB(225,230,235), GridColor.i = RGB(204,204,206), ScrollAreaColor = $A0A0A0 ,DftBackColor.i = $F0F0F0
       Protected X.i, Y.i 
       If Visible = #False
         CompilerIf #PB_Compiler_OS = #PB_OS_MacOS : DftBackColor = $C0C0C0 : CompilerEndIf
-        GridSpacing = 8192 : GridBackground = DftBackColor
+        GridSpacing = 8192 : GridBackground = DftBackColor : ScrollAreaColor = DftBackColor
       EndIf
       StartDrawing(CanvasOutput(#DrawArea))
-      Box(0, 0, OutputWidth(), OutputHeight(), DftBackColor)
+      Box(0, 0, OutputWidth(), OutputHeight(), ScrollAreaColor)
       Box(X, Y, ParentWidth, ParentHeight, GridBackground)
       For X = 0 To ParentWidth
         For Y = 0 To ParentHeight
@@ -639,6 +639,8 @@ Module SVDesigner
   EndModule
   
 ; IDE Options = PureBasic 5.60 (Windows - x64)
+; CursorPosition = 108
+; FirstLine = 102
 ; Folding = ----
 ; EnableXP
 ; Executable = SweetyVD.exe
