@@ -22,6 +22,7 @@ DeclareModule SVDesigner
   EndEnumeration
   
   Enumeration 1000
+    #ScrollDrawArea
     #DrawArea
     #Shortcut_Delete
   EndEnumeration
@@ -46,10 +47,10 @@ DeclareModule SVDesigner
   Declare SelectSVDGadget(Gadget.i)
   Declare DeleteSVDGadget(Gadget.i)
   Declare DisableSVD()
-  Declare AddSVDGadget(ParentGadget.i, Gadget.i)
-  Declare EnableSVD(ParentGadget.i, Grid.i=10)
+  Declare AddSVDGadget(Gadget.i)
+  Declare EnableSVD(Grid.i=10)
   Declare DrawAreaSize(Width.i, Height.i)
-  Declare InitSVD(ParentGadget.i, CountGadget.i = 144)
+  Declare InitSVD(CountGadget.i = 144)
   
 EndDeclareModule
 
@@ -100,7 +101,6 @@ Module SVDesigner
       DragHandle.i
       Gadget.i
     EndStructure
-    
     Global Dim GadgetDragHandleArray.GadgetDragHandle(0)
     Global Dim GadgetHandle(8)
     
@@ -499,11 +499,11 @@ Module SVDesigner
       ClearList(SVDListGadget())
     EndProcedure
     
-    Procedure AddSVDGadget(ParentGadget.i, Gadget.i)
+    Procedure AddSVDGadget(Gadget.i)
       Protected *SVDListGadget.SVDGadget, I.i
       With SVDListGadget()
         *SVDListGadget = AddElement(SVDListGadget())
-        \ParentGadget = ParentGadget
+        \ParentGadget = #ScrollDrawArea
         \Gadget = Gadget
         \TypeGadget = GadgetType(Gadget)
         SortStructuredArray(GadgetDragHandleArray(), #PB_Sort_Descending, OffsetOf(GadgetDragHandle\DragHandle), TypeOf(GadgetDragHandle\DragHandle))
@@ -524,16 +524,16 @@ Module SVDesigner
       EndWith
     EndProcedure
     
-    Procedure EnableSVD(ParentGadget.i, Grid.i=10)
+    Procedure EnableSVD(Grid.i=10)
       Protected *SVDListGadget.SVDGadget, GadgetObj.i, I.i
       MyGrid = Grid
       With *SVDListGadget
         ;If PB_Object_EnumerateNext(PB_Window_Objects, @Window) : Debug Str(Window)+" - "+Str(GetWindowData(Window)) : EndIf
         PB_Object_EnumerateStart(PB_Gadget_Objects)
         While PB_Object_EnumerateNext(PB_Gadget_Objects, @GadgetObj)
-          If GetGadgetData(GadgetObj) <> #PB_Ignore And GadgetObj <> ParentGadget
+          If GetGadgetData(GadgetObj) <> #PB_Ignore And GadgetObj <> #ScrollDrawArea
             *SVDListGadget = AddElement(SVDListGadget())
-            \ParentGadget = ParentGadget
+            \ParentGadget = #ScrollDrawArea
             \Gadget = GadgetObj
             \TypeGadget = GadgetType(GadgetObj)
           EndIf
@@ -560,7 +560,7 @@ Module SVDesigner
         Next
       EndWith
       HideGadget(GadgetHandle(0),#False)
-      SetGadgetData(GadgetHandle(0), ParentGadget)
+      SetGadgetData(GadgetHandle(0), #ScrollDrawArea)
       BindGadgetEvent(GadgetHandle(0), @SVD_WinCallback(), #PB_EventType_LeftButtonDown)
       BindGadgetEvent(GadgetHandle(0), @SVD_WinCallback(), #PB_EventType_LeftButtonUp)
       BindGadgetEvent(GadgetHandle(0), @SVD_WinCallback(), #PB_EventType_MouseMove)
@@ -572,20 +572,20 @@ Module SVDesigner
       If IsGadget(GadgetHandle(0)) : ResizeGadget(GadgetHandle(0), Width, Height, #PB_Ignore, #PB_Ignore) : EndIf
     EndProcedure 
     
-    Procedure InitSVD(ParentGadget.i, CountGadget.i = 144)
+    Procedure InitSVD(CountGadget.i = 144)
       Protected Mycursors.i, I.i
       ;Width and Height of the drawing Area used as Max values when moving
-      If IsGadget(ParentGadget)
-        If GadgetType(ParentGadget) = #PB_GadgetType_ScrollArea
-          ParentWidth = GetGadgetAttribute(ParentGadget,#PB_ScrollArea_InnerWidth)
-          ParentHeight = GetGadgetAttribute(ParentGadget,#PB_ScrollArea_InnerHeight)
+      If IsGadget(#ScrollDrawArea)
+        If GadgetType(#ScrollDrawArea) = #PB_GadgetType_ScrollArea
+          ParentWidth = GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_InnerWidth)
+          ParentHeight = GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_InnerHeight)
         Else
-          ParentWidth = GadgetWidth(ParentGadget)
-          ParentHeight = GadgetHeight(ParentGadget)
+          ParentWidth = GadgetWidth(#ScrollDrawArea)
+          ParentHeight = GadgetHeight(#ScrollDrawArea)
         EndIf
-      ElseIf IsWindow(ParentGadget)   ;Window
-        ParentWidth = WindowWidth(ParentGadget)
-        ParentHeight = WindowHeight(ParentGadget)
+      ElseIf IsWindow(#ScrollDrawArea)   ;Window
+        ParentWidth = WindowWidth(#ScrollDrawArea)
+        ParentHeight = WindowHeight(#ScrollDrawArea)
       EndIf
       ;Draw Grid on Canvas disabled
       CanvasGadget(#DrawArea, 0, 0, ParentWidth, ParentHeight)
@@ -639,8 +639,8 @@ Module SVDesigner
   EndModule
   
 ; IDE Options = PureBasic 5.60 (Windows - x64)
-; CursorPosition = 108
-; FirstLine = 102
+; CursorPosition = 24
+; FirstLine = 7
 ; Folding = ----
 ; EnableXP
 ; Executable = SweetyVD.exe
