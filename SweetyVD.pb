@@ -1916,9 +1916,7 @@ CompilerIf #PB_Compiler_IsMainFile
   EndDataSection
 CompilerEndIf
 
-; IDE Options = PureBasic 5.60 (Windows - x64)
-; CursorPosition = 1394
-; FirstLine = 1386
+; IDE Options = PureBasic 5.60 (Windows - x86)
 ; Folding = -------
 ; EnableXP
 ; UseIcon = Include\SweetyVD.ico

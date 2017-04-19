@@ -643,9 +643,7 @@ Module SVDesigner
     EndProcedure  
   EndModule
   
-; IDE Options = PureBasic 5.60 (Windows - x64)
-; CursorPosition = 130
-; FirstLine = 107
+; IDE Options = PureBasic 5.60 (Windows - x86)
 ; Folding = ----
 ; EnableXP
 ; Executable = SweetyVD.exe
