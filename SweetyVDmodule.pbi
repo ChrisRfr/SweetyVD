@@ -18,7 +18,8 @@ DeclareModule SVDesigner
     #SVD_Gadget_Focus       ; This Event fired to the window if a gadget get focus
     #SVD_Gadget_LostFocus   ; This Event fired to the window if a gadget Lost focus
     #SVD_Gadget_Resize      ; This Event fired to the window if a gadget is resized
-    #SVD_WinSize            ; This Event fired to the window if the DrawArea is resized
+    #SVD_Window_Focus       ; This Event fired to the window if the DrawArea get Focus
+    #SVD_Window_ReSize      ; This Event fired to the window if the DrawArea is resized
   EndEnumeration
   
   Enumeration 1000
@@ -148,7 +149,7 @@ Module SVDesigner
     EndProcedure
     
     Procedure DrawHandleBorder(DragHandle.i, BorderColor.i)
-      If StartDrawing(CanvasOutput(DragHandle))   ;Delete the border around the gadget
+      If StartDrawing(CanvasOutput(DragHandle))   ;Draw the border around the gadget
         Box(0, 0, OutputWidth(), OutputHeight(), BorderColor)
         Box(1, 1, OutputWidth()-2, OutputHeight()-2, $FFFFFF)
         StopDrawing()
@@ -224,14 +225,14 @@ Module SVDesigner
     EndProcedure
     
     Procedure SVD_Callback()
-      ;Notes: To display the gadgets after drag Handles resizing (canvas), we need resize to the gadgets
+      ;Notes: To display the gadgets after drag Handles resizing (canvas), we need to resize the gadgets
       ;We need to do it here for events : #PB_EventType_Focus, #PB_EventType_LostFocus, #PB_EventType_KeyDown (If Resize Done)
       ;                 #PB_EventType_RightButtonDown, #PB_EventType_MiddleButtonDown, #PB_EventType_LeftButtonDown
       ; -----------------------------------------------------------------------------------------------------------
       ;Canvas Event: MouseEnter=65537, MouseLeave=65538, MouseMove=65539, MouseWheel=65546, LeftButtonDown=65540
       ;  LeftButtonUp=65541, LeftClick=0, LeftDoubleClick=2, RightButtonDown=65542, RightButtonUp=65543
       ;  RightClick=13111, RightDoubleClick=3, MiddleButtonDown=65544, MiddleButtonUp=65545, Focus=14000, LostFocus=14001
-      ;  KeyDown=65547, KeyUp=65548, Input=65549, Resize=6        
+      ;  KeyDown=65547, KeyUp=65548, Input=65549, Resize=6
       Static Selected.i, X.i, Y.i, OffsetX.i, OffsetY.i, GadgetX0.i, GadgetWidth0, GadgetX1.i, GadgetY0.i, GadgetHeight0, GadgetY1.i
       Static ScrollX.i, ScrollY.i, SavPosDim.PosDim
       Protected *SVDListGadget.SVDGadget = GetGadgetData(EventGadget()), TmpWidth.i, TmpHeight.i, ResizeDone.b, I.i
@@ -240,6 +241,7 @@ Module SVDesigner
             
           Case #PB_EventType_Focus
             If \DragHandle = EventGadget()
+              ;Debug GetGadgetAttribute(\DragHandle,#PB_Canvas_Modifiers)   ;#PB_Canvas_Control=4, Cross Plateform #PB_Canvas_Command (4 on windonws)
               If LastDragHandleFocus > 0 And IsGadget(LastDragHandleFocus) : DrawHandleBorder(LastDragHandleFocus, #FreeHandelColor) : EndIf
               If LastGadgetFocus > 1 And IsGadget(LastGadgetFocus) : ResizeGadget(LastGadgetFocus, #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore) : EndIf
               For I = 1 To 8
@@ -386,6 +388,9 @@ Module SVDesigner
       Select EventType()
         Case #PB_EventType_LeftButtonDown
           Selected = #True
+          SetActiveGadget(-1)   ;Lost Focus on last Gadget (DragHandle) Selected
+          ;PostEvent(#PB_Event_Gadget, GetActiveWindow(), WinHandle, #SVD_Window_Focus, @SavPosDim)
+          PostEvent(#PB_Event_Gadget, 0, WinHandle, #SVD_Window_Focus)   ;InitWindowSelected
           OffsetX = GetGadgetAttribute(WinHandle, #PB_Canvas_MouseX) : OffsetY = GetGadgetAttribute(WinHandle, #PB_Canvas_MouseY)
           If IsGadget(ParentGadget)
             If GadgetType(ParentGadget) = #PB_GadgetType_ScrollArea
@@ -403,12 +408,12 @@ Module SVDesigner
         Case #PB_EventType_MouseMove
           If Selected = #True
             WinWidth = WindowMouseX(0)-OffsetX-ScrollX - 1 : WinHeight = WindowMouseY(0)-OffsetY-ScrollY - 1   ;The border is drawn at +1
-                                                                                                               ;<== FOR DEBUG: WinWidth = WindowMouseX(GetActiveWindow())-OffsetX-ScrollX - 1 : WinHeight = WindowMouseY(GetActiveWindow())-OffsetY-ScrollY - 1
+            ;<== FOR DEBUG: WinWidth = WindowMouseX(GetActiveWindow())-OffsetX-ScrollX - 1 : WinHeight = WindowMouseY(GetActiveWindow())-OffsetY-ScrollY - 1
             WinWidth = GridMatch(WinWidth, MyGrid, #MinSize, GetGadgetAttribute(ParentGadget, #PB_ScrollArea_InnerWidth) - 10)
             WinHeight = GridMatch(WinHeight, MyGrid, #MinSize, GetGadgetAttribute(ParentGadget, #PB_ScrollArea_InnerHeight) - 10)
             SavPosDim\X = 0 : SavPosDim\Y = 0 : SavPosDim\Width = WinWidth : SavPosDim\Height = WinHeight
-            ;PostEvent(#PB_Event_Gadget, GetActiveWindow(), \Gadget, #SVD_WinSize, @SavPosDim)
-            PostEvent(#PB_Event_Gadget, 0, WinHandle, #SVD_WinSize, @SavPosDim)   ;Updates the 4 SpinGadget(Width,Height)+ParentWidth,ParentHeight+Resize(WinHandle)+DrawGrid
+            ;PostEvent(#PB_Event_Gadget, GetActiveWindow(), WinHandle, #SVD_Window_ReSize, @SavPosDim)
+            PostEvent(#PB_Event_Gadget, 0, WinHandle, #SVD_Window_ReSize, @SavPosDim)   ;Updates the 4 SpinGadget(Width,Height)+ParentWidth,ParentHeight+Resize(WinHandle)+DrawGrid
           EndIf
           
       EndSelect
@@ -639,8 +644,8 @@ Module SVDesigner
   EndModule
   
 ; IDE Options = PureBasic 5.60 (Windows - x64)
-; CursorPosition = 24
-; FirstLine = 7
+; CursorPosition = 130
+; FirstLine = 107
 ; Folding = ----
 ; EnableXP
 ; Executable = SweetyVD.exe

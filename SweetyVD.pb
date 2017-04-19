@@ -30,17 +30,21 @@ CompilerIf #PB_Compiler_IsMainFile
   EnableExplicit
   
   ;Import internal function
-  CompilerIf #PB_Compiler_OS = #PB_OS_Windows
-    Import ""
-  CompilerElseIf #PB_Compiler_OS = #PB_OS_Linux
-    CompilerIf #PB_Compiler_Processor = #PB_Processor_x86
-      ImportC "/usr/lib/i386-linux-gnu/libwebkitgtk-3.0.so.0"   ; Ubuntu/Kubuntu/Xubuntu x86 with GTK3
-    CompilerElse
-      ImportC "/usr/lib/x86_64-linux-gnu/libwebkitgtk-3.0.so.0" ; Ubuntu/Kubuntu/Xubuntu x64 with GTK3
-    CompilerEndIf
-  CompilerElse
-    ImportC ""
-  CompilerEndIf
+  CompilerSelect #PB_Compiler_OS
+    CompilerCase #PB_OS_Windows
+      #PB_IDE = "purebasic.exe"   ; file name relative to #PB_Compiler_Home
+      Import ""
+    CompilerCase #PB_OS_Linux
+      #PB_IDE = "compilers/purebasic"
+      CompilerIf #PB_Compiler_Processor = #PB_Processor_x86
+        ImportC "/usr/lib/i386-linux-gnu/libwebkitgtk-3.0.so.0"   ; Ubuntu/Kubuntu/Xubuntu x86 with GTK3
+      CompilerElse
+        ImportC "/usr/lib/x86_64-linux-gnu/libwebkitgtk-3.0.so.0" ; Ubuntu/Kubuntu/Xubuntu x64 with GTK3
+      CompilerEndIf
+    CompilerCase #PB_OS_MacOS
+      #PB_IDE = "PureBasic.app"
+      ImportC ""
+  CompilerEndSelect
   PB_Object_EnumerateStart( PB_Objects )
   PB_Object_EnumerateNext( PB_Objects, *ID.Integer )
   PB_Object_EnumerateAbort( PB_Objects )
@@ -57,7 +61,7 @@ CompilerIf #PB_Compiler_IsMainFile
   #PB_MessageRequester_Error=16
   #PB_MessageRequester_Warning=48
   #PB_MessageRequester_Info=64
-  
+
   Enumeration
     #MainWindow
     #PopUpMenu
@@ -80,8 +84,10 @@ CompilerIf #PB_Compiler_IsMainFile
     #PosGadgetWidth
     #PosGadgetHeight
     ;Properties
+    #PanelControls
+    #TreeControls
+    #CreateControlsList
     #PropertiesContainer
-    #ControlsListIcon
     #CaptionText
     #CaptionString
     #ToolTipText
@@ -102,7 +108,8 @@ CompilerIf #PB_Compiler_IsMainFile
     #Constants
     ;Code Generator Windows
     #CodeForm
-    #CodePerform
+    #CodeClipboard
+    #CodeNewTab
     #CodeCancel
     #CodeIncTitle
     #CodeIncEnum
@@ -163,6 +170,7 @@ CompilerIf #PB_Compiler_IsMainFile
     FrontColor.s                  ;FrontColor
     BackColor.s                   ;FrontColor
     ToolTip.s                     ;ToolTip
+    Image.i                       ;Image
     Constants.s                   ;Available Constants (Ex: "#PB_Text_Center,#PB_Text_Right,#PB_Text_Border")
     CountGadget.i                 ;Gadget Counter by Model
   EndStructure
@@ -185,11 +193,14 @@ CompilerIf #PB_Compiler_IsMainFile
   EndStructure
   Global Dim Gadgets.StructureGadget(0), CountGadgets.i, CountImageBtn.i
   
-  Global X.i, Y.i
+  Global PBIDEpath.s, X.i, Y.i
   
   Declare.f AjustFontSize(Size.l)
   Declare LoadFontWML()
   Declare LoadControls()
+  Declare DelOldFiles(Folder.s, Filtre.s = "*.*", NbDay.l = 365)
+  Declare.s GetPBIDE()
+  Declare.s GetTemporaryFilename()
   Declare ClickHoverGridArea(Window.i)
   Declare GadgetHoverCheck(Window.i, Gadget.i)
   Declare InitModelWindow()
@@ -197,15 +208,17 @@ CompilerIf #PB_Compiler_IsMainFile
   Declare CreateGadgets(IdModel.i)
   Declare LoadPBObjectEnum()
   Declare AboutForm()
-  Declare CodeGenerateForm()
+  Declare CodeCreateForm()
+  Declare CodeCreate(Dest.s = "Clipboard")
   Declare InitWindowSelected()
   Declare InitProperties()
   Declare LoadGadgetProperties(IdGadget.i)
   Declare DrawSelectedImage(IdGadget.i, ImagePath.s)
   Declare ResizeDrawArea(Width.i, Height.i)
   Declare WindowSize()
-  Declare OpenMainWindow(X = 0, Y = 0, Width = 800, Height = 580)
+  Declare OpenMainWindow(X = 0, Y = 0, Width = 880, Height = 600)
   Declare SVDGadgetTest()
+  Declare Init()
   Declare Exit()
   
   UsePNGImageDecoder()
@@ -237,6 +250,87 @@ CompilerIf #PB_Compiler_IsMainFile
     ElseIf LoadFont(#FontWML, "Arial", AjustFontSize(8))
       SetGadgetFont(#PB_Default, FontID(#FontWML))   ; Set the loaded Arial 8 font as new default font for all Gadgets
     EndIf                                            ;If not loaded: SetGadgetFont(#PB_Default, #PB_Default): set the font settings back to original standard font
+  EndProcedure
+  
+  Procedure DelOldFiles(Folder.s, Filtre.s = "*.*", NbDay.l = 365)
+    Protected DateRef.i = AddDate(Date(), #PB_Date_Day, -NbDay)
+    CompilerIf #PB_Compiler_OS = #PB_OS_Windows
+      If Right(Folder,1) = "\" : Folder + "\" :EndIf
+    CompilerElse
+      If Right(Folder,1) = "/" : Folder + "/" :EndIf
+    CompilerEndIf
+    If FindString("/\", Right(Folder,1),1) = 0
+      Folder + "/"
+    EndIf
+    If FileSize(Folder) <> -2 : ProcedureReturn : EndIf
+    If ExamineDirectory(0, Folder, Filtre)  
+      While NextDirectoryEntry(0)
+        If DirectoryEntryType(0) = #PB_DirectoryEntry_File
+          If GetFileDate(Folder + DirectoryEntryName(0), #PB_Date_Modified) < DateRef
+            DeleteFile(Folder + DirectoryEntryName(0), #PB_FileSystem_Force)
+          EndIf
+        EndIf
+      Wend
+      FinishDirectory(0)
+    EndIf
+  EndProcedure
+  
+  Procedure.s GetPBIDE()
+    Protected IDEpath.s
+    CompilerIf #PB_Compiler_Debugger
+      If FileSize(#PB_Compiler_Home + #PB_IDE) > 0
+        ProcedureReturn #PB_Compiler_Home + #PB_IDE
+      EndIf
+    CompilerEndIf
+    
+    IDEpath = GetEnvironmentVariable("PB_TOOL_IDE")   ;Runs as PB Customized tools
+    If FileSize(IDEpath) > 0
+      ProcedureReturn IDEpath
+    EndIf
+    
+    IDEpath = GetEnvironmentVariable("PUREBASIC_HOME")   ;From PB Home directory variable Environment
+    If IDEpath
+      If FindString("/\", Right(IDEpath,1),1) = 0
+        IDEpath + "/"
+      EndIf
+      If FileSize(IDEpath + #PB_IDE) > 0
+        ProcedureReturn IDEpath + #PB_IDE
+      EndIf
+    EndIf
+    
+    CompilerIf #PB_Compiler_OS = #PB_OS_Windows
+      Protected PBRegKey.s, hKey1.l = 0, Type.l = 0, Res.l = -1, cbData.l = 1024, lpbData.l = AllocateMemory(cbData)   ;1024: The PB entry is really quite long!
+      If lpbData
+        PBRegKey="Software\Classes\PureBasic.exe\shell\open\command"   ;XP to Win10
+        Res=RegOpenKeyEx_(#HKEY_CURRENT_USER, PBRegKey, 0, #KEY_ALL_ACCESS , @hKey1)
+        If Res = #ERROR_SUCCESS And hKey1
+          If RegQueryValueEx_(hKey1, "", 0, @Type, lpbData, @cbData)=#ERROR_SUCCESS
+            IDEpath = PeekS(lpbData)
+            IDEpath = StringField(IDEpath,2,Chr(34))
+          EndIf
+          RegCloseKey_(hKey1)
+        EndIf
+        FreeMemory(lpbData)
+        If FileSize(IDEpath) > 0
+          ProcedureReturn IDEpath
+        EndIf
+      EndIf
+    CompilerEndIf
+    
+    ProcedureReturn ""
+  EndProcedure
+  
+  Procedure.s GetTemporaryFilename()
+    Protected i, filename$ = GetTemporaryDirectory() + "~SweetyVD"
+    For i = 0 To 6
+      filename$ + Chr('a'+Random(25))
+    Next
+    filename$ + ".pb"
+    If FileSize(filename$) = -1   ; If file does not exist, return the generated filename
+      ProcedureReturn filename$
+    Else                          ; Else: generate a new name
+      ProcedureReturn GetTemporaryFilename()
+    EndIf
   EndProcedure
   
   Procedure LoadControls()
@@ -344,10 +438,14 @@ CompilerIf #PB_Compiler_IsMainFile
       Gadgets(0)\ToolTip=\ToolTip
       Gadgets(0)\Constants=\Constants
       Gadgets(0)\ModelType=0   ;0=Window
-                               ;Add Window to List Gadgets ComboBox. Element 0 for the Window Draw Area
+      ;Add Window to List Gadgets ComboBox. Element 0 for the Window Draw Area
       AddGadgetItem(#ListGadgets, -1, Gadgets(0)\Name)
       SetGadgetState(#ListGadgets, 0)
       SetGadgetItemData(#ListGadgets, 0, 0)
+      
+      AddGadgetItem(#TreeControls, -1, Gadgets(0)\Name, ImageID(\Image), 0)
+      SetGadgetState(#TreeControls, 0)
+      SetGadgetItemData(#TreeControls, 0, 0)
     EndWith
   EndProcedure
   
@@ -376,19 +474,24 @@ CompilerIf #PB_Compiler_IsMainFile
           EndSelect
         Next
         If I = 0
+          ;GadgetImage = CatchImage(#PB_Any,?Vd_Window)
+          ;\Image=GadgetCtrlArray(0)\GadgetCtrlImage
+          \Image=CatchImage(#PB_Any,?Vd_Window)
           InitModelWindow()   ;Draw Area Width and Height and Save Window information
         Else
           GadgetCtrlFound = #False
           For J = 1 To ArraySize(GadgetCtrlArray())   ;Load Popup Menu Image and ListIcon Controls Gadgets with Image
             If GadgetCtrlArray(J)\GadgetCtrlName = LCase(\Model)
               GadgetCtrlFound = #True
-              AddGadgetItem(#ControlsListIcon, -1, \Model, ImageID(GadgetCtrlArray(J)\GadgetCtrlImage))
-              MenuItem(I, \Model, ImageID(GadgetCtrlArray(J)\GadgetCtrlImage))   ;Add to popup menu
+              \Image=GadgetCtrlArray(J)\GadgetCtrlImage
+              AddGadgetItem(#CreateControlsList, -1, \Model, ImageID(\Image))
+              MenuItem(I, \Model, ImageID(\Image))   ;Add to popup menu
             EndIf
           Next
           If GadgetCtrlFound = #False   ;If image not found, use Vd_Unknow.png
-            AddGadgetItem(#ControlsListIcon, -1, \Model, ImageID(GadgetCtrlArray(0)\GadgetCtrlImage))
-            MenuItem(I, \Model, ImageID(GadgetCtrlArray(0)\GadgetCtrlImage))   ;Add to popup menu
+            \Image=GadgetCtrlArray(0)\GadgetCtrlImage
+            AddGadgetItem(#CreateControlsList, -1, \Model, ImageID(\Image))
+            MenuItem(I, \Model, ImageID(\Image))   ;Add to popup menu
           EndIf
         EndIf
       Next
@@ -398,7 +501,7 @@ CompilerIf #PB_Compiler_IsMainFile
   Procedure CreateGadgets(IdModel.i)
     Protected IdGadget.i, TmpCaption.s, Mini.i, Maxi.i, StepValue.i
     InitProperties()
-    OpenGadgetList(#ScrollDrawArea)   ;Required when changing apps(ex: test generate code) to reopen the GadgetList
+    OpenGadgetList(#ScrollDrawArea)   ;Required when changing apps(ex: test generated code) to reopen the GadgetList
     With ModelGadget(IdModel)
       \CountGadget=\CountGadget+1   ;Updating the gadget counter by model
       CountGadgets=CountGadgets+1
@@ -524,6 +627,10 @@ CompilerIf #PB_Compiler_IsMainFile
       AddGadgetItem(#ListGadgets, -1, Gadgets(CountGadgets)\Name)
       SetGadgetState(#ListGadgets, CountGadgetItems(#ListGadgets)-1)
       SetGadgetItemData(#ListGadgets, CountGadgetItems(#ListGadgets)-1, IdGadget)
+      
+      AddGadgetItem(#TreeControls, -1, Gadgets(CountGadgets)\Name, ImageID(\Image), 1)
+      SetGadgetState(#TreeControls, CountGadgetItems(#TreeControls)-1)
+      SetGadgetItemData(#TreeControls, CountGadgetItems(#TreeControls)-1, IdGadget)
       ;Add Drag Handle Gadget in module
       AddSVDGadget(IdGadget)
     EndWith
@@ -567,6 +674,10 @@ CompilerIf #PB_Compiler_IsMainFile
               AddGadgetItem(#ListGadgets, -1, Gadgets(CountGadgets)\Name)
               SetGadgetState(#ListGadgets, CountGadgetItems(#ListGadgets)-1)
               SetGadgetItemData(#ListGadgets, CountGadgetItems(#ListGadgets)-1, GadgetObj)
+      
+              AddGadgetItem(#TreeControls, -1, Gadgets(CountGadgets)\Name, ImageID(\Image), 1)
+              SetGadgetState(#TreeControls, CountGadgetItems(#TreeControls)-1)
+              SetGadgetItemData(#TreeControls, CountGadgetItems(#TreeControls)-1, GadgetObj)
               Break
             EndIf
           Next
@@ -597,7 +708,7 @@ CompilerIf #PB_Compiler_IsMainFile
     EndIf
   EndProcedure
   
-  Procedure CodeGenerateForm()
+  Procedure CodeCreateForm()
     Protected AnyGadgets.b = #False, I.i
     For I = 1 To ArraySize(Gadgets())   ;At least one Gadget is required
       If Gadgets(I)\Idgadget > 0 And Gadgets(I)\ModelType=2
@@ -607,25 +718,30 @@ CompilerIf #PB_Compiler_IsMainFile
     Next
     
     If AnyGadgets   ;If at least one Gadget
-      If OpenWindow(#CodeForm, WindowX(#MainWindow)+GadgetX(#CodeCreate), WindowY(#MainWindow)+70 , 230 , 180, "SweetyVD: PureBasic code Generation",#PB_Window_TitleBar)
+      If OpenWindow(#CodeForm, WindowX(#MainWindow)+GadgetX(#CodeCreate), WindowY(#MainWindow)+70 , 250 , 175, "SweetyVD: Create PureBasic code",#PB_Window_TitleBar)
         CheckBoxGadget(#CodeIncTitle, 30, 5, 160, 25, "IncludeTitle block") : SetGadgetState(#CodeIncTitle, #PB_Checkbox_Checked)
         CheckBoxGadget(#CodeIncEnum, 30, 30, 160, 25, "Include enumeration") : SetGadgetState(#CodeIncEnum, #PB_Checkbox_Checked)
-        FrameGadget(#CodeFrame, 26, 53, 180, 35, "")
-        OptionGadget(#CodeConstants, 31, 63, 85, 20, "Constants") : SetGadgetState(#CodeConstants,#True)
-        OptionGadget(#CodePBany, 116, 63, 70, 20, "#PB_Any")
-        CheckBoxGadget(#CodeAddStatusBar, 30, 90, 160, 25, "Add a Status Bar")
-        CheckBoxGadget(#CodeIncEvent, 30, 115, 160, 25, "Include the event loop") : SetGadgetState(#CodeIncEvent, #PB_Checkbox_Checked)
+        FrameGadget(#CodeFrame, 26, 50, 180, 35, "")
+        OptionGadget(#CodeConstants, 31, 60, 85, 20, "Constants") : SetGadgetState(#CodeConstants,#True)
+        OptionGadget(#CodePBany, 116, 60, 70, 20, "#PB_Any")
+        CheckBoxGadget(#CodeAddStatusBar, 30, 85, 160, 25, "Add a Status Bar")
+        CheckBoxGadget(#CodeIncEvent, 30, 110, 160, 25, "Include the event loop") : SetGadgetState(#CodeIncEvent, #PB_Checkbox_Checked)
         CatchImage(#Img_About,?Img_About)
-        ButtonImageGadget(#AboutButton, 198, 5, 25, 25, ImageID(#Img_About))
-        ButtonGadget(#CodePerform, 20, 145, 80, 25, "Generate", #PB_Button_Toggle) : SetGadgetState(#CodePerform, #True)
-        ButtonGadget(#CodeCancel, 130, 145, 80, 25, "Cancel")
+        ButtonImageGadget(#AboutButton, 218, 5, 25, 25, ImageID(#Img_About))
+        If FileSize(PBIDEpath) > 1
+          ButtonGadget(#CodeNewTab, 10, 140, 70, 25, "New Tab", #PB_Button_Toggle) : SetGadgetState(#CodeNewTab, #True)
+          ButtonGadget(#CodeClipboard, 90, 140, 70, 25, "Clipboard")
+        Else
+          ButtonGadget(#CodeClipboard, 10, 140, 70, 25, "Clipboard", #PB_Button_Toggle) : SetGadgetState(#CodeClipboard, #True)
+        EndIf
+        ButtonGadget(#CodeCancel, 170, 140, 70, 25, "Cancel")
       EndIf
     Else
       MessageRequester("SweetyVD Information", "Let me play with at least one Gadget. Please  ;)", #PB_MessageRequester_Warning|#PB_MessageRequester_Ok)
     EndIf
   EndProcedure
   
-  Procedure CodeGenerate()
+  Procedure CodeCreate(Dest.s = "Clipboard")
     Protected Dim Buffer.StructureGadget(0)
     Protected IdGadget.i, SavModelType = -1
     Protected ImageExtPath.s, ImageExtFullPath.s, TmpImagePath.s
@@ -656,7 +772,8 @@ CompilerIf #PB_Compiler_IsMainFile
       Code + ";     PB-Version:" +#CRLF$
       Code + ";             OS:" +#CRLF$
       Code + ";         Credit:" +#CRLF$
-      Code + ";   French-Forum:" +#CRLF$
+      Code + ";          Forum:" +#CRLF$
+      Code + ";     Created by: SweetyVD" +#CRLF$
       Code + "; -----------------------------------------------------------------------------" +#CRLF$+#CRLF$
     Else
       Code = #CRLF$
@@ -957,14 +1074,34 @@ CompilerIf #PB_Compiler_IsMainFile
       Code + "ForEver" +#CRLF$
     EndIf
     
-    SetClipboardText(Code)   ;Copy the code to the clipboard
     FreeArray(Buffer())
     CloseWindow(#CodeForm)
-    MessageRequester("SweetyVD Information", "The Generate Code is copied to the Clipboard  :)", #PB_MessageRequester_Info|#PB_MessageRequester_Ok)
+    If Dest.s = "NewTab"
+      Define hWnd.i, hFile.i, TmpFile.s = GetTemporaryFilename()
+      hFile = CreateFile(#PB_Any, TmpFile)
+      If hFile
+        WriteStringFormat(hFile, #PB_UTF8)
+        WriteStringN(hFile, Code)
+        CloseFile(hFile)
+        RunProgram(PBIDEpath, TmpFile, "")
+        CompilerIf #PB_Compiler_OS = #PB_OS_Windows
+          ShowWindow_(WindowID(#MainWindow), #SW_MINIMIZE)
+        CompilerElse
+          MessageRequester("SweetyVD Information", "The Created Code is copied to a New Tab  :)", #PB_MessageRequester_Info|#PB_MessageRequester_Ok)
+        CompilerEndIf
+      Else
+        SetClipboardText(Code)
+        MessageRequester("SweetyVD Information", "The Created Code is copied to the Clipboard  :)", #PB_MessageRequester_Info|#PB_MessageRequester_Ok)
+      EndIf
+    Else
+      SetClipboardText(Code)   ;Copy the code to the clipboard
+      MessageRequester("SweetyVD Information", "The Created Code is copied to the Clipboard  :)", #PB_MessageRequester_Info|#PB_MessageRequester_Ok)
+    EndIf
   EndProcedure
   
   Procedure InitWindowSelected()
     SetGadgetState(#ListGadgets, #MainWindow)
+    SetGadgetState(#TreeControls, #MainWindow)
     SetGadgetState(#PosGadgetX, 0) : SetGadgetState(#PosGadgetY, 0)
     SetGadgetState(#PosGadgetWidth, GetGadgetState(#SetDrawWidth)) : SetGadgetState(#PosGadgetHeight, GetGadgetState(#SetDrawHeight))
     LoadGadgetProperties(#MainWindow)
@@ -1168,14 +1305,14 @@ CompilerIf #PB_Compiler_IsMainFile
     EndIf
   EndProcedure
   
-  Procedure OpenMainWindow(X = 0, Y = 0, Width = 800, Height = 580)
+  Procedure OpenMainWindow(X = 0, Y = 0, Width = 880, Height = 600)
     Protected GadgetObj.i
     OpenWindow(#MainWindow, x, y, width, height, "SweetyVD (Visual Designer)", #PB_Window_SizeGadget | #PB_Window_MinimizeGadget | #PB_Window_MaximizeGadget | #PB_Window_ScreenCentered | #PB_Window_SystemMenu)
     CreatePopupImageMenu(#PopUpMenu)
-    ButtonGadget(#EnableSVD, 5, 5, 100, 25, "Enable SVD", #PB_Button_Toggle) : SetGadgetState(#EnableSVD, #True)
-    ButtonGadget(#CodeCreate, 115, 5, 100, 25, "Create Code")
+    ButtonGadget(#CodeCreate, 5, 5, 100, 25, "Create Code")
+    ButtonGadget(#EnableSVD, 115, 5, 100, 25, "Preview", #PB_Button_Toggle)
     
-    ContainerGadget(#SettingContainer, 220, 5, 570, 30, #PB_Container_Raised) : HideGadget(#SettingContainer,#True)
+    ContainerGadget(#SettingContainer, 220, 5, 650, 30, #PB_Container_Raised)
     TextGadget(#SetDrawSizeText, 10, 4, 30, 20, "Size")
     SpinGadget(#SetDrawWidth, 40, 1, 70, 20, 1, 1920, #PB_Spin_Numeric)
     TextGadget(#SetDrawSizeTextX, 110, 4, 10, 20, "x", #PB_Text_Center)
@@ -1186,7 +1323,14 @@ CompilerIf #PB_Compiler_IsMainFile
     SpinGadget(#GridSpacing, 460, 1, 50, 20, 1, 50, #PB_Spin_Numeric) : SetGadgetState(#GridSpacing, 20)
     CloseGadgetList()
     
-    ContainerGadget(#GadgetList, 5, 35, 210, 110, #PB_Container_Raised) : HideGadget(#GadgetList,#True)
+    PanelGadget(#PanelControls, 5, 35, 210, 205)
+    AddGadgetItem(#PanelControls, -1, " Create Controls ")
+    ListIconGadget(#CreateControlsList, 0, 0, 205, 180, "Create Controls", 181)
+    AddGadgetItem(#PanelControls, -1, "  List Controls ")
+    TreeGadget(#TreeControls, 0, 0, 205, 180, #PB_Tree_AlwaysShowSelection)
+    CloseGadgetList()
+    
+    ContainerGadget(#GadgetList, 5, 245, 210, 110, #PB_Container_Raised)
     ComboBoxGadget(#ListGadgets, 2 ,5, 174, 22) ;Liste des gadgets
     CatchImage(#Img_Delete,?Img_Delete)
     ButtonImageGadget(#DeleteGadgetButton, 182, 5, 22, 22, ImageID(#Img_Delete))
@@ -1196,8 +1340,7 @@ CompilerIf #PB_Compiler_IsMainFile
     SpinGadget(#PosGadgetHeight, 68, 80, 70, 20, 1, 1020, #PB_Spin_Numeric)
     CloseGadgetList()
     
-    ListIconGadget(#ControlsListIcon, 5, 150, 210, 180, "Common Controls", 186) : HideGadget(#ControlsListIcon,#True)
-    ContainerGadget(#PropertiesContainer, 5, 335, 210, 95, #PB_Container_Raised) : HideGadget(#PropertiesContainer,#True)
+    ContainerGadget(#PropertiesContainer, 5, 360, 210, 95, #PB_Container_Raised)
     StringGadget(#CaptionText, 0, 2, 65, 22, "Caption", #PB_String_ReadOnly)
     StringGadget(#CaptionString, 65, 2, 141, 22, "")
     StringGadget(#ToolTipText, 0, 24, 65, 22, "ToolTip", #PB_String_ReadOnly)
@@ -1216,11 +1359,11 @@ CompilerIf #PB_Compiler_IsMainFile
     ButtonImageGadget(#BackColorPick, 180, 70, 22, 18, 0)
     CreateImage(#BackColorImg, 22, 22)
     CloseGadgetList()
-    ListIconGadget(#Constants, 5, 435, 210, 135, "Options (#PB_)", 186, #PB_ListIcon_CheckBoxes) : HideGadget(#Constants,#True)
+    ListIconGadget(#Constants, 5, 460, 210, 130, "Options (#PB_)", 186, #PB_ListIcon_CheckBoxes)
     
-    ScrollAreaGadget(#ScrollDrawArea, 220, 35, 570, 535, 1930, 1030, 20, #PB_ScrollArea_Single)   ;InnerWidth,InnerHeight + 10 for the resize handle of the drawing window
+    ScrollAreaGadget(#ScrollDrawArea, 220, 35, 650, 555, 1930, 1030, 20, #PB_ScrollArea_Single)   ;InnerWidth,InnerHeight + 10 for the resize handle of the drawing window
     
-    EnableGadgetDrop(#ControlsListIcon, #PB_Drop_Text, #PB_Drag_Copy)
+    EnableGadgetDrop(#CreateControlsList, #PB_Drop_Text, #PB_Drag_Copy)
     EnableGadgetDrop(#ScrollDrawArea, #PB_Drop_Text, #PB_Drag_Copy)
     
     ;All interface Objects must have #PB_Ignore as data. To not load them later when loading Designer
@@ -1245,16 +1388,32 @@ CompilerIf #PB_Compiler_IsMainFile
     LoadPBObjectEnum()
   EndProcedure
   
+  Procedure Init()
+    PBIDEpath = GetPBIDE()
+    LoadFontWML()
+    LoadControls()
+    DelOldFiles(GetTemporaryDirectory(), "~SweetyVD*.pb", 2)   ;Cleaning, Keep 2 days temporary files
+  EndProcedure
+  
   ;- Main
   Define *PosDim.PosDim
   Define IdGadget.i, GadgetsElement.i, ImagePath.s, TmpImage.i, SelectedColor.i, TmpConstants.s, I.i
+  Define GadgetsListElement.i, OldGadgetsListElement.i, ListHightLight.i = $D77800
   
-  LoadFontWML()
-  LoadControls()
+  Init()
   OpenMainWindow()
   InitModelgadget()   ;Initializing Gadget Templates
   BindEvent(#PB_Event_SizeWindow, @WindowSize())
   ;SVDGadgetTest()
+  
+  CompilerIf #PB_Compiler_OS = #PB_OS_Linux : AddKeyboardShortcut(#MainWindow, #PB_Shortcut_Insert, #Shortcut_Insert) : CompilerEndIf   ;Insert key as Right Click replacement under Linux
+  InitWindowSelected()
+  EnableSVD(GetGadgetState(#DragSVD))
+  If GetGadgetState(#ShowGrid) = #PB_Checkbox_Checked
+    DrawGrid(#True, GetGadgetState(#GridSpacing))
+  Else
+    DrawGrid(#False)
+  EndIf
   
   Repeat   ;- Event Loop
     Select WaitWindowEvent()
@@ -1287,9 +1446,11 @@ CompilerIf #PB_Compiler_IsMainFile
             
           Case #Shortcut_Delete   ;AddKeyboardShortcut is added on #PB_EventType_Focus and RemoveKeyboardShortcut on #PB_EventType_LostFocus in module, proc SVD_Callback
             If GetGadgetState(#ListGadgets) > 0
-              IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
+              GadgetsListElement = GetGadgetState(#ListGadgets)
+              IdGadget=GetGadgetItemData(#ListGadgets, GadgetsListElement)
               If IsGadget(IdGadget)
-                RemoveGadgetItem(#ListGadgets, GetGadgetState(#ListGadgets))
+                RemoveGadgetItem(#TreeControls, GadgetsListElement)
+                RemoveGadgetItem(#ListGadgets, GadgetsListElement)
                 For I = 1 To ArraySize(Gadgets())
                   If Gadgets(I)\Idgadget = IdGadget
                     Gadgets(I)\Idgadget = 0
@@ -1315,25 +1476,27 @@ CompilerIf #PB_Compiler_IsMainFile
             Case #EnableSVD
               Select GetGadgetState(#EnableSVD)
                 Case #True
-                  SetGadgetText(#EnableSVD, "Enable SVD")
+                  SetGadgetText(#EnableSVD, "Designer")
                   CompilerIf #PB_Compiler_OS = #PB_OS_Linux : RemoveKeyboardShortcut(#MainWindow, #PB_Shortcut_Insert) : CompilerEndIf   ;Insert key as Right Click replacement under Linux
                   HideGadget(#SettingContainer,#True)
                   HideGadget(#GadgetList,#True)
                   HideGadget(#PropertiesContainer,#True)
-                  HideGadget(#ControlsListIcon,#True)
+                  HideGadget(#PanelControls,#True)
                   HideGadget(#Constants,#True)
+                  SetGadgetState(#EnableSVD, #True)
                   DisableSVD()
                   DrawGrid(#False)
                   
                 Case #False   ;EnableSVD Parameters: drawing area, Drag Space
-                  SetGadgetText(#EnableSVD, "Disable SVD")
+                  SetGadgetText(#EnableSVD, "Preview")
                   CompilerIf #PB_Compiler_OS = #PB_OS_Linux : AddKeyboardShortcut(#MainWindow, #PB_Shortcut_Insert, #Shortcut_Insert) : CompilerEndIf   ;Insert key as Right Click replacement under Linux
                   InitWindowSelected()
                   HideGadget(#SettingContainer,#False)
                   HideGadget(#GadgetList,#False)
                   HideGadget(#PropertiesContainer,#False)
-                  HideGadget(#ControlsListIcon,#False)
+                  HideGadget(#PanelControls,#False)
                   HideGadget(#Constants,#False)
+                  SetGadgetState(#EnableSVD, #False)
                   EnableSVD(GetGadgetState(#DragSVD))
                   If GetGadgetState(#ShowGrid) = #PB_Checkbox_Checked
                     DrawGrid(#True, GetGadgetState(#GridSpacing))
@@ -1343,7 +1506,7 @@ CompilerIf #PB_Compiler_IsMainFile
               EndSelect
               
             Case #CodeCreate ;Génération du code
-              CodeGenerateForm()
+              CodeCreateForm()
               
             Case #ListGadgets
               If GetGadgetState(#ListGadgets) = 0
@@ -1357,11 +1520,25 @@ CompilerIf #PB_Compiler_IsMainFile
                 EndIf
               EndIf
               
+            Case #TreeControls
+              If GetGadgetState(#TreeControls) = 0
+                InitWindowSelected()
+              Else
+                IdGadget=GetGadgetItemData(#TreeControls, GetGadgetState(#TreeControls))
+                If IsGadget(IdGadget)
+                  SelectSVDGadget(IdGadget)
+                Else
+                  InitWindowSelected()
+                EndIf
+              EndIf
+              
             Case #DeleteGadgetButton
               If GetGadgetState(#ListGadgets) > 0
-                IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
+                GadgetsListElement = GetGadgetState(#ListGadgets)
+                IdGadget=GetGadgetItemData(#ListGadgets, GadgetsListElement)
                 If IsGadget(IdGadget)
-                  RemoveGadgetItem(#ListGadgets, GetGadgetState(#ListGadgets))
+                  RemoveGadgetItem(#TreeControls, GadgetsListElement)
+                  RemoveGadgetItem(#ListGadgets, GadgetsListElement)
                   For I = 1 To ArraySize(Gadgets())
                     If Gadgets(I)\Idgadget = IdGadget
                       Gadgets(I)\Idgadget = 0
@@ -1374,13 +1551,13 @@ CompilerIf #PB_Compiler_IsMainFile
                 EndIf
               EndIf
               
-            Case #ControlsListIcon   ;Element beging at 0 -> Element+1
+            Case #CreateControlsList   ;Element beging at 0 -> Element+1
               Select EventType()
                 Case #PB_EventType_LeftDoubleClick
                   X = MyGrid : Y = MyGrid   ;coordinates for creating gadget inside #ScrollDrawArea
-                  CreateGadgets(GetGadgetState(#ControlsListIcon)+1)
+                  CreateGadgets(GetGadgetState(#CreateControlsList)+1)
                 Case #PB_EventType_DragStart
-                  DragText(Str(GetGadgetState(#ControlsListIcon)+1))
+                  DragText(Str(GetGadgetState(#CreateControlsList)+1))
               EndSelect
               
             Case #DragSVD
@@ -1597,8 +1774,10 @@ CompilerIf #PB_Compiler_IsMainFile
               AboutForm()
             Case #CodeCancel
               CloseWindow(#CodeForm)
-            Case #CodePerform
-              CodeGenerate()
+            Case #CodeClipboard
+              CodeCreate()
+            Case #CodeNewTab
+              CodeCreate("NewTab")
           EndSelect
         EndIf
         
@@ -1606,7 +1785,7 @@ CompilerIf #PB_Compiler_IsMainFile
           Select EventGadget()
             Case #AboutBack
               CloseWindow(#AboutForm)
-              CodeGenerateForm()
+              CodeCreateForm()
           EndSelect
         EndIf
         
@@ -1617,6 +1796,7 @@ CompilerIf #PB_Compiler_IsMainFile
             For I=0 To CountGadgetItems(#ListGadgets)
               If GetGadgetItemData(#ListGadgets, I) = EventGadget()
                 SetGadgetState(#ListGadgets,I)
+                SetGadgetState(#TreeControls,I)
                 Break
               EndIf
             Next
@@ -1643,7 +1823,10 @@ CompilerIf #PB_Compiler_IsMainFile
               EndIf
             EndIf
             
-          Case #SVD_WinSize
+          Case  #SVD_Window_Focus
+            InitWindowSelected()
+            
+          Case #SVD_Window_ReSize
             *PosDim = EventData()
             SetGadgetState(#SetDrawWidth, *PosDim\Width)
             SetGadgetState(#SetDrawHeight, *PosDim\Height)
@@ -1689,9 +1872,16 @@ CompilerIf #PB_Compiler_IsMainFile
     Data.q $A3949401807FD710,$31D7F62D2AEC96BA,$E7EDF34A24125630,$1E54B85D96EA191F,$CCC0514CCB09D1E7,$6067A5444CCC0CD4,$CCC0F94CCC037A66,$0000F80D18918CB4,$EFF21D717890888A,$444E454900000000
     Data.b $AE,$42,$60,$82
     
+    #Vd_Window:
+    Data.q $0A1A0A0D474E5089,$524448490D000000,$1000000010000000,$FFF31F0000000608,$4752730100000061,$0000E91CCEAE0042,$0000414D41670400,$00000561FC0B8FB1,$0000735948700900,$C701C30E0000C30E,$741900000064A86F,$7774666F53745845,$6E69617000657261,$2E342074656E2E74
+    Data.q $7A5B033433312E30,$544144490D010000,$FBB6580AA0634F38,$9B0617D348528A5C,$0C0D0943F0B8FF92,$79B3583FE75E477C,$8FFDDFCE077BA4DA,$F637E3065410BC0F,$00610C83620C60BE,$FFFF3BB9FF7FFCDA,$EB780CC31787FBFD,$FF7F79C8006A8216,$400CC31909AAC1FE,$1A477ABD5E0370C6
+    Data.q $2203E1C18C1CF17E,$ECF17E124D7F3F9E,$F1F8F018463F1009,$F880F7C7B3F09273,$84931FF7FB80C22E,$6E0370C609BC3C9F,$3AFF747E12407EDF,$FFE6F57CB80DC318,$B9DFEF8D12EF379B,$8E0308F3B5FAFFFE,$44DBF5FAFFFF3E9E,$F4783FFE6E379BE3,$FBFFDA9F1100C430,$922DDAED7FFA9F8F
+    Data.q $82F483FF7BBDB6F0,$C5F9C77C41947292,$5128E176BFFCB6EB,$DB63F5FF6DF6E378,$30145332C2F4822E,$B40C08893B05DF49,$01818065335C35F9,$B3553835ADCF4F00,$4E4549000000006C
+    Data.b $44,$AE,$42,$60,$82
+    
     ModelGadgets:   ;31 Gadgets Models +window Model
     ;"CreateGadget","Order","GadgetType","Width","Height","Name","Caption","Option1","Option2","Option3","FrontColor","BackColor","ToolTip","Constants"
-    Data.s "OpenWindow","0","","520","480","Window","#Text","","","","#Nooo","","#Nooo","Window_SystemMenu(x)|Window_MinimizeGadget(x)|Window_MaximizeGadget(x)|Window_SizeGadget(x)|Window_Invisible|Window_TitleBar|Window_Tool|Window_BorderLess|Window_ScreenCentered(x)|Window_WindowCentered|Window_Maximize|Window_Minimize|Window_NoGadgets"
+    Data.s "OpenWindow","0","","600","500","Window","#Text","","","","#Nooo","","#Nooo","Window_SystemMenu(x)|Window_MinimizeGadget(x)|Window_MaximizeGadget(x)|Window_SizeGadget(x)|Window_Invisible|Window_TitleBar|Window_Tool|Window_BorderLess|Window_ScreenCentered(x)|Window_WindowCentered|Window_Maximize|Window_Minimize|Window_NoGadgets"
     Data.s "ButtonGadget","1","1","100","20","Button","#Text","","","","#Nooo","#Nooo","","Button_Right|Button_Left|Button_Default|Button_MultiLine|Button_Toggle"
     Data.s "ButtonImageGadget","2","19","100","20","ButtonImage","","#Imag:0","","","#Nooo","#Nooo","","Button_Toggle"
     Data.s "CalendarGadget","3","20","220","160","Calendar","","#Date:0","","","#Nooo","#Nooo","","Calendar_Borderless"
@@ -1727,22 +1917,21 @@ CompilerIf #PB_Compiler_IsMainFile
 CompilerEndIf
 
 ; IDE Options = PureBasic 5.60 (Windows - x64)
-; CursorPosition = 582
-; FirstLine = 577
-; Folding = -----
+; CursorPosition = 1394
+; FirstLine = 1386
+; Folding = -------
 ; EnableXP
 ; UseIcon = Include\SweetyVD.ico
 ; Executable = SweetyVD.exe
 ; Compiler = PureBasic 5.60 (Windows - x86)
 ; EnablePurifier
 ; IncludeVersionInfo
-; VersionField0 = 1.8.2
-; VersionField1 = 1.8.2
+; VersionField0 = 1.8.25
+; VersionField1 = 1.8.25
 ; VersionField3 = SweetyVD.exe
-; VersionField4 = 1.8.2
-; VersionField5 = 1.8.2
+; VersionField4 = 1.8.25
+; VersionField5 = 1.8.25
 ; VersionField6 = Sweety Visual Designer
 ; VersionField7 = SweetyVD.exe
 ; VersionField8 = SweetyVD.exe
 ; VersionField9 = @ChrisR
-; Watchlist = CodeGenerate()>Code
