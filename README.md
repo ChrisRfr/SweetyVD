@@ -8,7 +8,7 @@ A tiny Visual Designer Develop in PureBasic to create PureBasic interface
 Author: ChrisR <br />
 Date: 2017-03-31 <br />
 Version: 1.6 <br />
-PB-Version: 5.4* LTS, 5.5*, 5.60 (x86/x64) <br />
+PB-Version: 5.60 (x86/x64) <br />
 OS: Windows, Linux, Mac <br />
 Credit: STARGÅTE Transformation of gadgets at runtime<br />
 Credit: Falsam Tiny Visual Designer (TVD) <br />
