@@ -10,7 +10,7 @@ Date: 2017-03-31 <br />
 Version: 1.6 <br />
 PB-Version: 5.60 (x86/x64) <br />
 OS: Windows, Linux, Mac <br />
-Credit: STARGÅTE Transformation of gadgets at runtime<br />
+Credit: Stargâte Transformation of gadgets at runtime<br />
 Credit: Falsam Tiny Visual Designer (TVD) <br />
 
 English-Forum: http://www.purebasic.fr/english/viewtopic.php?f=27&t=68187 <br />
