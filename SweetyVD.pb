@@ -2091,7 +2091,7 @@ CompilerEndIf
 ; EnableXP
 ; UseIcon = Include\SweetyVD.ico
 ; Executable = SweetyVD_x86.exe
-; Compiler = PureBasic 5.60 (Windows - x86)
+; Compiler = PureBasic 5.60 (Windows - x64)
 ; EnablePurifier
 ; IncludeVersionInfo
 ; VersionField0 = 1.9.0
