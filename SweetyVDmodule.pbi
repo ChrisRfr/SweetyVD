@@ -15,11 +15,13 @@
 DeclareModule SVDesigner
   
   Enumeration #PB_EventType_FirstCustomValue
-    #SVD_Gadget_Focus       ; This Event fired to the window if a gadget get focus
-    #SVD_Gadget_LostFocus   ; This Event fired to the window if a gadget Lost focus
-    #SVD_Gadget_Resize      ; This Event fired to the window if a gadget is resized
-    #SVD_Window_Focus       ; This Event fired to the window if the DrawArea get Focus
-    #SVD_Window_ReSize      ; This Event fired to the window if the DrawArea is resized
+    #SVD_Gadget_Focus
+    #SVD_Gadget_LostFocus
+    #SVD_Gadget_Resize
+    #SVD_Window_Focus
+    #SVD_Window_ReSize
+    #SVD_DrawArea_RightClick
+    #SVD_DrawArea_Focus
   EndEnumeration
   
   Enumeration 1000
@@ -35,20 +37,31 @@ DeclareModule SVDesigner
     Height.i
   EndStructure
   
-  Global ParentWidth.i, ParentHeight.i
-  Global MyGrid.i, LastGadgetFocus.i, LastDragHandleFocus.i
+  Global ParentWidth.i, ParentHeight.i, SavPosDim.PosDim
+  Global MyGrid.i, ShowGrid.b, GridSpacing.i, SelectedDrawGadget.i, LastGadgetFocus.i, LastDragHandleFocus.i
   
-  Declare DrawGrid(Visible.b, GridSpacing.i=20)
+  Declare DrawContainer(X, Y, Width, Height)
+  Declare DrawFrame(X, Y, Width, Height, Text.s, BackColor.i = $F0F0F0)
+  Declare DrawPanel(X, Y, Width, Height, Text.s = "Tab1", BackColor.i = $F0F0F0)
+  Declare DrawScrollArea(X, Y, Width, Height, InnerW, InnerH, ScrollX, ScrollY) 
+  Declare DrawGrid()
   Declare.i GridMatch(Value.i, Grid.i=1, Min.i=0, Max.i=$7FFFFFFF)
   Declare DrawHandleBorder(DragHandle.i, BorderColor.i)
+  Declare DrawAreaHandleBorder(Gadget.i, BorderColor.i)
   Declare ResizeSVDGadget(Gadget.i, X.i, Y.i, Width.i, Height.i)  
   Declare ResizeHandle(Gadget)
   Declare SVD_Callback()
+  Declare ClickHoverDrawArea()
+  Declare SetActiveDrawGadget(Gadget.i)
+  Declare SetDrawAeraFocus()
+  Declare SVD_DrawCallback()
   Declare SVD_WinCallback()
   Declare SelectSVDGadget(Gadget.i)
   Declare DeleteSVDGadget(Gadget.i)
   Declare DisableSVD()
-  Declare AddSVDGadget(Gadget.i)
+  Declare SetSVDDrawGadget(Gadget.i, Caption.s, Option1.s, Option2.s)
+  Declare AddSVDDrawGadget(Gadget.i, Model.s, X.i, Y.i, Width.i, Height.i, Caption.s, Option1.s, Option2.s)
+  Declare AddSVDGadget(Gadget.i, Model.s)
   Declare EnableSVD(Grid.i=10)
   Declare DrawAreaSize(Width.i, Height.i)
   Declare InitSVD(CountGadget.i = 144)
@@ -73,23 +86,32 @@ Module SVDesigner
       PB_Gadget_Objects.i
     EndImport
     
-    #HandelSize = 7
     #MinSize = 6
     #HandelColor = $640000      ;BlueDark
     #WinHandleColor= $000064    ;RedDark
     #FreeHandelColor = $FF8080  ;White=$FFFFFF, grey=$C6C6C6
     CompilerIf #PB_Compiler_OS = #PB_OS_MacOS
-      #OutSideBorder = 2
+      #HandelSize = 8
+      #OutSideBorder = 3
     CompilerElse
+      #HandelSize = 7
       #OutSideBorder = 1
     CompilerEndIf
     
     Structure SVDGadget
-      ParentGadget.i
       Gadget.i
+      Model.s
       DragHandle.i
       Handle.i[9]
-      TypeGadget.i
+      X.i
+      Y.i
+      Width.i
+      Height.i
+      DrawGadget.b
+      ParentGadget.i
+      Caption.s
+      Option1.s
+      Option2.s
     EndStructure
     
     Structure DataBuffer
@@ -105,36 +127,145 @@ Module SVDesigner
     Global Dim GadgetDragHandleArray.GadgetDragHandle(0)
     Global Dim GadgetHandle(8)
     
-    Procedure DrawGrid(Visible.b, GridSpacing.i=20)
-      ;Notes: To display the gadgets after grid drawing (canvas), we need resize the gadgets and the move handles
-      Protected GridBackground.i = RGB(225,230,235), GridColor.i = RGB(204,204,206), ScrollAreaColor = $A0A0A0 ,DftBackColor.i = $F0F0F0
-      Protected X.i, Y.i 
-      If Visible = #False
-        CompilerIf #PB_Compiler_OS = #PB_OS_MacOS : DftBackColor = $C0C0C0 : CompilerEndIf
-        GridSpacing = 8192 : GridBackground = DftBackColor : ScrollAreaColor = DftBackColor
+    Procedure DrawContainer(X, Y, Width, Height)
+      DrawingMode(#PB_2DDrawing_Outlined)
+      Box(X, Y, Width, Height, RGB(0, 0, 0))
+    EndProcedure
+    
+    Procedure DrawFrame(X, Y, Width, Height, Text.s, BackColor.i = $F0F0F0)
+      Protected TextW, TextH
+      If Text <> ""
+        TextW = TextWidth(Text) : TextH = TextHeight(Text)
+      Else
+        TextW = TextWidth("X") : TextH = TextHeight("X")
       EndIf
-      StartDrawing(CanvasOutput(#DrawArea))
-      Box(0, 0, OutputWidth(), OutputHeight(), ScrollAreaColor)
-      Box(X, Y, ParentWidth, ParentHeight, GridBackground)
-      For X = 0 To ParentWidth
-        For Y = 0 To ParentHeight
-          Line(0,Y,ParentWidth,1,GridColor)
-          Y+GridSpacing-1
-        Next
-        Line(X,0,1,ParentHeight,GridColor)
-        X+GridSpacing-1
+      DrawingMode(#PB_2DDrawing_Outlined)
+      Box(X, Y+TextH/2, Width, Height-TextH/2, RGB(127, 127, 127))
+      ;RoundBox(X, Y+TextH/2, Width, Height-TextH/2, 4, 4, RGB(127, 127, 127))
+      If Text <> ""
+        DrawingMode(#PB_2DDrawing_Transparent)
+        Box(X+10, Y+TextH/2, TextW+10, 1, BackColor)
+        DrawingMode(#PB_2DDrawing_Transparent)
+        DrawText(X+15, Y, Text, RGB(0, 0, 0))
+      EndIf
+    EndProcedure
+    
+    Procedure DrawPanel(X, Y, Width, Height, Text.s = "Tab1", BackColor.i = $F0F0F0)
+      Protected TextW, TextH, TabW, TabH, I.i, ActiveTab.i=99, TmpText.s
+      TextW = TextWidth(Text) / (CountString(Text, "|") + 1) : TabW = TextW+20
+      TextH = TextHeight(Text) : TabH = 20
+      For I=0 To CountString(Text, "|")   ;Draw Tab + Text (eg: "Tab1|Tab2(x)|Tab3"
+        TmpText = Trim(StringField(Text, I+1, "|"))
+        If Text <> ""
+          DrawingMode(#PB_2DDrawing_Default)
+          If Right(TmpText, 3) = "(x)"
+            TmpText = Left(TmpText, Len(TmpText)-3)
+            ActiveTab = I
+            Box(X+I*TabW, Y, TabW+1, TabH, RGB(255, 255, 255))
+            DrawingMode(#PB_2DDrawing_Outlined)
+            Box(X+I*TabW, Y, TabW+1, TabH, RGB(0, 0, 0))
+            DrawingMode(#PB_2DDrawing_Transparent)
+            DrawText(X+I*TabW+10, Y+(TabH-TextH)/2, TmpText, RGB(0, 0, 0))
+          Else
+            Box(X+I*TabW, Y+2, TabW+1, TabH-2, RGB(240, 240, 240))
+            DrawingMode(#PB_2DDrawing_Outlined)
+            Box(X+I*TabW, Y+2, TabW+1, TabH-2, RGB(95, 95, 95))
+            DrawingMode(#PB_2DDrawing_Transparent)
+            DrawText(X+I*TabW+10, Y+(TabH-TextH)/2+1, TmpText, RGB(66, 66, 66))
+          EndIf
+        EndIf
       Next
-      Line(0, ParentHeight, ParentWidth, 1, #WinHandleColor)
-      Line(ParentWidth, 0, 1, ParentHeight, #WinHandleColor)
-      StopDrawing()
-      ;To redraw Gadget and DragHandle above the grid
-      If IsGadget(GadgetHandle(0)) : ResizeGadget(GadgetHandle(0), #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore) : EndIf
-      With SVDListGadget()
-        ForEach SVDListGadget()
-          ResizeGadget(\Gadget, #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore)
-          ResizeGadget(\DragHandle, #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore)
+      
+      DrawingMode(#PB_2DDrawing_Outlined)
+      Box(X, Y+(TabH-1), Width, Height-(TabH-1), RGB(0, 0, 0))   ;Inner Panel
+      If ActiveTab = 99 : ActiveTab = 0 : EndIf
+      Box(X+ActiveTab*TabW, Y, TabW+1, TabH, RGB(0, 0, 0))   ;Active Tab
+      Box(X+ActiveTab*TabW+1, Y+(TabH-1), TabW-1, 1, BackColor)   ;Active Tab
+    EndProcedure
+    
+    Procedure DrawScrollArea(X, Y, Width, Height, InnerW, InnerH, ScrollX, ScrollY)
+      Protected ScrollCursorX, ScrollCursorWidth, ScrollCursorY, ScrollCursorHeight
+      DrawingMode(#PB_2DDrawing_Outlined)
+      Box(X, Y, Width, Height, RGB(130, 135, 144))   ;Border Black RGB(0, 0, 0))
+      DrawingMode(#PB_2DDrawing_Default)
+      Box(X+1, Y+Height-18, Width-2, 17, RGB(240, 240, 240))   ;ScrollBarX Background
+      Box(X+Width-18, Y+1, 17, Height-2, RGB(240, 240, 240))   ;ScrollBarY Background
+      ;Arrow ScrollX Bottom Left
+      LineXY(X+6, Y+Height-9, X+11, Y+Height-12, RGB(0, 0, 0)) : LineXY(X+6, Y+Height-9, X+11, Y+Height-6, RGB(0, 0, 0))
+      ;Arrow ScrollY Top Right
+      LineXY(X+Width-9, Y+6, X+Width-12, Y+11, RGB(0, 0, 0)) : LineXY(X+Width-9, Y+6, X+Width-6, Y+11, RGB(0, 0, 0))
+      ;Arrow ScrollX Bottom Right
+      LineXY(X+Width-26, Y+Height-9, X+Width-31, Y+Height-12, RGB(0, 0, 0)) : LineXY(X+Width-26, Y+Height-9, X+Width-31, Y+Height-6, RGB(0, 0, 0))
+      ;Arrow ScrollY Bottom Right
+      LineXY(X+Width-9, Y+Height-26, X+Width-12, Y+Height-31, RGB(0, 0, 0)) : LineXY(X+Width-9, Y+Height-26, X+Width-6, Y+Height-31, RGB(0, 0, 0))
+      
+      ScrollCursorWidth = Width-54   ;Cursor length 100% (20 *2 for Arrow + 20 for the bottom left corner)
+      If InnerW > Width-18
+        ScrollCursorWidth = (ScrollCursorWidth*(Width-18))/InnerW
+        If ScrollX > Width-54 - ScrollCursorWidth : ScrollX = Width-54 - ScrollCursorWidth : EndIf
+      Else
+        ScrollX = 0
+      EndIf
+      ;Debug "ScrollStepX = 1 => " +StrF(InnerW/(Width-54), 2)
+      Box(X+18+ScrollX, Y+Height-18, ScrollCursorWidth, 17, RGB(205, 205, 205))   ;ScrollX Cursor
+      
+      ScrollCursorHeight = Height-54   ;Cursor length 100% (20 *2 for Arrow + 20 for the bottom left corner)
+      If InnerH > Height-18
+        ScrollCursorHeight = (ScrollCursorHeight*(Height-18))/InnerH
+        If ScrollY > Height-54 - ScrollCursorHeight : ScrollY = Height-54 - ScrollCursorHeight : EndIf
+      Else
+        ScrollY = 0
+      EndIf
+      ;Debug "ScrollStepY = 1 => " +StrF(InnerH/(Height-54), 2)
+      Box(X+Width-18, Y+18+ScrollY, 17, ScrollCursorHeight, RGB(205, 205, 205))   ;ScrollY Cursor
+    EndProcedure
+
+    Procedure DrawGrid()
+      ;Notes: To display the gadgets after grid drawing (canvas), we need to resize the gadgets and the move handles
+      Protected GridBackground.i = RGB(225,230,235), GridColor.i = RGB(204,204,206), ScrollAreaColor = $A0A0A0 ,DftBackColor.i = $F0F0F0
+      Protected X.i, Y.i, Spacing.i = GridSpacing
+      If ShowGrid = #False
+        CompilerIf #PB_Compiler_OS = #PB_OS_MacOS : DftBackColor = $C0C0C0 : CompilerEndIf
+        Spacing = 8192 : GridBackground = DftBackColor : ScrollAreaColor = DftBackColor
+      EndIf
+      If StartDrawing(CanvasOutput(#DrawArea))
+        Box(0, 0, OutputWidth(), OutputHeight(), ScrollAreaColor)
+        Box(X, Y, ParentWidth, ParentHeight, GridBackground)
+        For X = 0 To ParentWidth
+          For Y = 0 To ParentHeight
+            Line(0,Y,ParentWidth,1,GridColor)
+            Y+Spacing-1
+          Next
+          Line(X,0,1,ParentHeight,GridColor)
+          X+Spacing-1
         Next
-      EndWith
+        Line(0, ParentHeight, ParentWidth, 1, #WinHandleColor)
+        Line(ParentWidth, 0, 1, ParentHeight, #WinHandleColor)
+        
+        ;To redraw Gadget and DragHandle above the grid
+        If IsGadget(GadgetHandle(0)) : ResizeGadget(GadgetHandle(0), #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore) : EndIf
+        With SVDListGadget()
+          ForEach SVDListGadget()
+            If \DrawGadget = #False
+              ;ResizeGadget(\Gadget, #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore)
+              ;ResizeGadget(\DragHandle, #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore)
+            Else
+              Select \Model
+                Case "ContainerGadget" : DrawContainer(\X, \Y, \Width, \Height)
+                Case "FrameGadget" : DrawFrame(\X, \Y, \Width, \Height, \Caption, GridBackground)
+                Case "PanelGadget" : DrawPanel(\X, \Y, \Width, \Height, \Caption, GridBackground)
+                Case "ScrollAreaGadget" : DrawScrollArea(\X, \Y, \Width, \Height, Val(Mid(\Option1,7)), Val(Mid(\Option2,7)), 0, 0)
+              EndSelect
+            EndIf
+          Next
+          StopDrawing()
+          ForEach SVDListGadget()
+            If \DrawGadget = #True
+              DrawAreaHandleBorder(\Gadget, #FreeHandelColor)
+            EndIf
+          Next
+        EndWith
+      EndIf
     EndProcedure
     
     Procedure.i GridMatch(Value.i, Grid.i=1, Min.i=0, Max.i=$7FFFFFFF)
@@ -154,29 +285,48 @@ Module SVDesigner
         Box(1, 1, OutputWidth()-2, OutputHeight()-2, $FFFFFF)
         StopDrawing()
       EndIf
+    EndProcedure
+    
+    Procedure DrawAreaHandleBorder(Gadget.i, BorderColor.i)
+      With SVDListGadget()
+      ForEach SVDListGadget()
+        If \Gadget = Gadget And \DrawGadget = #True
+          If StartDrawing(CanvasOutput(#DrawArea))
+            DrawingMode(#PB_2DDrawing_Outlined)
+            Box(\X-#OutSideBorder-1, \Y-#OutSideBorder-1, \Width+(2*#OutSideBorder)+2, \Height+(2*#OutSideBorder)+2, BorderColor)
+            StopDrawing()
+          EndIf
+          Break
+        EndIf
+      Next
+      EndWith
     EndProcedure  
     
     Procedure ResizeSVDGadget(Gadget.i, X.i, Y.i, Width.i, Height.i)
       Protected *SVDListGadget.SVDGadget
-      If IsGadget(Gadget) = 0 Or ParentWidth= 0 Or ParentHeight = 0
-        ProcedureReturn #False
-      EndIf
       With SVDListGadget()
         ForEach SVDListGadget()
           If \Gadget = Gadget
             ;Only one of the values X, Y, Width or Height. Sent from an interface, with control there. other values must be negative (#PB_Ignore=-65535)
             If X >= 0 And Y < 0 And Width < 0 And Height < 0
-              ResizeGadget(Gadget, GridMatch(X, 1, 0, ParentWidth-GadgetWidth(Gadget)), #PB_Ignore, #PB_Ignore, #PB_Ignore)
+              \X = GridMatch(X, 1, 0, ParentWidth-\Width)
             ElseIf Y >= 0 And X < 0 And Width < 0 And Height < 0
-              ResizeGadget(Gadget, #PB_Ignore, GridMatch(Y, 1, 0, ParentHeight-GadgetHeight(Gadget)), #PB_Ignore, #PB_Ignore)
+              \Y = GridMatch(Y, 1, 0, ParentHeight-\Height)
             ElseIf Width >= 0 And X < 0 And Y < 0 And Height < 0
-              ResizeGadget(Gadget, #PB_Ignore, #PB_Ignore, GridMatch(Width, 1, 0, ParentWidth-GadgetX(Gadget)), #PB_Ignore)
+              \Width = GridMatch(Width, 1, 0, ParentWidth-\X)
             ElseIf Height >= 0 And X < 0 And Y < 0 And Width < 0
-              ResizeGadget(Gadget, #PB_Ignore, #PB_Ignore, #PB_Ignore, GridMatch(Height, 1, 0, ParentHeight-GadgetY(Gadget)))
+              \Height = GridMatch(Height, 1, 0, ParentHeight-\Y)
             Else
               ProcedureReturn #False
-            EndIf          
+            EndIf
+            SavPosDim\X = \X : SavPosDim\Y = \Y : SavPosDim\Width = \Width : SavPosDim\Height = \Height
+            If \DrawGadget = #False 
+              ResizeGadget(Gadget, \X, \Y, \Width, \Height)
+            Else
+              DrawGrid()
+            EndIf
             ResizeHandle(Gadget)
+            Break
           EndIf
         Next
       EndWith
@@ -184,15 +334,19 @@ Module SVDesigner
     
     Procedure ResizeHandle(Gadget)
       Protected *SVDListGadget.SVDGadget
-      Protected GadgetX0 = GadgetX(Gadget), GadgetWidth0 = GadgetWidth(Gadget), GadgetX1 = GadgetX0 + GadgetWidth0
-      Protected GadgetY0 = GadgetY(Gadget), GadgetHeight0 = GadgetHeight(Gadget), GadgetY1 = GadgetY0 + GadgetHeight0
+      Protected GadgetX0, GadgetWidth0, GadgetX1
+      Protected GadgetY0, GadgetHeight0, GadgetY1
       
       With SVDListGadget()
         ForEach SVDListGadget()
           If \Gadget = Gadget
+            GadgetX0 = \X : GadgetWidth0 = \Width : GadgetX1 = GadgetX0 + GadgetWidth0
+            GadgetY0 = \Y : GadgetHeight0 = \Height : GadgetY1 = GadgetY0 + GadgetHeight0
             If \DragHandle   ;Moved Handle
               ResizeGadget(\DragHandle, GadgetX0-#OutSideBorder, GadgetY0-#OutSideBorder, GadgetWidth0+(2*#OutSideBorder), GadgetHeight0+(2*#OutSideBorder))
               DrawHandleBorder(\DragHandle, #HandelColor)
+            Else
+              DrawAreaHandleBorder(\Gadget, #HandelColor)
             EndIf
             If \Handle[1]   ;Handle top, middle (N)
               ResizeGadget(\Handle[1], GadgetX0+(GadgetWidth0-#HandelSize)/2, GadgetY0-#HandelSize, #PB_Ignore, #PB_Ignore)
@@ -233,17 +387,22 @@ Module SVDesigner
       ;  LeftButtonUp=65541, LeftClick=0, LeftDoubleClick=2, RightButtonDown=65542, RightButtonUp=65543
       ;  RightClick=13111, RightDoubleClick=3, MiddleButtonDown=65544, MiddleButtonUp=65545, Focus=14000, LostFocus=14001
       ;  KeyDown=65547, KeyUp=65548, Input=65549, Resize=6
-      Static Selected.i, X.i, Y.i, OffsetX.i, OffsetY.i, GadgetX0.i, GadgetWidth0, GadgetX1.i, GadgetY0.i, GadgetHeight0, GadgetY1.i
-      Static ScrollX.i, ScrollY.i, SavPosDim.PosDim
-      Protected *SVDListGadget.SVDGadget = GetGadgetData(EventGadget()), TmpWidth.i, TmpHeight.i, ResizeDone.b, I.i
+      Static Selected.b, X.i, Y.i, OffsetX.i, OffsetY.i, GadgetX0.i, GadgetWidth0, GadgetX1.i, GadgetY0.i, GadgetHeight0, GadgetY1.i
+      Static ScrollX.i, ScrollY.i
+      Protected *SVDListGadget.SVDGadget = GetGadgetData(EventGadget()), ResizeDone.b, I.i
       With *SVDListGadget
         Select EventType()
             
           Case #PB_EventType_Focus
             If \DragHandle = EventGadget()
-              ;Debug GetGadgetAttribute(\DragHandle,#PB_Canvas_Modifiers)   ;#PB_Canvas_Control=4, Cross Plateform #PB_Canvas_Command (4 on windonws)
               If LastDragHandleFocus > 0 And IsGadget(LastDragHandleFocus) : DrawHandleBorder(LastDragHandleFocus, #FreeHandelColor) : EndIf
-              If LastGadgetFocus > 1 And IsGadget(LastGadgetFocus) : ResizeGadget(LastGadgetFocus, #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore) : EndIf
+              If LastGadgetFocus > 1 
+                If IsGadget(LastGadgetFocus) : ResizeGadget(LastGadgetFocus, #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore) : EndIf
+                DrawAreaHandleBorder(LastGadgetFocus, #FreeHandelColor)
+              EndIf
+              LastDragHandleFocus = \DragHandle
+              LastGadgetFocus = \Gadget
+              SelectedDrawGadget = -1
               For I = 1 To 8
                 \Handle[I] = GadgetHandle(I)
                 SetGadgetData(\Handle[I], *SVDListGadget)
@@ -251,32 +410,20 @@ Module SVDesigner
                 BindGadgetEvent(\Handle[I], @SVD_Callback()) 
               Next
               ResizeHandle(\Gadget)
-            EndIf  
-            ResizeGadget(\Gadget, #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore)   ;to avoid a white frame (=canvas) instead of gadget
-            AddKeyboardShortcut(0, #PB_Shortcut_Delete, #Shortcut_Delete)
-            SavPosDim\X = GadgetX(\Gadget) : SavPosDim\Y = GadgetY(\Gadget) : SavPosDim\Width = GadgetWidth(\Gadget) : SavPosDim\Height = GadgetHeight(\Gadget)
-            ;PostEvent(#PB_Event_Gadget, GetActiveWindow(), \Gadget, #SVD_Gadget_Focus, @SavPosDim)
-            PostEvent(#PB_Event_Gadget, 0, \Gadget, #SVD_Gadget_Focus, @SavPosDim)   ;For Debug
+              ResizeGadget(\Gadget, #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore)   ;to avoid a white frame (=canvas) instead of gadget
+              AddKeyboardShortcut(0, #PB_Shortcut_Delete, #Shortcut_Delete)
+              SavPosDim\X = \X : SavPosDim\Y = \Y : SavPosDim\Width = \Width : SavPosDim\Height = \Height
+              ;PostEvent(#PB_Event_Gadget, GetActiveWindow(), \Gadget, #SVD_Gadget_Focus, @SavPosDim)
+              PostEvent(#PB_Event_Gadget, 0, \Gadget, #SVD_Gadget_Focus, @SavPosDim)   ;For Debug
+            EndIf
             
           Case #PB_EventType_LostFocus
-            If \DragHandle = EventGadget()
-              LastGadgetFocus = \Gadget
-              LastDragHandleFocus = \DragHandle   ;DrawHandleBorder(\DragHandle, #FreeHandelColor)
-              For I = 1 To 8
-                If \Handle[I]
-                  UnbindGadgetEvent(\Handle[I], @SVD_Callback())
-                  HideGadget(\Handle[I],#True)
-                  \Handle[I] = 0
-                EndIf
-              Next
-            EndIf 
             ResizeGadget(\Gadget, #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore)   ;to avoid a white frame (=canvas) instead of gadget
-            RemoveKeyboardShortcut(0, #PB_Shortcut_Delete)
             ;Do not Post Event to keep X, Y, Width, Height SpinGadget on hand
             
           Case #PB_EventType_KeyDown
-            GadgetX0 = GadgetX(\Gadget) : GadgetWidth0 = GadgetWidth(\Gadget) : GadgetX1 = GadgetX0 + GadgetWidth0
-            GadgetY0 = GadgetY(\Gadget) : GadgetHeight0 = GadgetHeight(\Gadget) : GadgetY1 = GadgetY0 + GadgetHeight0
+            GadgetX0 = \X : GadgetWidth0 = \Width : GadgetX1 = GadgetX0 + GadgetWidth0
+            GadgetY0 = \Y : GadgetHeight0 = \Height : GadgetY1 = GadgetY0 + GadgetHeight0
             Select GetGadgetAttribute(EventGadget(),#PB_Canvas_Key)
               Case #PB_Shortcut_Up
                 If GetGadgetAttribute(\DragHandle, #PB_Canvas_Modifiers) = #PB_Canvas_Shift And IsGadget(\Handle[1])
@@ -304,9 +451,10 @@ Module SVDesigner
                 EndIf
             EndSelect
             If ResizeDone
+              \X = GadgetX(\Gadget) : \Y = GadgetY(\Gadget) : \Width = GadgetWidth(\Gadget) : \Height = GadgetHeight(\Gadget)
+              SavPosDim\X = \X : SavPosDim\Y = \Y : SavPosDim\Width = \Width : SavPosDim\Height = \Height
               ResizeHandle(\Gadget)
               ResizeGadget(\Gadget, #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore)   ;to avoid a white frame (=canvas) instead of gadget
-              SavPosDim\X = GadgetX(\Gadget) : SavPosDim\Y = GadgetY(\Gadget) : SavPosDim\Width = GadgetWidth(\Gadget) : SavPosDim\Height = GadgetHeight(\Gadget)
               ;PostEvent(#PB_Event_Gadget, GetActiveWindow(), \Gadget, #SVD_Gadget_Resize, @SavPosDim)
               PostEvent(#PB_Event_Gadget, 0, \Gadget, #SVD_Gadget_Resize, @SavPosDim)   ;For Debug
               ResizeDone = #False
@@ -319,10 +467,15 @@ Module SVDesigner
             ResizeGadget(\Gadget, #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore)   ;to avoid a white frame (=canvas) instead of gadget
             
           Case #PB_EventType_LeftButtonDown
+            If \DragHandle <> EventGadget()
+              If IsGadget(\DragHandle)       ;Or \DrawGadget= #False
+                SetActiveGadget(\DragHandle)
+              EndIf
+            EndIf   ;To keep Keyboard focus
             Selected = #True
             OffsetX = GetGadgetAttribute(EventGadget(), #PB_Canvas_MouseX) : OffsetY = GetGadgetAttribute(EventGadget(), #PB_Canvas_MouseY)
-            GadgetX0 = GadgetX(\Gadget) : GadgetWidth0 = GadgetWidth(\Gadget) : GadgetX1 = GadgetX0 + GadgetWidth0
-            GadgetY0 = GadgetY(\Gadget) : GadgetHeight0 = GadgetHeight(\Gadget) :GadgetY1 = GadgetY0 + GadgetHeight0
+            GadgetX0 = \X : GadgetWidth0 = \Width: GadgetX1 = GadgetX0 + GadgetWidth0
+            GadgetY0 = \Y : GadgetHeight0 = \Height :GadgetY1 = GadgetY0 + GadgetHeight0
             SavPosDim\X = GadgetX0 : SavPosDim\Y = GadgetX0 : SavPosDim\Width = GadgetWidth0 : SavPosDim\Height = GadgetHeight0
             If IsGadget(\ParentGadget)
               If GadgetType(\ParentGadget) = #PB_GadgetType_ScrollArea
@@ -333,7 +486,9 @@ Module SVDesigner
             ElseIf IsWindow(\ParentGadget)   ;Window
               ScrollX = 0 : ScrollY = 0
             EndIf
-            ResizeGadget(\Gadget, #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore)   ;to avoid a white frame (=canvas) instead of gadget 
+            If IsGadget(\Gadget)
+              ResizeGadget(\Gadget, #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore)   ;to avoid a white frame (=canvas) instead of gadget
+            EndIf
             
           Case #PB_EventType_LeftButtonUp
             Selected = #False
@@ -344,34 +499,44 @@ Module SVDesigner
               ;<== FOR DEBUG: X = WindowMouseX(GetActiveWindow())-OffsetX-ScrollX : Y = WindowMouseY(GetActiveWindow())-OffsetY-ScrollY
               Select EventGadget()
                 Case \DragHandle   ;Moved Gadget NESW
-                  ResizeGadget(\Gadget, GridMatch(X+#OutSideBorder, MyGrid, 0, ParentWidth-GadgetWidth0), GridMatch(Y+#OutSideBorder, MyGrid, 0, ParentHeight-GadgetHeight0), #PB_Ignore, #PB_Ignore)
+                  \X = GridMatch(X+#OutSideBorder, MyGrid, 0, ParentWidth-GadgetWidth0)
+                  \Y = GridMatch(Y+#OutSideBorder, MyGrid, 0, ParentHeight-GadgetHeight0)
                 Case \Handle[1]   ;Handle top, middle (N)
-                  TmpWidth = GridMatch(GadgetY1-(Y+#HandelSize), MyGrid, #MinSize, GadgetY1)
-                  ResizeGadget(\Gadget, #PB_Ignore, GridMatch(Y+#HandelSize, MyGrid, 0, GadgetY1-TmpWidth), #PB_Ignore, TmpWidth)
+                  \Height = GridMatch(GadgetY1-(Y+#HandelSize), MyGrid, #MinSize, GadgetY1)
+                  \Y = GridMatch(Y+#HandelSize, MyGrid, 0, GadgetY1-\Height)
                 Case \Handle[2]   ;Handle top, right (NE)
-                  TmpWidth = GridMatch(GadgetY1-(Y+#HandelSize), MyGrid, #MinSize, GadgetY1)
-                  ResizeGadget(\Gadget, #PB_Ignore, GridMatch(Y+#HandelSize, MyGrid, 0, GadgetY1-TmpWidth), GridMatch(X, MyGrid, GadgetX0+#MinSize, ParentWidth)-GadgetX0, TmpWidth)
+                  \Width = GridMatch(X, MyGrid, GadgetX0+#MinSize, ParentWidth)-GadgetX0
+                  \Height = GridMatch(GadgetY1-(Y+#HandelSize), MyGrid, #MinSize, GadgetY1)
+                  \Y = GridMatch(Y+#HandelSize, MyGrid, 0, GadgetY1-\Height)
                 Case \Handle[3]   ;Handle middle, right (E)
-                  ResizeGadget(\Gadget, #PB_Ignore, #PB_Ignore, GridMatch(X, MyGrid, GadgetX0+#MinSize, ParentWidth)-GadgetX0, #PB_Ignore)
+                  \Width = GridMatch(X, MyGrid, GadgetX0+#MinSize, ParentWidth)-GadgetX0
                 Case \Handle[4]   ;Handle bottom, right (SE)
-                  ResizeGadget(\Gadget, #PB_Ignore, #PB_Ignore, GridMatch(X, MyGrid, GadgetX0+#MinSize, ParentWidth)-GadgetX0, GridMatch(Y, MyGrid, GadgetY0+#MinSize, ParentHeight)-GadgetY0)
+                  \Width = GridMatch(X, MyGrid, GadgetX0+#MinSize, ParentWidth)-GadgetX0
+                  \Height = GridMatch(Y, MyGrid, GadgetY0+#MinSize, ParentHeight)-GadgetY0
                 Case \Handle[5]   ;Handle bottom, middle (S)
-                  ResizeGadget(\Gadget, #PB_Ignore, #PB_Ignore, #PB_Ignore, GridMatch(Y, MyGrid, GadgetY0+#MinSize, ParentHeight)-GadgetY0)
+                  \Height = GridMatch(Y, MyGrid, GadgetY0+#MinSize, ParentHeight)-GadgetY0
                 Case \Handle[6]   ;Handle bottom, left (SW)
-                  TmpHeight = GridMatch(GadgetX1-(X+#HandelSize), MyGrid, #MinSize, GadgetX1)
-                  ResizeGadget(\Gadget, GridMatch(X+#HandelSize, MyGrid, 0, GadgetX1-TmpHeight), #PB_Ignore, TmpHeight, GridMatch(Y, MyGrid, GadgetY0+#MinSize, ParentHeight)-GadgetY0)
+                  \Width = GridMatch(GadgetX1-(X+#HandelSize), MyGrid, #MinSize, GadgetX1)
+                  \Height = GridMatch(Y, MyGrid, GadgetY0+#MinSize, ParentHeight)-GadgetY0
+                  \X = GridMatch(X+#HandelSize, MyGrid, 0, GadgetX1-\Width)
                 Case \Handle[7]   ;Handle middle, left (W)
-                  TmpHeight = GridMatch(GadgetX1-(X+#HandelSize), MyGrid, #MinSize, GadgetX1)
-                  ResizeGadget(\Gadget, GridMatch(X+#HandelSize, MyGrid, 0, GadgetX1-TmpHeight), #PB_Ignore, TmpHeight, #PB_Ignore)
+                  \Width = GridMatch(GadgetX1-(X+#HandelSize), MyGrid, #MinSize, GadgetX1)
+                  \X = GridMatch(X+#HandelSize, MyGrid, 0, GadgetX1-\Width)
                 Case \Handle[8]   ;Handle top, left (NW)
-                  TmpWidth = GridMatch(GadgetY1-(Y+#HandelSize), MyGrid, #MinSize, GadgetY1)
-                  TmpHeight = GridMatch(GadgetX1-(X+#HandelSize), MyGrid, #MinSize, GadgetX1)
-                  ResizeGadget(\Gadget, GridMatch(X+#HandelSize, MyGrid, 0, GadgetX1-TmpHeight), GridMatch(Y+#HandelSize, MyGrid, 0, GadgetY1-TmpWidth), TmpHeight, TmpWidth)
+                  \Width = GridMatch(GadgetX1-(X+#HandelSize), MyGrid, #MinSize, GadgetX1)
+                  \Height = GridMatch(GadgetY1-(Y+#HandelSize), MyGrid, #MinSize, GadgetY1)
+                  \X = GridMatch(X+#HandelSize, MyGrid, 0, GadgetX1-\Width)
+                  \Y = GridMatch(Y+#HandelSize, MyGrid, 0, GadgetY1-\Height)
               EndSelect
-              ;Check move or resize, the gadgets are moved following Drag Spacing 
-              If GadgetX(\Gadget) <> SavPosDim\X Or GadgetY(\Gadget) <> SavPosDim\Y Or GadgetWidth(\Gadget) <> SavPosDim\Width Or GadgetHeight(\Gadget) <> SavPosDim\Height
+              If \X <> SavPosDim\X Or \Y <> SavPosDim\Y Or \Width <> SavPosDim\Width Or \Height <> SavPosDim\Height
+                SavPosDim\X = \X : SavPosDim\Y = \Y : SavPosDim\Width = \Width : SavPosDim\Height = \Height
+                ;Check move or resize, the gadgets are moved following Drag Spacing
+                If \DrawGadget = #False
+                  ResizeGadget(\Gadget, \X, \Y, \Width, \Height)
+                Else
+                  DrawGrid()
+                EndIf
                 ResizeHandle(\Gadget)
-                SavPosDim\X = GadgetX(\Gadget) : SavPosDim\Y = GadgetY(\Gadget) : SavPosDim\Width = GadgetWidth(\Gadget) : SavPosDim\Height = GadgetHeight(\Gadget)
                 ;PostEvent(#PB_Event_Gadget, GetActiveWindow(), \Gadget, #SVD_Gadget_Resize, @SavPosDim)
                 PostEvent(#PB_Event_Gadget, 0, \Gadget, #SVD_Gadget_Resize, @SavPosDim)      ;For Debug
               EndIf
@@ -380,8 +545,192 @@ Module SVDesigner
       EndWith
     EndProcedure
     
+    Procedure  ClickHoverDrawArea()
+      Protected X = ParentWidth + GadgetX(#ScrollDrawArea) - GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_X), Y = ParentHeight + GadgetY(#ScrollDrawArea) - GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_Y)
+      Protected Mx = WindowMouseX(0), My = WindowMouseY(0)
+      If Mx > GadgetX(#ScrollDrawArea) And Mx < X And My > GadgetY(#ScrollDrawArea) And My < Y
+        ProcedureReturn 1   ;Mouse is on Gadget
+      EndIf
+      ProcedureReturn 0   ;Mouse is not on Gadget
+    EndProcedure
+  
+    Procedure SetDrawAeraFocus()
+      Protected I.i
+      ;SetActiveGadget(-1)   ;LOST FOCUS, NO KEYBOARD
+      If LastDragHandleFocus > 0 And IsGadget(LastDragHandleFocus) : DrawHandleBorder(LastDragHandleFocus, #FreeHandelColor) : EndIf
+      ;If LastDragHandleFocus > 0 And IsGadget(LastDragHandleFocus) : DrawHandleBorder(LastDragHandleFocus, #FreeHandelColor) : EndIf
+      If LastGadgetFocus > 1 
+        If IsGadget(LastGadgetFocus) : ResizeGadget(LastGadgetFocus, #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore) : EndIf
+        DrawAreaHandleBorder(LastGadgetFocus, #FreeHandelColor)
+      EndIf
+      LastGadgetFocus = 0
+      LastDragHandleFocus = 0   ;DrawHandleBorder(\DragHandle, #FreeHandelColor)
+      SelectedDrawGadget = -1
+      For I = 1 To 8
+        If GadgetHandle(I)
+          UnbindGadgetEvent(GadgetHandle(I), @SVD_Callback())
+          HideGadget(GadgetHandle(I),#True)
+          ;GadgetHandle(I) = 0 NO
+        EndIf
+      Next
+      RemoveKeyboardShortcut(0, #PB_Shortcut_Delete)
+    EndProcedure
+
+    Procedure SetActiveDrawGadget(Gadget.i)
+      Protected *SVDListGadget.SVDGadget, I.i
+      With SVDListGadget()
+        ForEach SVDListGadget()
+          If \Gadget = Gadget
+            If LastDragHandleFocus > 0 And IsGadget(LastDragHandleFocus) : DrawHandleBorder(LastDragHandleFocus, #FreeHandelColor) : EndIf
+            If LastGadgetFocus > 1 And IsGadget(LastGadgetFocus) : ResizeGadget(LastGadgetFocus, #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore) : EndIf
+;             If LastGadgetFocus > 1 
+;               If IsGadget(LastGadgetFocus) : ResizeGadget(LastGadgetFocus, #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore) : EndIf
+;               DrawAreaHandleBorder(LastGadgetFocus, #FreeHandelColor)
+;             EndIf
+            LastGadgetFocus = Gadget
+            LastDragHandleFocus = \DragHandle   ;DrawHandleBorder(\DragHandle, #FreeHandelColor)
+            SelectedDrawGadget = Gadget
+            For I = 1 To 8
+              \Handle[I] = GadgetHandle(I)
+              SetGadgetData(\Handle[I], SVDListGadget())
+              HideGadget(\Handle[I],#False)
+              BindGadgetEvent(\Handle[I], @SVD_Callback()) 
+            Next
+            ResizeHandle(Gadget)
+            AddKeyboardShortcut(0, #PB_Shortcut_Delete, #Shortcut_Delete)
+            If \DrawGadget = #True
+              SavPosDim\X = \X : SavPosDim\Y = \Y : SavPosDim\Width = \Width : SavPosDim\Height = \Height
+              ;PostEvent(#PB_Event_Gadget, GetActiveWindow(), Gadget, #SVD_Gadget_Focus, @SavPosDim)
+              PostEvent(#PB_Event_Gadget, 0, Gadget, #SVD_Gadget_Focus, SavPosDim)   ;For Debug
+            EndIf
+            Break
+          EndIf
+        Next
+      EndWith
+    EndProcedure
+            
+    Procedure SVD_DrawCallback()
+      Static MouseDown.b, Selected.b, X.i, Y.i, OffsetX.i, OffsetY.i, DeltaX.i, DeltaY.i
+      Static MouseOverGadget.i, SavPBCursor, SavPosDim.PosDim
+      Protected ResizeDone.b, I.i
+      
+      Select EventType()
+                  
+        Case #PB_EventType_RightClick
+          ;PostEvent(#PB_Event_Gadget, GetActiveWindow(), #DrawArea, #SVD_DrawArea_RightClick)
+          PostEvent(#PB_Event_Gadget, 0, #DrawArea, #SVD_DrawArea_RightClick)   ;RightClick for the MenuPopup
+          
+        Case #PB_EventType_KeyDown
+          If SelectedDrawGadget <> -1
+            With SVDListGadget()
+              ForEach SVDListGadget()
+                If \Gadget = SelectedDrawGadget
+                  Select GetGadgetAttribute(EventGadget(),#PB_Canvas_Key)
+                    Case #PB_Shortcut_Up
+                      If GetGadgetAttribute(#DrawArea, #PB_Canvas_Modifiers) = #PB_Canvas_Shift And IsGadget(\Handle[1])
+                        \Height =  GridMatch(\Height-MyGrid, MyGrid, #MinSize) : ResizeDone = #True
+                      ElseIf IsGadget(\Handle[1])
+                        \Y = GridMatch(\Y-MyGrid, MyGrid, 0) : ResizeDone = #True
+                      EndIf
+                    Case #PB_Shortcut_Right
+                      If GetGadgetAttribute(#DrawArea,#PB_Canvas_Modifiers) = #PB_Canvas_Shift And IsGadget(\Handle[3])
+                        \Width = GridMatch(\Width+MyGrid, MyGrid, 0, ParentWidth-\X) : ResizeDone = #True
+                      ElseIf IsGadget(\Handle[3])
+                        \X = GridMatch(\X+MyGrid, MyGrid, 0, ParentWidth-\Width) : ResizeDone = #True
+                      EndIf
+                    Case #PB_Shortcut_Down
+                      If GetGadgetAttribute(#DrawArea, #PB_Canvas_Modifiers) = #PB_Canvas_Shift
+                        \Height = GridMatch(\Height+MyGrid, MyGrid, 0, ParentHeight-\Y) : ResizeDone = #True
+                      ElseIf IsGadget(\Handle[5])
+                        \Y = GridMatch(\Y+MyGrid, MyGrid, 0, ParentHeight-\Height) : ResizeDone = #True
+                      EndIf
+                    Case #PB_Shortcut_Left
+                      If GetGadgetAttribute(#DrawArea, #PB_Canvas_Modifiers) = #PB_Canvas_Shift
+                        \Width = GridMatch(\Width-MyGrid, MyGrid, #MinSize) : ResizeDone = #True
+                      ElseIf IsGadget(\Handle[7])
+                        \X = GridMatch(\X-MyGrid, MyGrid, 0) : ResizeDone = #True
+                      EndIf
+                  EndSelect
+                  If ResizeDone
+                    SavPosDim\X = \X : SavPosDim\Y = \Y : SavPosDim\Width = \Width : SavPosDim\Height = \Height
+                    DrawGrid()
+                    ResizeHandle(SelectedDrawGadget)
+                    ;PostEvent(#PB_Event_Gadget, GetActiveWindow(), SelectedDrawGadget, #SVD_Gadget_Resize, @SavPosDim)
+                    PostEvent(#PB_Event_Gadget, 0, SelectedDrawGadget, #SVD_Gadget_Resize, @SavPosDim)      ;For Debug
+                    ResizeDone = #False
+                  EndIf
+                  Break
+                EndIf
+              Next
+            EndWith
+          EndIf
+          
+        Case #PB_EventType_LeftButtonDown
+          If MouseOverGadget <> -1
+            SelectedDrawGadget = MouseOverGadget
+            SetActiveDrawGadget(SelectedDrawGadget)
+          Else
+            SelectedDrawGadget = -1
+            SetDrawAeraFocus()
+            ;PostEvent(#PB_Event_Gadget, GetActiveWindow(), #DrawArea, #SVD_DrawArea_Focus)
+            PostEvent(#PB_Event_Gadget, 0, #DrawArea, #SVD_DrawArea_Focus)   ;Left Click Lost focus for now
+          EndIf
+          MouseDown = #True
+          
+        Case #PB_EventType_LeftButtonUp
+          MouseDown = #False
+          
+        Case #PB_EventType_MouseMove
+          OffsetX = GetGadgetAttribute(#DrawArea, #PB_Canvas_MouseX)
+          OffsetY = GetGadgetAttribute(#DrawArea, #PB_Canvas_MouseY)
+          
+          If MouseDown = #False
+            ;Survol d'un gadget ?
+            MouseOverGadget = -1
+            With SVDListGadget()
+            ForEach SVDListGadget()
+              If \DrawGadget = #True And OffsetX > = \X And OffsetX <= \X + \Width  And OffsetY >= \Y And OffsetY <= \Y + \Height
+                MouseOverGadget = \Gadget
+                DeltaX = OffsetX - \X
+                DeltaY = OffsetY - \Y
+              EndIf
+            Next
+            EndWith
+            If MouseOverGadget <> -1
+              If SavPBCursor <> #PB_Cursor_Arrows
+                SetGadgetAttribute(#DrawArea, #PB_Canvas_Cursor, #PB_Cursor_Arrows) : SavPBCursor = #PB_Cursor_Arrows
+              EndIf
+            Else
+              If SavPBCursor <> #PB_Cursor_Default
+                SetGadgetAttribute(#DrawArea, #PB_Canvas_Cursor, #PB_Cursor_Default) : SavPBCursor = #PB_Cursor_Default
+              EndIf
+            EndIf
+          Else
+            If SelectedDrawGadget <> -1
+              With SVDListGadget()
+                ForEach SVDListGadget()
+                  If \Gadget = SelectedDrawGadget
+                    \X = GridMatch(OffsetX - DeltaX, MyGrid, 0, ParentWidth-\Width)
+                    \Y = GridMatch(OffsetY - DeltaY, MyGrid, 0, ParentHeight-\Height)
+                    If \X <> SavPosDim\X Or \Y <> SavPosDim\Y Or \Width <> SavPosDim\Width Or \Height <> SavPosDim\Height
+                      SavPosDim\X = \X : SavPosDim\Y = \Y : SavPosDim\Width = \Width : SavPosDim\Height = \Height
+                      DrawGrid()
+                      ResizeHandle(SelectedDrawGadget)
+                      ;PostEvent(#PB_Event_Gadget, GetActiveWindow(), SelectedDrawGadget, #SVD_Gadget_Resize, @SavPosDim)
+                      PostEvent(#PB_Event_Gadget, 0, SelectedDrawGadget, #SVD_Gadget_Resize, @SavPosDim)      ;For Debug
+                    EndIf
+                    Break
+                  EndIf
+                Next
+              EndWith 
+            EndIf
+          EndIf
+          
+      EndSelect
+    EndProcedure
+    
     Procedure SVD_WinCallback()
-      Static Selected.i, OffsetX.i, OffsetY.i, WinWidth.i, WinHeight.i
+      Static Selected.b, OffsetX.i, OffsetY.i, WinWidth.i, WinHeight.i
       Static ScrollX.i, ScrollY.i, SavPosDim.PosDim
       Protected  WinHandle = EventGadget(), ParentGadget = GetGadgetData(EventGadget())
       
@@ -389,7 +738,7 @@ Module SVDesigner
         Case #PB_EventType_LeftButtonDown
           Selected = #True
           SetActiveGadget(-1)   ;Lost Focus on last Gadget (DragHandle) Selected
-          ;PostEvent(#PB_Event_Gadget, GetActiveWindow(), WinHandle, #SVD_Window_Focus, @SavPosDim)
+          ;PostEvent(#PB_Event_Gadget, GetActiveWindow(), WinHandle, #SVD_Window_Focus)
           PostEvent(#PB_Event_Gadget, 0, WinHandle, #SVD_Window_Focus)   ;InitWindowSelected
           OffsetX = GetGadgetAttribute(WinHandle, #PB_Canvas_MouseX) : OffsetY = GetGadgetAttribute(WinHandle, #PB_Canvas_MouseY)
           If IsGadget(ParentGadget)
@@ -420,13 +769,15 @@ Module SVDesigner
     EndProcedure
     
     Procedure SelectSVDGadget(Gadget.i)
-      If IsGadget(Gadget) = 0
-        ProcedureReturn #False
-      EndIf
       With SVDListGadget()
         ForEach SVDListGadget()
           If \Gadget = Gadget
-            SetActiveGadget(\DragHandle)
+            If \DrawGadget = #False
+              SetActiveGadget(\DragHandle)
+            Else
+              SetActiveGadget(#DrawArea)   ;To have the keyboard arrows operational right now
+              SetActiveDrawGadget(Gadget)
+            EndIf
             Break
           EndIf
         Next
@@ -435,46 +786,59 @@ Module SVDesigner
     
     Procedure DeleteSVDGadget(Gadget.i)
       Protected I.i, K.i, *SVDListGadget.SVDGadget
-      If IsGadget(Gadget) = 0 
-        ProcedureReturn #False
-      Else
-        ForEach SVDListGadget()
-          If SVDListGadget()\Gadget = Gadget
-            With SVDListGadget()
-              For I = 1 To 8
-                If \Handle[I]
-                  UnbindGadgetEvent(\Handle[I], @SVD_Callback())                
-                  SetGadgetData(\Handle[I], #PB_Ignore)
-                  HideGadget(\Handle[I],#True)
-                  ;ResizeGadget(\Handle[I], 0, 0, #PB_Ignore, #PB_Ignore)
-                EndIf
-              Next
-            EndWith
+      ForEach SVDListGadget()
+        With SVDListGadget()
+        If \Gadget = Gadget
+          For I = 1 To 8
+            If \Handle[I]
+              UnbindGadgetEvent(\Handle[I], @SVD_Callback())                
+              SetGadgetData(\Handle[I], #PB_Ignore)
+              HideGadget(\Handle[I],#True)
+              ;ResizeGadget(\Handle[I], 0, 0, #PB_Ignore, #PB_Ignore)
+            EndIf
+          Next
+          If \DrawGadget = #False
             ;DragHandle
             SortStructuredArray(GadgetDragHandleArray(), #PB_Sort_Descending, OffsetOf(GadgetDragHandle\DragHandle), TypeOf(GadgetDragHandle\DragHandle))
             SortStructuredArray(GadgetDragHandleArray(), #PB_Sort_Descending, OffsetOf(GadgetDragHandle\Gadget), TypeOf(GadgetDragHandle\Gadget))
             For K = 0 To ArraySize(GadgetDragHandleArray())
-              With GadgetDragHandleArray(K)
-                If \Gadget = Gadget
-                  \Gadget = 0
-                  UnbindGadgetEvent(\DragHandle, @SVD_Callback())                
-                  SetGadgetData(\DragHandle, #PB_Ignore)
-                  HideGadget(\DragHandle,#True)
-                  ;ResizeGadget(\DragHandle, 0, 0, 0, 0)
-                  Break
-                EndIf
-              EndWith
+              If GadgetDragHandleArray(K)\Gadget = Gadget
+                GadgetDragHandleArray(K)\Gadget = 0
+                UnbindGadgetEvent(GadgetDragHandleArray(K)\DragHandle, @SVD_Callback())                
+                SetGadgetData(GadgetDragHandleArray(K)\DragHandle, #PB_Ignore)
+                HideGadget(GadgetDragHandleArray(K)\DragHandle,#True)
+                ;ResizeGadget(\DragHandle, 0, 0, 0, 0)
+                Break
+              EndIf
             Next
             DeleteElement(SVDListGadget())
             FreeGadget(Gadget)
-            Break
+          Else
+            DeleteElement(SVDListGadget())
+            DrawGrid()
           EndIf
-        Next
-      EndIf
+          Break
+          EndWith
+        EndIf
+      Next
     EndProcedure
     
     Procedure DisableSVD()
-      Protected *SVDListGadget.SVDGadget, I.i
+      Protected *SVDListGadget.SVDGadget, I.i, DftBackColor.i = $F0F0F0
+      CompilerIf #PB_Compiler_OS = #PB_OS_MacOS : DftBackColor = $C0C0C0 : CompilerEndIf
+      ;UnbindGadgetEvent for Drawn Gadgets (Container + Frame)
+      UnbindGadgetEvent(#DrawArea, @SVD_DrawCallback())
+      DisableGadget(#DrawArea, #True)
+      ;Remove the draw border around Draw Gadget
+      With SVDListGadget()
+      ForEach SVDListGadget()
+        If \DrawGadget = #True
+          DrawAreaHandleBorder(\Gadget.i, DftBackColor)
+        EndIf
+      Next
+    EndWith
+
+      ;Handles
       For I = 0 To 8
         If I = 0
           UnbindGadgetEvent(GadgetHandle(I), @SVD_WinCallback())
@@ -501,16 +865,53 @@ Module SVDesigner
           EndIf
         Next
       EndWith
-      ClearList(SVDListGadget())
+      ;ClearList(SVDListGadget())   ;TagClearList: with Enumerate Object To fill the list
     EndProcedure
     
-    Procedure AddSVDGadget(Gadget.i)
+    Procedure SetSVDDrawGadget(Gadget.i, Caption.s, Option1.s, Option2.s)
+      Protected *SVDListGadget.SVDGadget
+      With SVDListGadget()
+        ForEach SVDListGadget()
+          If \Gadget = Gadget
+            If Caption <> "-65535" : \Caption = Caption : EndIf
+            If Option1 <> "-65535" : \Option1 = Option1 : EndIf
+            If Option2 <> "-65535" : \Option2 = Option2 : EndIf
+            DrawGrid()
+            DrawAreaHandleBorder(Gadget, #HandelColor)
+            Break
+          EndIf
+        Next
+      EndWith
+    EndProcedure
+      
+    Procedure AddSVDDrawGadget(Gadget.i, Model.s, X.i, Y.i, Width.i, Height.i, Caption.s, Option1.s, Option2.s)
       Protected *SVDListGadget.SVDGadget, I.i
       With SVDListGadget()
         *SVDListGadget = AddElement(SVDListGadget())
         \ParentGadget = #ScrollDrawArea
         \Gadget = Gadget
-        \TypeGadget = GadgetType(Gadget)
+        \Model = Model.s
+        \X = X : \Y = Y : \Width = Width : \Height = Height
+        \DrawGadget = #True
+        \DragHandle = 0
+        \Caption = Caption
+        \Option1 = Option1
+        \Option2 = Option2
+        DrawGrid()
+        SetActiveGadget(#DrawArea)   ;To have the keyboard arrows operational right now
+        SetActiveDrawGadget(Gadget)
+      EndWith
+    EndProcedure
+    
+    Procedure AddSVDGadget(Gadget.i, Model.s)
+      Protected *SVDListGadget.SVDGadget, I.i
+      With SVDListGadget()
+        *SVDListGadget = AddElement(SVDListGadget())
+        \ParentGadget = #ScrollDrawArea
+        \Gadget = Gadget
+        \Model = Model.s
+        \X = GadgetX(\Gadget) : \Y = GadgetY(\Gadget) : \Width = GadgetWidth(\Gadget) : \Height = GadgetHeight(\Gadget)
+        \DrawGadget = #False
         SortStructuredArray(GadgetDragHandleArray(), #PB_Sort_Descending, OffsetOf(GadgetDragHandle\DragHandle), TypeOf(GadgetDragHandle\DragHandle))
         SortStructuredArray(GadgetDragHandleArray(), #PB_Sort_Ascending, OffsetOf(GadgetDragHandle\Gadget), TypeOf(GadgetDragHandle\Gadget))
         For I = 0 To ArraySize(GadgetDragHandleArray())
@@ -518,7 +919,7 @@ Module SVDesigner
             \DragHandle = GadgetDragHandleArray(I)\DragHandle
             GadgetDragHandleArray(I)\Gadget = \Gadget
             HideGadget(\DragHandle,#False)
-            ResizeGadget(\DragHandle, GadgetX(\Gadget)-#OutSideBorder, GadgetY(\Gadget)-#OutSideBorder, GadgetWidth(\Gadget)+(2*#OutSideBorder), GadgetHeight(\Gadget)+(2*#OutSideBorder))
+            ResizeGadget(\DragHandle, \X-#OutSideBorder, \Y-#OutSideBorder, \Width+(2*#OutSideBorder), \Height+(2*#OutSideBorder))
             Break
           EndIf
         Next
@@ -532,38 +933,46 @@ Module SVDesigner
     Procedure EnableSVD(Grid.i=10)
       Protected *SVDListGadget.SVDGadget, GadgetObj.i, I.i
       MyGrid = Grid
-      With *SVDListGadget
-        ;If PB_Object_EnumerateNext(PB_Window_Objects, @Window) : Debug Str(Window)+" - "+Str(GetWindowData(Window)) : EndIf
-        PB_Object_EnumerateStart(PB_Gadget_Objects)
-        While PB_Object_EnumerateNext(PB_Gadget_Objects, @GadgetObj)
-          If GetGadgetData(GadgetObj) <> #PB_Ignore And GadgetObj <> #ScrollDrawArea
-            *SVDListGadget = AddElement(SVDListGadget())
-            \ParentGadget = #ScrollDrawArea
-            \Gadget = GadgetObj
-            \TypeGadget = GadgetType(GadgetObj)
-          EndIf
-        Wend
-      EndWith
-      
+;       With *SVDListGadget      ;TagClearList: Enumerate Object To fill the list in common with ClearList
+;         ;If PB_Object_EnumerateNext(PB_Window_Objects, @Window) : Debug Str(Window)+" - "+Str(GetWindowData(Window)) : EndIf
+;         PB_Object_EnumerateStart(PB_Gadget_Objects)
+;         While PB_Object_EnumerateNext(PB_Gadget_Objects, @GadgetObj)
+;           If GetGadgetData(GadgetObj) <> #PB_Ignore And GadgetObj <> #ScrollDrawArea
+;             *SVDListGadget = AddElement(SVDListGadget())
+;             \ParentGadget = #ScrollDrawArea
+;             \Gadget = GadgetObj
+;             \Model = GadgetObj
+;           EndIf
+;         Wend
+;       EndWith
+       
+      BindGadgetEvent(#DrawArea, @SVD_DrawCallback())   ;BindGadgetEvent for Drawn Gadgets (Container + Frame)
+      DisableGadget(#DrawArea, #False)
       ;Resize and Enable Drag Handle
       SortStructuredArray(GadgetDragHandleArray(), #PB_Sort_Descending, OffsetOf(GadgetDragHandle\DragHandle), TypeOf(GadgetDragHandle\DragHandle))
       SortStructuredArray(GadgetDragHandleArray(), #PB_Sort_Ascending, OffsetOf(GadgetDragHandle\Gadget), TypeOf(GadgetDragHandle\Gadget))
       With SVDListGadget()
         ForEach SVDListGadget()
-          For I = 0 To ArraySize(GadgetDragHandleArray())
-            If GadgetDragHandleArray(I)\Gadget = 0 And GadgetDragHandleArray(I)\DragHandle
-              \DragHandle = GadgetDragHandleArray(I)\DragHandle
-              GadgetDragHandleArray(I)\Gadget = \Gadget
-              HideGadget(\DragHandle,#False)
-              ResizeGadget(\DragHandle, GadgetX(\Gadget)-#OutSideBorder, GadgetY(\Gadget)-#OutSideBorder, GadgetWidth(\Gadget)+(2*#OutSideBorder), GadgetHeight(\Gadget)+(2*#OutSideBorder))
-              Break
-            EndIf
-          Next
-          SetGadgetData(\DragHandle, SVDListGadget())
-          DrawHandleBorder(\DragHandle, #FreeHandelColor)
-          BindGadgetEvent(\DragHandle, @SVD_Callback())
+          If \DrawGadget = #False
+            For I = 0 To ArraySize(GadgetDragHandleArray())
+              If GadgetDragHandleArray(I)\Gadget = 0 And GadgetDragHandleArray(I)\DragHandle
+                \DragHandle = GadgetDragHandleArray(I)\DragHandle
+                GadgetDragHandleArray(I)\Gadget = \Gadget
+                HideGadget(\DragHandle,#False)
+                ResizeGadget(\DragHandle, \X-#OutSideBorder, \Y-#OutSideBorder, \Width+(2*#OutSideBorder), \Height+(2*#OutSideBorder))
+                Break
+              EndIf
+            Next
+            SetGadgetData(\DragHandle, SVDListGadget())
+            DrawHandleBorder(\DragHandle, #FreeHandelColor)
+            BindGadgetEvent(\DragHandle, @SVD_Callback())
+          Else
+            ;DrawGrid()
+            ;DrawHandleBorder(\DragHandle, #FreeHandelColor)
+          EndIf
         Next
       EndWith
+      
       HideGadget(GadgetHandle(0),#False)
       SetGadgetData(GadgetHandle(0), #ScrollDrawArea)
       BindGadgetEvent(GadgetHandle(0), @SVD_WinCallback(), #PB_EventType_LeftButtonDown)
@@ -592,26 +1001,14 @@ Module SVDesigner
         ParentWidth = WindowWidth(#ScrollDrawArea)
         ParentHeight = WindowHeight(#ScrollDrawArea)
       EndIf
-      ;Draw Grid on Canvas disabled
-      CanvasGadget(#DrawArea, 0, 0, ParentWidth, ParentHeight)
-      SetGadgetData(#DrawArea, #PB_Ignore) :  DisableGadget(#DrawArea,#True)    ; HideGadget(#DrawArea,#True)
-      DrawGrid(#False)
       
-      ;Create Handle 1 to 8: North, North-East, East, South-East, South, South-West, West, North-West 
-      Restore Cursors
-      Read.i Mycursors   ;Position 0 used for the drawing area bottom left
-      For I = 0 To 8
-        GadgetHandle(I) = CanvasGadget(#PB_Any, 0, 0, #HandelSize, #HandelSize)
-        HideGadget(GadgetHandle(I),#True)
-        If I = 0
-          DrawHandleBorder(GadgetHandle(I), #WinHandleColor)   ;Drawing area handle
-        Else
-          DrawHandleBorder(GadgetHandle(I), #HandelColor)
-        EndIf
-        Read.i Mycursors
-        SetGadgetData(GadgetHandle(I), #PB_Ignore)
-        SetGadgetAttribute(GadgetHandle(I), #PB_Canvas_Cursor, Mycursors)
-      Next
+      ;Draw Grid on Canvas disabled
+      CompilerIf #PB_Compiler_OS = #PB_OS_Windows
+        CanvasGadget(#DrawArea, 0, 0, ParentWidth, ParentHeight, #PB_Canvas_Keyboard | #PB_Canvas_Container)   ;Resize with Handles does not work with #PB_Canvas_Keyboard
+      CompilerElse
+        CanvasGadget(#DrawArea, 0, 0, ParentWidth, ParentHeight, #PB_Canvas_Keyboard)   ;Resize with Handles does not work with #PB_Canvas_Keyboard
+      CompilerEndIf
+      SetGadgetData(#DrawArea, #PB_Ignore)   ;: DisableGadget(#DrawArea,#True)
       
       ;Create Drag Handles canvas in advance, rather than creating each gadget is easier
       ;With many canvas create in advance, it is little bit longer at startup but it does not cost much more in Ram
@@ -629,6 +1026,22 @@ Module SVDesigner
       Next
       SortStructuredArray(GadgetDragHandleArray(), #PB_Sort_Descending, OffsetOf(GadgetDragHandle\DragHandle), TypeOf(GadgetDragHandle\DragHandle))
       
+      ;Create Handle 1 To 8: North, North-East, East, South-East, South, South-West, West, North-West 
+      Restore Cursors
+      Read.i Mycursors   ;Position 0 used for the drawing area bottom left
+      For I = 0 To 8
+        GadgetHandle(I) = CanvasGadget(#PB_Any, 0, 0, #HandelSize, #HandelSize)
+        HideGadget(GadgetHandle(I),#True)
+        If I = 0
+          DrawHandleBorder(GadgetHandle(I), #WinHandleColor)   ;Drawing area handle
+        Else
+          DrawHandleBorder(GadgetHandle(I), #HandelColor)
+        EndIf
+        Read.i Mycursors
+        SetGadgetData(GadgetHandle(I), #PB_Ignore)
+        SetGadgetAttribute(GadgetHandle(I), #PB_Canvas_Cursor, Mycursors)
+      Next
+      
       DataSection
         CompilerIf #PB_Compiler_OS = #PB_OS_Windows
           Cursors:          
@@ -639,12 +1052,14 @@ Module SVDesigner
           Data.i 0, #PB_Cursor_Cross, #PB_Cursor_UpDown, #PB_Cursor_Cross, #PB_Cursor_LeftRight, #PB_Cursor_Cross
           Data.i #PB_Cursor_UpDown, #PB_Cursor_Cross, #PB_Cursor_LeftRight, #PB_Cursor_Cross
         CompilerEndIf
-      EndDataSection    
+      EndDataSection
     EndProcedure  
   EndModule
   
-; IDE Options = PureBasic 5.60 (Windows - x86)
-; Folding = ----
+; IDE Options = PureBasic 5.60 (Windows - x64)
+; CursorPosition = 900
+; FirstLine = 886
+; Folding = ------
 ; EnableXP
 ; Executable = SweetyVD.exe
 ; EnablePurifier
