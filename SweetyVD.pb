@@ -1005,7 +1005,7 @@ CompilerIf #PB_Compiler_IsMainFile
       With Buffer(I)
         If \ModelType = 9 : Break : EndIf   ;Gadget Deleted
         IdGadget = \IdGadget
-        For J=1 To ArraySize(ModelGadget())
+        For J=0 To ArraySize(ModelGadget())
           If ModelGadget(J)\Type = \Type
             Model = ModelGadget(J)\Model
             Break
@@ -1527,7 +1527,7 @@ CompilerIf #PB_Compiler_IsMainFile
         Exit()
         
       Case #PB_Event_GadgetDrop
-        If EventGadget() = #ScrollDrawArea And ClickHoverDrawArea() = #True
+        If EventGadget() = #ScrollDrawArea
           X=WindowMouseX(#MainWindow)-GadgetX(#ScrollDrawArea) + GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_X) : Y=WindowMouseY(#MainWindow)-GadgetY(#ScrollDrawArea) + GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_Y)  ;Keep the coordinates of the mouse before creating the gadget
           CreateGadgets(EventDropText())
         EndIf
