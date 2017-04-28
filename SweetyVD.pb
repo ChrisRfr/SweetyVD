@@ -1527,7 +1527,7 @@ CompilerIf #PB_Compiler_IsMainFile
         Exit()
         
       Case #PB_Event_GadgetDrop
-        If EventGadget() = #ScrollDrawArea
+        If EventGadget() = #ScrollDrawArea And ClickHoverDrawArea() = #True
           X=WindowMouseX(#MainWindow)-GadgetX(#ScrollDrawArea) + GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_X) : Y=WindowMouseY(#MainWindow)-GadgetY(#ScrollDrawArea) + GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_Y)  ;Keep the coordinates of the mouse before creating the gadget
           CreateGadgets(EventDropText())
         EndIf
@@ -2087,13 +2087,11 @@ CompilerIf #PB_Compiler_IsMainFile
 CompilerEndIf
 
 ; IDE Options = PureBasic 5.60 (Windows - x64)
-; CursorPosition = 1939
-; FirstLine = 1933
 ; Folding = -------
 ; EnableXP
 ; UseIcon = Include\SweetyVD.ico
-; Executable = SweetyVD.exe
-; Compiler = PureBasic 5.60 (Windows - x64)
+; Executable = SweetyVD_x86.exe
+; Compiler = PureBasic 5.60 (Windows - x86)
 ; EnablePurifier
 ; IncludeVersionInfo
 ; VersionField0 = 1.9.0
