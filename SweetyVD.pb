@@ -605,7 +605,7 @@ CompilerIf #PB_Compiler_IsMainFile
         ClosePreferences()
       EndIf
     EndIf
-    Code = #CRLF$
+    Code + #CRLF$
     
     If GetGadgetState(#CodeEnumeration) = #True
       Code + "EnableExplicit" +#CRLF$+#CRLF$
@@ -1411,7 +1411,7 @@ CompilerIf #PB_Compiler_IsMainFile
     EndIf
     If Designer_Maximize  = 1 : Flags = Flags | #PB_Window_Maximize : EndIf
     
-    OpenWindow(#MainWindow, x, y, Designer_Width, Designer_Height, "SweetyVD (Visual Designer) " + "#BuildVersion", Flags)
+    OpenWindow(#MainWindow, x, y, Designer_Width, Designer_Height, "SweetyVD (Visual Designer) " + #BuildVersion, Flags)
     CreatePopupImageMenu(#PopUpMenu)
     ButtonGadget(#CodeCreate, 5, 5, 100, 25, "Create Code")
     ButtonGadget(#EnableSVD, 115, 5, 100, 25, "Preview", #PB_Button_Toggle)
