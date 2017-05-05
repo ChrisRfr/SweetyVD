@@ -107,13 +107,15 @@ CompilerIf #PB_Compiler_IsMainFile
     #CodeClipboard
     #CodeNewTab
     #CodeCancel
-    #CodeInclude_TitleBlock
+    #Code_TitleBlock
     #CodeEnumeration
     #CodeVariable
     #CodeConstants
     #CodePBany
     #CodeStatusBar
-    #CodeInclude_EventLoop
+    #CodeEventLoop
+    #CodeSeparator
+    #CodeCustomAddition
     #AboutButton
     #Shortcut_Insert
     #AboutForm
@@ -199,6 +201,7 @@ CompilerIf #PB_Compiler_IsMainFile
   Declare AboutForm()
   Declare CodeCreateForm()
   Declare CodeCreate(Dest.s = "Clipboard")
+  Declare.s CustomAddition(Group.s)
   Declare CreateGadgets(Model.s)
   Declare InitWindowSelected()
   Declare InitProperties()
@@ -220,7 +223,7 @@ CompilerIf #PB_Compiler_IsMainFile
     DragSpace = 10
     ShowGrid = #True
     GridSize = 20
-    If OpenPreferences("SweetyVD.ini", #PB_Preference_GroupSeparator) = 0
+    If OpenPreferences("SweetyVD.ini", #PB_Preference_GroupSeparator) = 0   ;Create Default SweetyVD.ini setting
       ;Canvas_Size_X = 1600  not working
       CreatePreferences("SweetyVD.ini", #PB_Preference_GroupSeparator)
       PreferenceComment("The size of the drawing area (OpenWindow) is defined in the Gadget templates: SweetyVD.json file")
@@ -244,8 +247,11 @@ CompilerIf #PB_Compiler_IsMainFile
       WritePreferenceLong("Variable", 0)
       WritePreferenceLong("Include_StatusBar", 0)
       WritePreferenceLong("Include_EventLoop", 1)
+      WritePreferenceLong("Include_CustomAddition", 0)
       ;Default Title Block
       PreferenceGroup("TitleBlock")
+      PreferenceComment("Use FormatDate (%yyyy, %yy, %mm, %dd + Separator) to format the current date, variable: %Date%")
+      PreferenceComment("The Key name in the title block must start with " + #DQUOTE$ +"Line" + #DQUOTE$)
       WritePreferenceString("FormatDate", "%yyyy-%mm-%dd")
       WritePreferenceString("Line01", "; -----------------------------------------------------------------------------")
       WritePreferenceString("Line02", ";           Name:")
@@ -259,6 +265,28 @@ CompilerIf #PB_Compiler_IsMainFile
       WritePreferenceString("Line10", ";          Forum:")
       WritePreferenceString("Line11", ";     Created by: SweetyVD")
       WritePreferenceString("Line12", "; -----------------------------------------------------------------------------")
+      ;Include Custom Addition
+      PreferenceGroup("CustomAddition")
+      PreferenceComment("Include a dot " + #DQUOTE$ + "." + #DQUOTE$ + " as first character To include spaces at the beginning of a Line (eg: indentation)")
+      PreferenceComment("The Key name must start With " + #DQUOTE$ + "Line" + #DQUOTE$)
+      PreferenceGroup("CustomAddition_Include")
+      WritePreferenceString("Line01", "")
+      PreferenceGroup("CustomAddition_Constante")
+      WritePreferenceString("Line01", "")
+      PreferenceGroup("CustomAddition_Structure")
+      WritePreferenceString("Line01", "")
+      PreferenceGroup("CustomAddition_Variable")
+      WritePreferenceString("Line01", "")
+      PreferenceGroup("CustomAddition_Declare")
+      WritePreferenceString("Line01", "")
+      PreferenceGroup("CustomAddition_Procedure")
+      WritePreferenceString("Line01", "")
+      PreferenceGroup("CustomAddition_Init")
+      WritePreferenceString("Line01", "")
+      PreferenceGroup("CustomAddition_Main") 
+      WritePreferenceString("Line01", "")
+      PreferenceGroup("CustomAddition_Exit")
+      WritePreferenceString("Line01", "")
       ClosePreferences()
     Else   ;Read Global variables
       PreferenceGroup("Designer")
@@ -521,7 +549,7 @@ CompilerIf #PB_Compiler_IsMainFile
   
   Procedure CodeCreateForm()
     Protected AnyGadgets.b = #False, I.i
-    Protected Include_TitleBlock.b = 1, Include_Enumeration.b = 1, Variable.b = 0, Include_StatusBar.b = 0, Include_EventLoop.b = 1
+    Protected Include_TitleBlock.b = 1, Include_Enumeration.b = 1, Variable.b = 0, Include_StatusBar.b = 0, Include_EventLoop.b = 1, Include_CustomAddition.b = 0
     For I = 1 To ArraySize(Gadgets())   ;At least one Gadget is required
       If Gadgets(I)\Idgadget > 0 And (Gadgets(I)\ModelType=1 Or Gadgets(I)\ModelType=2)
         AnyGadgets = #True
@@ -536,13 +564,14 @@ CompilerIf #PB_Compiler_IsMainFile
       Variable = ReadPreferenceLong("Variable", Variable)
       Include_StatusBar = ReadPreferenceLong("Include_StatusBar", Include_StatusBar)
       Include_EventLoop = ReadPreferenceLong("Include_EventLoop", Include_EventLoop)
+      Include_CustomAddition = ReadPreferenceLong("Include_CustomAddition", Include_CustomAddition)
       ClosePreferences()
     EndIf
     
     If AnyGadgets   ;If at least one Gadget
-      If OpenWindow(#CodeForm, WindowX(#MainWindow)+GadgetX(#CodeCreate), WindowY(#MainWindow)+70 , 250 , 175, "SweetyVD: Create PureBasic code",#PB_Window_TitleBar)
-        CheckBoxGadget(#CodeInclude_TitleBlock, 30, 5, 160, 25, "Include Title block") : SetGadgetState(#CodeInclude_TitleBlock, Include_TitleBlock)
-        CheckBoxGadget(#CodeEnumeration, 30, 30, 160, 25, "Include enumeration") : SetGadgetState(#CodeEnumeration, Include_Enumeration)
+      If OpenWindow(#CodeForm, WindowX(#MainWindow)+GadgetX(#CodeCreate), WindowY(#MainWindow)+70 , 250 , 215, "SweetyVD: Create PureBasic code",#PB_Window_TitleBar)
+        CheckBoxGadget(#Code_TitleBlock, 30, 5, 160, 25, "Include Title Block") : SetGadgetState(#Code_TitleBlock, Include_TitleBlock)
+        CheckBoxGadget(#CodeEnumeration, 30, 30, 160, 25, "Include Enumeration") : SetGadgetState(#CodeEnumeration, Include_Enumeration)
         FrameGadget(#CodeVariable, 26, 50, 180, 35, "")
         OptionGadget(#CodeConstants, 31, 60, 85, 20, "Constants")
         OptionGadget(#CodePBany, 116, 60, 70, 20, "#PB_Any")
@@ -552,16 +581,18 @@ CompilerIf #PB_Compiler_IsMainFile
           SetGadgetState(#CodeConstants,#True)
         EndIf
         CheckBoxGadget(#CodeStatusBar, 30, 85, 160, 25, "Add a Status Bar") : SetGadgetState(#CodeStatusBar, Include_StatusBar)
-        CheckBoxGadget(#CodeInclude_EventLoop, 30, 110, 160, 25, "Include the event loop") : SetGadgetState(#CodeInclude_EventLoop, Include_EventLoop)
+        CheckBoxGadget(#CodeEventLoop, 30, 110, 160, 25, "Include the Event Loop") : SetGadgetState(#CodeEventLoop, Include_EventLoop)
+        TextGadget(#CodeSeparator, 10, 132, WindowWidth(#CodeForm)-20, 10, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .")
+        CheckBoxGadget(#CodeCustomAddition, 30, 145, 160, 25, "Include Custom Addition") : SetGadgetState(#CodeCustomAddition, Include_CustomAddition)
         CatchImage(#Img_About,?Img_About)
         ButtonImageGadget(#AboutButton, 218, 5, 25, 25, ImageID(#Img_About))
         If FileSize(PBIDEpath) > 1
-          ButtonGadget(#CodeNewTab, 10, 140, 70, 25, "New Tab", #PB_Button_Toggle) : SetGadgetState(#CodeNewTab, #True)
-          ButtonGadget(#CodeClipboard, 90, 140, 70, 25, "Clipboard")
+          ButtonGadget(#CodeNewTab, 10, 180, 70, 25, "New Tab", #PB_Button_Toggle) : SetGadgetState(#CodeNewTab, #True)
+          ButtonGadget(#CodeClipboard, 90, 180, 70, 25, "Clipboard")
         Else
-          ButtonGadget(#CodeClipboard, 10, 140, 70, 25, "Clipboard", #PB_Button_Toggle) : SetGadgetState(#CodeClipboard, #True)
+          ButtonGadget(#CodeClipboard, 10, 180, 70, 25, "Clipboard", #PB_Button_Toggle) : SetGadgetState(#CodeClipboard, #True)
         EndIf
-        ButtonGadget(#CodeCancel, 170, 140, 70, 25, "Cancel")
+        ButtonGadget(#CodeCancel, 170, 180, 70, 25, "Cancel")
       EndIf
     Else
       MessageRequester("SweetyVD Information", "Let me play with at least one Gadget. Please  ;)", #PB_MessageRequester_Warning|#PB_MessageRequester_Ok)
@@ -571,10 +602,12 @@ CompilerIf #PB_Compiler_IsMainFile
   Procedure CodeCreate(Dest.s = "Clipboard")
     Protected Dim Buffer.StructureGadget(0)
     Protected IdGadget.i, SavModelType = -1
-    Protected ImageExtPath.s, ImageExtFullPath.s, TmpImagePath.s, IncludeFileAdded.s, IncludeFileAddedTmp.s, TitleLine.s, DateFormat.s="%yyyy-%mm-%dd"
+    Protected ImageExtPath.s, ImageExtFullPath.s, TmpImagePath.s, IncludeFileAdded.s, IncludeFileAddedTmp.s
+    Protected Include_CustomAddition.b, TmpCode.s, DateFormat.s="%yyyy-%mm-%dd"
     Protected Code.s, Model.s, Name.s, X.s, Y.s, Width.s, Height.s, Caption.s, Caption7.s
     Protected Mini.i, Maxi.i, TmpTabName.s, ActiveTab.i=-1, TmpConstants.s, FirstPass.b, INDENT$ = "  ", I.i, J.i
     
+    Include_CustomAddition = GetGadgetState(#CodeCustomAddition)
     CopyArray(Gadgets(), Buffer())   ;Sort: Creation of the Model key (Window or Gadget) + Position X + Position Y
     For I=0 To ArraySize(Buffer())
       With Buffer(I)
@@ -591,15 +624,15 @@ CompilerIf #PB_Compiler_IsMainFile
     Next
     SortStructuredArray(Buffer(), #PB_Sort_Ascending, OffsetOf(StructureGadget\Key), TypeOf(StructureGadget\Key))
     
-    If GetGadgetState(#CodeInclude_TitleBlock) = #True   ;-Include Title block
+    If GetGadgetState(#Code_TitleBlock) = #True   ;-Include Title block
       If OpenPreferences("SweetyVD.ini", #PB_Preference_GroupSeparator)
         PreferenceGroup("TitleBlock")
         DateFormat =  ReadPreferenceString("FormatDate", DateFormat)
         ExaminePreferenceKeys()
         While  NextPreferenceKey()
           If Left(PreferenceKeyName(), 4) = "Line"
-            TitleLine = ReplaceString(PreferenceKeyValue(), "%Date%", FormatDate(DateFormat, Date()), #PB_String_NoCase, 1)
-            Code + TitleLine +#CRLF$
+            TmpCode = ReplaceString(PreferenceKeyValue(), "%Date%", FormatDate(DateFormat, Date()), #PB_String_NoCase, 1)
+            If TmpCode <> "" Or Code <> "": Code + TmpCode +#CRLF$ : EndIf
           EndIf
         Wend
         ClosePreferences()
@@ -611,6 +644,11 @@ CompilerIf #PB_Compiler_IsMainFile
       Code + "EnableExplicit" +#CRLF$+#CRLF$
     EndIf
     
+    If Include_CustomAddition
+      TmpCode = CustomAddition("CustomAddition_Include")
+      If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
+    EndIf
+     
     For I=0 To ArraySize(Buffer())   ;XIncludeFile "TabBarGadget.pbi" if used
       With Buffer(I)
         Select \Type
@@ -640,6 +678,19 @@ CompilerIf #PB_Compiler_IsMainFile
     EndWith
     If IncludeFileAdded <> ""
       Code +#CRLF$
+    EndIf
+    
+    If Include_CustomAddition
+      TmpCode = CustomAddition("CustomAddition_Constante")
+      If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
+    EndIf
+    If GetGadgetState(#CodeConstants) = 0 And Include_CustomAddition
+      TmpCode = CustomAddition("CustomAddition_Structure")
+      If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
+    EndIf
+    If GetGadgetState(#CodeConstants) = 0 And Include_CustomAddition
+      TmpCode = CustomAddition("CustomAddition_Variable")
+      If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
     EndIf
     
     If GetGadgetState(#CodeEnumeration) = #True   ;-Include Enumeration
@@ -698,7 +749,16 @@ CompilerIf #PB_Compiler_IsMainFile
         Else
           Code +#CRLF$
         EndIf
-        
+      EndIf
+    EndIf
+    
+    If GetGadgetState(#CodeConstants) And Include_CustomAddition
+      TmpCode = CustomAddition("CustomAddition_Structure")
+      If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
+    EndIf
+    
+    If GetGadgetState(#CodeEnumeration) = #True
+      If ArraySize(ImageBtnPathArray()) > 0   ;Image Enumeration
         For I=1 To ArraySize(ImageBtnPathArray())   ;UseIMAGEDecoder
           ImageExtPath = LCase(GetExtensionPart(ImageBtnPathArray(I)\ImagePath))
           If FindString(ImageExtFullPath, "*." + ImageExtPath + ";", 1) = 0
@@ -727,8 +787,20 @@ CompilerIf #PB_Compiler_IsMainFile
         Next
         Code +#CRLF$
       EndIf
-      
+    EndIf
+    
+    If GetGadgetState(#CodeConstants) And Include_CustomAddition
+      TmpCode = CustomAddition("CustomAddition_Variable")
+      If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
+    EndIf
+    
+    If GetGadgetState(#CodeEnumeration) = #True
       Code + "Define.l Event" +#CRLF$+#CRLF$
+    EndIf
+    
+    If Include_CustomAddition
+      TmpCode = CustomAddition("CustomAddition_Declare")
+      If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
     EndIf
     
     ;-Create Window
@@ -738,6 +810,12 @@ CompilerIf #PB_Compiler_IsMainFile
       Caption = Mid(\Caption, 7)
       
       Code + "Declare Open_"+Mid(\Name,2)+"(X = 0, Y = 0, Width = "+Width+", Height = "+Height+")" +#CRLF$+#CRLF$
+      
+      If Include_CustomAddition
+        TmpCode = CustomAddition("CustomAddition_Procedure")
+        If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
+      EndIf
+    
       Code + "Procedure Open_"+Mid(\Name,2)+"(X = 0, Y = 0, Width = "+Width+", Height = "+Height+")" +#CRLF$
       
       If GetGadgetState(#CodeConstants)
@@ -932,9 +1010,19 @@ CompilerIf #PB_Compiler_IsMainFile
     Code +INDENT$+ "EndIf" +#CRLF$
     Code + "EndProcedure" +#CRLF$+#CRLF$
     
+    If Include_CustomAddition
+      TmpCode = CustomAddition("CustomAddition_Init")
+      If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
+    EndIf
+
     Code + "Open_" + Mid(Buffer(0)\Name,2) + "()" +#CRLF$+#CRLF$
     
-    If GetGadgetState(#CodeInclude_EventLoop) = #True   ;-Include Event Loop
+    If Include_CustomAddition
+      TmpCode = CustomAddition("CustomAddition_Main")
+      If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
+    EndIf
+    
+    If GetGadgetState(#CodeEventLoop) = #True   ;-Include Event Loop
       Code + "Repeat" +#CRLF$
       Code +INDENT$+ "Event = WaitWindowEvent()" +#CRLF$
       Code +INDENT$+ "Select Event" +#CRLF$
@@ -958,6 +1046,11 @@ CompilerIf #PB_Compiler_IsMainFile
       Code +INDENT$+INDENT$+INDENT$+ "End" +#CRLF$
       Code +INDENT$+ "EndSelect" +#CRLF$
       Code + "ForEver" +#CRLF$
+    EndIf
+    
+    If Include_CustomAddition
+      TmpCode = CustomAddition("CustomAddition_Exit")
+      If TmpCode <> "" : Code +#CRLF$ + TmpCode : EndIf
     EndIf
     
     FreeArray(Buffer())
@@ -985,6 +1078,25 @@ CompilerIf #PB_Compiler_IsMainFile
     EndIf
   EndProcedure
   
+  Procedure.s CustomAddition(Group.s)
+    Protected Code.s, TmpCode.s
+    If OpenPreferences("SweetyVD.ini", #PB_Preference_GroupSeparator)
+      PreferenceGroup(Group)
+      ExaminePreferenceKeys()
+      While  NextPreferenceKey()
+        If Left(PreferenceKeyName(), 4) = "Line"
+          ;TmpCode = ReplaceString(PreferenceKeyValue(), "%Indent% ", "  ", #PB_String_NoCase, 1)
+          ;TmpCode = ReplaceString(TmpCode, "%Indent%", "  ", #PB_String_NoCase, 1)
+          TmpCode = PreferenceKeyValue()
+          If Left(TmpCode, 1) = "." : TmpCode = Mid(TmpCode, 2) : EndIf
+          If TmpCode <> "" Or Code <> "": Code + TmpCode +#CRLF$ : EndIf
+        EndIf
+      Wend
+      ClosePreferences()
+    EndIf
+    ProcedureReturn Code
+  EndProcedure
+    
   Procedure CreateGadgets(Model.s)
     Protected IdGadget.i, ModelType.i, DrawGadget.b, TmpCaption.s, Mini.i, Maxi.i, StepValue.i, I.i
     InitProperties()
@@ -1533,7 +1645,7 @@ CompilerIf #PB_Compiler_IsMainFile
         
       Case #PB_Event_Menu   ;-> Event Menu
         Select EventMenu()
-          Case 0 To ArraySize(ModelGadget())   ;Popup menu for creating gadgets
+          Case 1 To ArraySize(ModelGadget())   ;Popup menu for creating gadgets
             Model = GetMenuItemText(#PopUpMenu, EventMenu())
             CreateGadgets(Model)
             
@@ -2089,6 +2201,8 @@ CompilerIf #PB_Compiler_IsMainFile
 CompilerEndIf
 
 ; IDE Options = PureBasic 5.60 (Windows - x64)
+; CursorPosition = 269
+; FirstLine = 265
 ; Folding = ------
 ; EnableXP
 ; UseIcon = Include\SweetyVD.ico
