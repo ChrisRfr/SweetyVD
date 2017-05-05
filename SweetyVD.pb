@@ -251,7 +251,7 @@ CompilerIf #PB_Compiler_IsMainFile
       ;Default Title Block
       PreferenceGroup("TitleBlock")
       PreferenceComment("Use FormatDate (%yyyy, %yy, %mm, %dd + Separator) to format the current date, variable: %Date%")
-      PreferenceComment("The Key name in the title block must start with " + #DQUOTE$ +"Line" + #DQUOTE$)
+      PreferenceComment("The Key name must start with " + #DQUOTE$ +"Line" + #DQUOTE$)
       WritePreferenceString("FormatDate", "%yyyy-%mm-%dd")
       WritePreferenceString("Line01", "; -----------------------------------------------------------------------------")
       WritePreferenceString("Line02", ";           Name:")
@@ -2201,8 +2201,6 @@ CompilerIf #PB_Compiler_IsMainFile
 CompilerEndIf
 
 ; IDE Options = PureBasic 5.60 (Windows - x64)
-; CursorPosition = 269
-; FirstLine = 265
 ; Folding = ------
 ; EnableXP
 ; UseIcon = Include\SweetyVD.ico
