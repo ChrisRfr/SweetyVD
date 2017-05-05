@@ -1621,6 +1621,7 @@ CompilerIf #PB_Compiler_IsMainFile
   
   Init()
   OpenMainWindow(Designer_Width, Designer_Height)
+  WindowSize()
   If FileSize("SweetyVD.json") = -1
     InitModelgadget()   ;Initializing Gadget Model Templates from Datasection + Save JSON file
   Else
@@ -1986,6 +1987,9 @@ CompilerIf #PB_Compiler_IsMainFile
                 If Gadgets(GadgetsElement)\DrawGadget = #False
                   If IsGadget(IdGadget) :  SetGadgetColor(IdGadget, #PB_Gadget_BackColor, #PB_Default) : EndIf   ;For fun SetWindowColor(#MainWindow, SelectedColor)
                 EndIf
+                If GadgetsElement = 0   ;OpenWindow
+                  WinBackColor = 0 : DrawGrid()
+                EndIf
               Else
                 If StartDrawing(ImageOutput(#BackColorImg))
                   Box(0, 0, OutputWidth(), OutputHeight(), SelectedColor)
@@ -1994,6 +1998,9 @@ CompilerIf #PB_Compiler_IsMainFile
                   Gadgets(GadgetsElement)\BackColor = Str(SelectedColor)
                   If Gadgets(GadgetsElement)\DrawGadget = #False
                     If IsGadget(IdGadget) : SetGadgetColor(IdGadget, #PB_Gadget_BackColor, SelectedColor) : EndIf   ;For fun SetWindowColor(#MainWindow, SelectedColor)
+                  EndIf
+                  If GadgetsElement = 0   ;OpenWindow
+                    WinBackColor = SelectedColor : DrawGrid()
                   EndIf
                 EndIf
               EndIf
@@ -2208,13 +2215,13 @@ CompilerEndIf
 ; UseIcon = Include\SweetyVD.ico
 ; Executable = SweetyVD.exe
 ; EnablePurifier
-; Constant = #BuildVersion = "1.9.2"
+; Constant = #BuildVersion = "1.9.21"
 ; IncludeVersionInfo
-; VersionField0 = 1.9.2
-; VersionField1 = 1.9.2
+; VersionField0 = 1.9.21
+; VersionField1 = 1.9.21
 ; VersionField3 = SweetyVD.exe
-; VersionField4 = 1.9.2
-; VersionField5 = 1.9.2
+; VersionField4 = 1.9.21
+; VersionField5 = 1.9.21
 ; VersionField6 = Sweety Visual Designer
 ; VersionField7 = SweetyVD.exe
 ; VersionField8 = SweetyVD.exe
