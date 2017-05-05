@@ -2061,23 +2061,25 @@ CompilerIf #PB_Compiler_IsMainFile
           Case #SVD_Gadget_LostFocus
             
           Case #SVD_Gadget_Resize
-            *PosDim = EventData()
-            SetGadgetState(#PosGadgetX, *PosDim\X)
-            SetGadgetState(#PosGadgetY, *PosDim\Y)
-            SetGadgetState(#PosGadgetWidth, *PosDim\Width)
-            SetGadgetState(#PosGadgetHeight, *PosDim\Height)
-            GadgetsElement = GetGadgetElement(EventGadget())
-            Gadgets(GadgetsElement)\X=*PosDim\X
-            Gadgets(GadgetsElement)\Y=*PosDim\Y
-            Gadgets(GadgetsElement)\Width=*PosDim\Width
-            Gadgets(GadgetsElement)\Height=*PosDim\Height
-            If GetGadgetText(#ImageString) <> "0" And GetGadgetText(#ImageString) <> ""
-              If IsGadget(EventGadget()) And GadgetType(EventGadget()) = 33
-                TmpImage = LoadImage(#PB_Any, GetGadgetText(#ImageString))
-                If TmpImage
-                  ResizeImage(TmpImage, *PosDim\Width, *PosDim\Height)
-                  SetGadgetAttribute(EventGadget(), #PB_Canvas_Image, ImageID(TmpImage))
-                  FreeImage(TmpImage)
+            If GetGadgetState(#EnableSVD) = #False   ;Designer mode. The TabBar Gadget is resized on click on the preview mode. Thanks JHPJHP
+              *PosDim = EventData()
+              SetGadgetState(#PosGadgetX, *PosDim\X)
+              SetGadgetState(#PosGadgetY, *PosDim\Y)
+              SetGadgetState(#PosGadgetWidth, *PosDim\Width)
+              SetGadgetState(#PosGadgetHeight, *PosDim\Height)
+              GadgetsElement = GetGadgetElement(EventGadget())
+              Gadgets(GadgetsElement)\X=*PosDim\X
+              Gadgets(GadgetsElement)\Y=*PosDim\Y
+              Gadgets(GadgetsElement)\Width=*PosDim\Width
+              Gadgets(GadgetsElement)\Height=*PosDim\Height
+              If GetGadgetText(#ImageString) <> "0" And GetGadgetText(#ImageString) <> ""
+                If IsGadget(EventGadget()) And GadgetType(EventGadget()) = 33
+                  TmpImage = LoadImage(#PB_Any, GetGadgetText(#ImageString))
+                  If TmpImage
+                    ResizeImage(TmpImage, *PosDim\Width, *PosDim\Height)
+                    SetGadgetAttribute(EventGadget(), #PB_Canvas_Image, ImageID(TmpImage))
+                    FreeImage(TmpImage)
+                  EndIf
                 EndIf
               EndIf
             EndIf
@@ -2205,9 +2207,8 @@ CompilerEndIf
 ; EnableXP
 ; UseIcon = Include\SweetyVD.ico
 ; Executable = SweetyVD.exe
-; Compiler = PureBasic 5.60 (Windows - x64)
 ; EnablePurifier
-; Constant =  #BuildVersion = "1.9.2"
+; Constant = #BuildVersion = "1.9.2"
 ; IncludeVersionInfo
 ; VersionField0 = 1.9.2
 ; VersionField1 = 1.9.2
