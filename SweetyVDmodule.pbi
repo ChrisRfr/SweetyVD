@@ -2,8 +2,8 @@
 ;           Name: SweetyVDmodule
 ;    Description: Sweety Visual Designer Module
 ;         Author: ChrisR
-;           Date: 2017-05-05
-;        Version: 1.9.2
+;           Date: 2017-05-06
+;        Version: 1.9.22
 ;     PB-Version: 5.60 (x86/x64)
 ;             OS: Windows, Linux, Mac
 ;         Credit: Stargâte: Transformation of gadgets at runtime
@@ -927,10 +927,10 @@ Module SVDesigner
       With SVDListGadget()
         ForEach SVDListGadget()
           If \DrawGadget = #True
-            DrawAreaHandleBorder(\Gadget.i, DftBackColor)
+            DrawAreaHandleBorder(\Gadget, DftBackColor)
           Else
             CompilerIf #PB_Compiler_OS = #PB_OS_MacOS
-              DisableGadget(IdGadget, #False)
+              DisableGadget(\Gadget, #False)
             CompilerEndIf
           EndIf
         Next
@@ -998,7 +998,7 @@ Module SVDesigner
                 ResizeGadget(\DragHandle, \X-#OutSideBorder, \Y-#OutSideBorder, \Width+(2*#OutSideBorder), \Height+(2*#OutSideBorder))
                 ResizeGadget(\Gadget, #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore)
                 CompilerIf #PB_Compiler_OS = #PB_OS_MacOS
-                  DisableGadget(IdGadget, #True)
+                  DisableGadget(\Gadget, #True)
                 CompilerEndIf
                 Break
               EndIf
@@ -1097,8 +1097,6 @@ Module SVDesigner
   EndModule
   
 ; IDE Options = PureBasic 5.60 (Windows - x64)
-; CursorPosition = 228
-; FirstLine = 220
 ; Folding = -------
 ; EnableXP
 ; Executable = SweetyVD.exe
