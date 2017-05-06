@@ -90,11 +90,16 @@ Module SVDesigner
     EndImport
     
     #MinSize = 6
-    #HandelSize = 7
-    #OutSideBorder = 1
     #HandelColor = $640000      ;BlueDark
     #WinHandleColor= $000064    ;RedDark
     #FreeHandelColor = $FF8080  ;White=$FFFFFF, grey=$C6C6C6
+    CompilerIf #PB_Compiler_OS = #PB_OS_MacOS
+      #HandelSize = 8
+      #OutSideBorder = 3
+    CompilerElse
+      #HandelSize = 7
+      #OutSideBorder = 1
+    CompilerEndIf
     
     Structure SVDGadget
       Gadget.i
