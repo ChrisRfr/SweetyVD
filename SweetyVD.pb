@@ -2215,13 +2215,13 @@ CompilerEndIf
 ; UseIcon = Include\SweetyVD.ico
 ; Executable = SweetyVD.exe
 ; EnablePurifier
-; Constant = #BuildVersion = "1.9.21"
+; Constant = #BuildVersion = "1.9.22"
 ; IncludeVersionInfo
-; VersionField0 = 1.9.21
-; VersionField1 = 1.9.21
+; VersionField0 = 1.9.22
+; VersionField1 = 1.9.22
 ; VersionField3 = SweetyVD.exe
-; VersionField4 = 1.9.21
-; VersionField5 = 1.9.21
+; VersionField4 = 1.9.22
+; VersionField5 = 1.9.22
 ; VersionField6 = Sweety Visual Designer
 ; VersionField7 = SweetyVD.exe
 ; VersionField8 = SweetyVD.exe
