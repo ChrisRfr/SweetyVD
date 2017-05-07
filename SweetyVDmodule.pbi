@@ -38,7 +38,7 @@ DeclareModule SVDesigner
   EndStructure
   
   Global WinBackColor.i = 0
-  Global ParentWidth.i, ParentHeight.i, SavPosDim.PosDim
+  Global UserScreen_Width.i, UserScreen_Height.i, SavPosDim.PosDim
   Global DragSpace.i, ShowGrid.b, GridSize.i, SelectedDrawGadget.i, LastGadgetFocus.i, LastDragHandleFocus.i
   
   Declare DrawContainer(X, Y, Width, Height)
@@ -202,7 +202,7 @@ Module SVDesigner
       ;Arrow ScrollY Bottom Right
       LineXY(X+Width-9, Y+Height-26, X+Width-12, Y+Height-31, RGB(0, 0, 0)) : LineXY(X+Width-9, Y+Height-26, X+Width-6, Y+Height-31, RGB(0, 0, 0))
       
-      ScrollCursorWidth = Width-54   ;Cursor length 100% (20 *2 for Arrow + 20 for the bottom left corner)
+      ScrollCursorWidth = Width-54   ;Cursor length 100% (18 *2 for Arrow + 18 for the bottom left corner)
       If InnerW > Width-18
         ScrollCursorWidth = (ScrollCursorWidth*(Width-18))/InnerW
         If ScrollX > Width-54 - ScrollCursorWidth : ScrollX = Width-54 - ScrollCursorWidth : EndIf
@@ -212,7 +212,7 @@ Module SVDesigner
       ;Debug "ScrollStepX = 1 => " +StrF(InnerW/(Width-54), 2)
       Box(X+18+ScrollX, Y+Height-18, ScrollCursorWidth, 17, RGB(205, 205, 205))   ;ScrollX Cursor
       
-      ScrollCursorHeight = Height-54   ;Cursor length 100% (20 *2 for Arrow + 20 for the bottom left corner)
+      ScrollCursorHeight = Height-54   ;Cursor length 100% (18 *2 for Arrow + 18 for the bottom left corner)
       If InnerH > Height-18
         ScrollCursorHeight = (ScrollCursorHeight*(Height-18))/InnerH
         If ScrollY > Height-54 - ScrollCursorHeight : ScrollY = Height-54 - ScrollCursorHeight : EndIf
@@ -238,17 +238,17 @@ Module SVDesigner
       EndIf
       If StartDrawing(CanvasOutput(#DrawArea))
         Box(0, 0, OutputWidth(), OutputHeight(), ScrollAreaColor)
-        Box(X, Y, ParentWidth, ParentHeight, GridBackground)
-        For X = 0 To ParentWidth
-          For Y = 0 To ParentHeight
-            Line(0,Y,ParentWidth,1,GridColor)
+        Box(X, Y, UserScreen_Width, UserScreen_Height, GridBackground)
+        For X = 0 To UserScreen_Width
+          For Y = 0 To UserScreen_Height
+            Line(0,Y,UserScreen_Width,1,GridColor)
             Y+Spacing-1
           Next
-          Line(X,0,1,ParentHeight,GridColor)
+          Line(X,0,1,UserScreen_Height,GridColor)
           X+Spacing-1
         Next
-        Line(0, ParentHeight, ParentWidth, 1, #WinHandleColor)
-        Line(ParentWidth, 0, 1, ParentHeight, #WinHandleColor)
+        Line(0, UserScreen_Height, UserScreen_Width, 1, #WinHandleColor)
+        Line(UserScreen_Width, 0, 1, UserScreen_Height, #WinHandleColor)
         
         ;To redraw Gadget and DragHandle above the grid
         If IsGadget(GadgetHandle(0)) : ResizeGadget(GadgetHandle(0), #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore) : EndIf
@@ -318,7 +318,7 @@ Module SVDesigner
     EndProcedure
     
     Procedure  MouseOverDrawArea()
-      Protected X = ParentWidth + GadgetX(#ScrollDrawArea) - GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_X), Y = ParentHeight + GadgetY(#ScrollDrawArea) - GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_Y)
+      Protected X = UserScreen_Width + GadgetX(#ScrollDrawArea) - GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_X), Y = UserScreen_Height + GadgetY(#ScrollDrawArea) - GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_Y)
       Protected Mx = WindowMouseX(0), My = WindowMouseY(0)
       If Mx > GadgetX(#ScrollDrawArea) And Mx < X And My > GadgetY(#ScrollDrawArea) And My < Y
         ProcedureReturn 1   ;Mouse is on Gadget
@@ -344,13 +344,13 @@ Module SVDesigner
           If \Gadget = Gadget
             ;Only one of the values X, Y, Width or Height. Sent from an interface, with control there. other values must be negative (#PB_Ignore=-65535)
             If X >= 0 And Y < 0 And Width < 0 And Height < 0
-              \X = GridMatch(X, 1, 0, ParentWidth-\Width)
+              \X = GridMatch(X, 1, 0, UserScreen_Width-\Width)
             ElseIf Y >= 0 And X < 0 And Width < 0 And Height < 0
-              \Y = GridMatch(Y, 1, 0, ParentHeight-\Height)
+              \Y = GridMatch(Y, 1, 0, UserScreen_Height-\Height)
             ElseIf Width >= 0 And X < 0 And Y < 0 And Height < 0
-              \Width = GridMatch(Width, 1, 0, ParentWidth-\X)
+              \Width = GridMatch(Width, 1, 0, UserScreen_Width-\X)
             ElseIf Height >= 0 And X < 0 And Y < 0 And Width < 0
-              \Height = GridMatch(Height, 1, 0, ParentHeight-\Y)
+              \Height = GridMatch(Height, 1, 0, UserScreen_Height-\Y)
             Else
               ProcedureReturn #False
             EndIf
@@ -469,15 +469,15 @@ Module SVDesigner
                 EndIf
               Case #PB_Shortcut_Right
                 If GetGadgetAttribute(\DragHandle,#PB_Canvas_Modifiers) = #PB_Canvas_Shift And IsGadget(\Handle[3])
-                  ResizeGadget(\Gadget, #PB_Ignore, #PB_Ignore, GridMatch(GadgetWidth0+DragSpace, DragSpace, 0, ParentWidth-GadgetX0), #PB_Ignore) : ResizeDone = #True
+                  ResizeGadget(\Gadget, #PB_Ignore, #PB_Ignore, GridMatch(GadgetWidth0+DragSpace, DragSpace, 0, UserScreen_Width-GadgetX0), #PB_Ignore) : ResizeDone = #True
                 ElseIf IsGadget(\DragHandle) Or IsGadget(\Handle[3])
-                  ResizeGadget(\Gadget, GridMatch(GadgetX0+DragSpace, DragSpace, 0, ParentWidth-GadgetWidth0), #PB_Ignore, #PB_Ignore, #PB_Ignore) : ResizeDone = #True
+                  ResizeGadget(\Gadget, GridMatch(GadgetX0+DragSpace, DragSpace, 0, UserScreen_Width-GadgetWidth0), #PB_Ignore, #PB_Ignore, #PB_Ignore) : ResizeDone = #True
                 EndIf
               Case #PB_Shortcut_Down
                 If GetGadgetAttribute(\DragHandle, #PB_Canvas_Modifiers) = #PB_Canvas_Shift And IsGadget(\Handle[5])
-                  ResizeGadget(\Gadget, #PB_Ignore, #PB_Ignore, #PB_Ignore, GridMatch(GadgetHeight0+DragSpace, DragSpace, 0, ParentHeight-GadgetY0)) : ResizeDone = #True
+                  ResizeGadget(\Gadget, #PB_Ignore, #PB_Ignore, #PB_Ignore, GridMatch(GadgetHeight0+DragSpace, DragSpace, 0, UserScreen_Height-GadgetY0)) : ResizeDone = #True
                 ElseIf IsGadget(\DragHandle) Or IsGadget(\Handle[5])
-                  ResizeGadget(\Gadget, #PB_Ignore, GridMatch(GadgetY0+DragSpace, DragSpace, 0, ParentHeight-GadgetHeight0), #PB_Ignore, #PB_Ignore) : ResizeDone = #True
+                  ResizeGadget(\Gadget, #PB_Ignore, GridMatch(GadgetY0+DragSpace, DragSpace, 0, UserScreen_Height-GadgetHeight0), #PB_Ignore, #PB_Ignore) : ResizeDone = #True
                 EndIf
               Case #PB_Shortcut_Left
                 If GetGadgetAttribute(\DragHandle, #PB_Canvas_Modifiers) = #PB_Canvas_Shift And IsGadget(\Handle[7])
@@ -539,25 +539,25 @@ Module SVDesigner
               ;<== FOR DEBUG: X = WindowMouseX(GetActiveWindow())-OffsetX-ScrollX : Y = WindowMouseY(GetActiveWindow())-OffsetY-ScrollY
               Select EventGadget()
                 Case \DragHandle   ;Moved Gadget NESW
-                  \X = GridMatch(X+#OutSideBorder, DragSpace, 0, ParentWidth-GadgetWidth0)
-                  \Y = GridMatch(Y+#OutSideBorder, DragSpace, 0, ParentHeight-GadgetHeight0)
+                  \X = GridMatch(X+#OutSideBorder, DragSpace, 0, UserScreen_Width-GadgetWidth0)
+                  \Y = GridMatch(Y+#OutSideBorder, DragSpace, 0, UserScreen_Height-GadgetHeight0)
                 Case \Handle[1]   ;Handle top, middle (N)
                   \Height = GridMatch(GadgetY1-(Y+#HandelSize), DragSpace, #MinSize, GadgetY1)
                   \Y = GridMatch(Y+#HandelSize, DragSpace, 0, GadgetY1-\Height)
                 Case \Handle[2]   ;Handle top, right (NE)
-                  \Width = GridMatch(X, DragSpace, GadgetX0+#MinSize, ParentWidth)-GadgetX0
+                  \Width = GridMatch(X, DragSpace, GadgetX0+#MinSize, UserScreen_Width)-GadgetX0
                   \Height = GridMatch(GadgetY1-(Y+#HandelSize), DragSpace, #MinSize, GadgetY1)
                   \Y = GridMatch(Y+#HandelSize, DragSpace, 0, GadgetY1-\Height)
                 Case \Handle[3]   ;Handle middle, right (E)
-                  \Width = GridMatch(X, DragSpace, GadgetX0+#MinSize, ParentWidth)-GadgetX0
+                  \Width = GridMatch(X, DragSpace, GadgetX0+#MinSize, UserScreen_Width)-GadgetX0
                 Case \Handle[4]   ;Handle bottom, right (SE)
-                  \Width = GridMatch(X, DragSpace, GadgetX0+#MinSize, ParentWidth)-GadgetX0
-                  \Height = GridMatch(Y, DragSpace, GadgetY0+#MinSize, ParentHeight)-GadgetY0
+                  \Width = GridMatch(X, DragSpace, GadgetX0+#MinSize, UserScreen_Width)-GadgetX0
+                  \Height = GridMatch(Y, DragSpace, GadgetY0+#MinSize, UserScreen_Height)-GadgetY0
                 Case \Handle[5]   ;Handle bottom, middle (S)
-                  \Height = GridMatch(Y, DragSpace, GadgetY0+#MinSize, ParentHeight)-GadgetY0
+                  \Height = GridMatch(Y, DragSpace, GadgetY0+#MinSize, UserScreen_Height)-GadgetY0
                 Case \Handle[6]   ;Handle bottom, left (SW)
                   \Width = GridMatch(GadgetX1-(X+#HandelSize), DragSpace, #MinSize, GadgetX1)
-                  \Height = GridMatch(Y, DragSpace, GadgetY0+#MinSize, ParentHeight)-GadgetY0
+                  \Height = GridMatch(Y, DragSpace, GadgetY0+#MinSize, UserScreen_Height)-GadgetY0
                   \X = GridMatch(X+#HandelSize, DragSpace, 0, GadgetX1-\Width)
                 Case \Handle[7]   ;Handle middle, left (W)
                   \Width = GridMatch(GadgetX1-(X+#HandelSize), DragSpace, #MinSize, GadgetX1)
@@ -610,15 +610,15 @@ Module SVDesigner
                       EndIf
                     Case #PB_Shortcut_Right
                       If GetGadgetAttribute(#DrawArea,#PB_Canvas_Modifiers) = #PB_Canvas_Shift And IsGadget(\Handle[3])
-                        \Width = GridMatch(\Width+DragSpace, DragSpace, 0, ParentWidth-\X) : ResizeDone = #True
+                        \Width = GridMatch(\Width+DragSpace, DragSpace, 0, UserScreen_Width-\X) : ResizeDone = #True
                       ElseIf IsGadget(\Handle[3])
-                        \X = GridMatch(\X+DragSpace, DragSpace, 0, ParentWidth-\Width) : ResizeDone = #True
+                        \X = GridMatch(\X+DragSpace, DragSpace, 0, UserScreen_Width-\Width) : ResizeDone = #True
                       EndIf
                     Case #PB_Shortcut_Down
                       If GetGadgetAttribute(#DrawArea, #PB_Canvas_Modifiers) = #PB_Canvas_Shift
-                        \Height = GridMatch(\Height+DragSpace, DragSpace, 0, ParentHeight-\Y) : ResizeDone = #True
+                        \Height = GridMatch(\Height+DragSpace, DragSpace, 0, UserScreen_Height-\Y) : ResizeDone = #True
                       ElseIf IsGadget(\Handle[5])
-                        \Y = GridMatch(\Y+DragSpace, DragSpace, 0, ParentHeight-\Height) : ResizeDone = #True
+                        \Y = GridMatch(\Y+DragSpace, DragSpace, 0, UserScreen_Height-\Height) : ResizeDone = #True
                       EndIf
                     Case #PB_Shortcut_Left
                       If GetGadgetAttribute(#DrawArea, #PB_Canvas_Modifiers) = #PB_Canvas_Shift
@@ -691,8 +691,8 @@ Module SVDesigner
               With SVDListGadget()
                 ForEach SVDListGadget()
                   If \Gadget = SelectedDrawGadget
-                    \X = GridMatch(OffsetX - DeltaX, DragSpace, 0, ParentWidth-\Width)
-                    \Y = GridMatch(OffsetY - DeltaY, DragSpace, 0, ParentHeight-\Height)
+                    \X = GridMatch(OffsetX - DeltaX, DragSpace, 0, UserScreen_Width-\Width)
+                    \Y = GridMatch(OffsetY - DeltaY, DragSpace, 0, UserScreen_Height-\Height)
                     If \X <> SavPosDim\X Or \Y <> SavPosDim\Y Or \Width <> SavPosDim\Width Or \Height <> SavPosDim\Height
                       SavPosDim\X = \X : SavPosDim\Y = \Y : SavPosDim\Width = \Width : SavPosDim\Height = \Height
                       DrawGrid()
@@ -744,7 +744,7 @@ Module SVDesigner
             WinHeight = GridMatch(WinHeight, DragSpace, #MinSize, GetGadgetAttribute(ParentGadget, #PB_ScrollArea_InnerHeight) - 10)
             SavPosDim\X = 0 : SavPosDim\Y = 0 : SavPosDim\Width = WinWidth : SavPosDim\Height = WinHeight
             ;PostEvent(#PB_Event_Gadget, GetActiveWindow(), WinHandle, #SVD_Window_ReSize, @SavPosDim)
-            PostEvent(#PB_Event_Gadget, 0, WinHandle, #SVD_Window_ReSize, @SavPosDim)   ;Updates the 4 SpinGadget(Width,Height)+ParentWidth,ParentHeight+Resize(WinHandle)+DrawGrid
+            PostEvent(#PB_Event_Gadget, 0, WinHandle, #SVD_Window_ReSize, @SavPosDim)   ;Updates the 4 SpinGadget(Width,Height)+UserScreen_Width,UserScreen_Height+Resize(WinHandle)+DrawGrid
           EndIf
           
       EndSelect
@@ -1026,32 +1026,32 @@ Module SVDesigner
     EndProcedure
     
     Procedure DrawAreaSize(Width.i, Height.i)
-      ParentWidth = Width
-      ParentHeight = Height
+      UserScreen_Width = Width
+      UserScreen_Height = Height
       If IsGadget(GadgetHandle(0)) : ResizeGadget(GadgetHandle(0), Width, Height, #PB_Ignore, #PB_Ignore) : EndIf
     EndProcedure 
     
     Procedure InitSVD(CountGadget.i = 144)
-      Protected Mycursors.i, I.i
+      Protected ScrollDrawAreaWidth.i, ScrollDrawAreaHeight.i, Mycursors.i, I.i
       ;Width and Height of the drawing Area used as Max values when moving
       If IsGadget(#ScrollDrawArea)
         If GadgetType(#ScrollDrawArea) = #PB_GadgetType_ScrollArea
-          ParentWidth = GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_InnerWidth)
-          ParentHeight = GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_InnerHeight)
+          ScrollDrawAreaWidth = GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_InnerWidth)
+          ScrollDrawAreaHeight = GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_InnerHeight)
         Else
-          ParentWidth = GadgetWidth(#ScrollDrawArea)
-          ParentHeight = GadgetHeight(#ScrollDrawArea)
+          ScrollDrawAreaWidth = GadgetWidth(#ScrollDrawArea)
+          ScrollDrawAreaHeight = GadgetHeight(#ScrollDrawArea)
         EndIf
       ElseIf IsWindow(#ScrollDrawArea)   ;Window
-        ParentWidth = WindowWidth(#ScrollDrawArea)
-        ParentHeight = WindowHeight(#ScrollDrawArea)
+        ScrollDrawAreaWidth = WindowWidth(#ScrollDrawArea)
+        ScrollDrawAreaHeight = WindowHeight(#ScrollDrawArea)
       EndIf
       
       ;Draw Grid on Canvas disabled
       CompilerIf #PB_Compiler_OS = #PB_OS_Windows
-        CanvasGadget(#DrawArea, 0, 0, ParentWidth, ParentHeight, #PB_Canvas_Keyboard | #PB_Canvas_Container)   ;Resize with Handles does not work with #PB_Canvas_Keyboard
+        CanvasGadget(#DrawArea, 0, 0, ScrollDrawAreaWidth, ScrollDrawAreaHeight, #PB_Canvas_Keyboard | #PB_Canvas_Container)   ;Resize with Handles does not work with #PB_Canvas_Keyboard
       CompilerElse
-        CanvasGadget(#DrawArea, 0, 0, ParentWidth, ParentHeight, #PB_Canvas_Keyboard)   ;Resize with Handles does not work with #PB_Canvas_Keyboard
+        CanvasGadget(#DrawArea, 0, 0, ScrollDrawAreaWidth, ScrollDrawAreaHeight, #PB_Canvas_Keyboard)   ;Resize with Handles does not work with #PB_Canvas_Keyboard
       CompilerEndIf
       SetGadgetData(#DrawArea, #PB_Ignore)   ;: DisableGadget(#DrawArea,#True)
       

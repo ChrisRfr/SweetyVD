@@ -220,6 +220,8 @@ CompilerIf #PB_Compiler_IsMainFile
   Procedure StartPrefs()
     Global Designer_Width.i = 1000
     Global Designer_Height.i = 660
+    UserScreen_Width.i = 640
+    UserScreen_Height.i = 480
     DragSpace = 10
     ShowGrid = #True
     GridSize = 20
@@ -234,6 +236,8 @@ CompilerIf #PB_Compiler_IsMainFile
       WritePreferenceLong("SaveOnExit", 1)
       WritePreferenceLong("Designer_Width", Designer_Width)
       WritePreferenceLong("Designer_Height", Designer_Height)
+      WritePreferenceLong("UserScreen_Width", UserScreen_Width)
+      WritePreferenceLong("UserScreen_Height", UserScreen_Height)
       WritePreferenceLong("Designer_Maximize", 0)
       WritePreferenceLong("ScrollArea_MaxWidth", 1920)
       WritePreferenceLong("ScrollArea_MaxHeight", 1020)
@@ -292,6 +296,8 @@ CompilerIf #PB_Compiler_IsMainFile
       PreferenceGroup("Designer")
       Designer_Width     = ReadPreferenceLong("Designer_Width", Designer_Width) ; default values
       Designer_Height    = ReadPreferenceLong("Designer_Height", Designer_Height)
+      UserScreen_Width    = ReadPreferenceLong("UserScreen_Width", UserScreen_Width)
+      UserScreen_Height   = ReadPreferenceLong("UserScreen_Height", UserScreen_Height)
       DragSpace          = ReadPreferenceLong("Drag_Space", DragSpace)
       ShowGrid           = ReadPreferenceLong("Show_Grid", ShowGrid)
       GridSize           = ReadPreferenceLong("Grid_Size", GridSize)
@@ -309,6 +315,8 @@ CompilerIf #PB_Compiler_IsMainFile
         WritePreferenceLong("Designer_Width", Designer_Width)
         WritePreferenceLong("Designer_Height", Designer_Height)
         WritePreferenceLong("Designer_Maximize", Designer_Maximize)
+        WritePreferenceLong("UserScreen_Width", GetGadgetState(#SetDrawWidth))
+        WritePreferenceLong("UserScreen_Height", GetGadgetState(#SetDrawHeight))
         WritePreferenceLong("Drag_Space", GetGadgetState(#DragSpace))
         WritePreferenceLong("Show_Grid", GetGadgetState(#ShowGrid))
         WritePreferenceLong("Grid_Size", GetGadgetState(#GridSize))
@@ -381,6 +389,8 @@ CompilerIf #PB_Compiler_IsMainFile
       If ModelGadget(I)\Type = 0   ;OpenWindow
         With ModelGadget(I)
           ;Draw Area Width and Height with associated Spin Gadgets
+          \DftWidth = UserScreen_Width
+          \DftHeight = UserScreen_Height
           SetGadgetState(#PosGadgetWidth, \DftWidth)
           SetGadgetState(#PosGadgetHeight, \DftHeight)
           SetGadgetState(#SetDrawWidth, \DftWidth)
@@ -1109,8 +1119,8 @@ CompilerIf #PB_Compiler_IsMainFile
           CountGadgets=CountGadgets+1
           ReDim Gadgets(CountGadgets)
           
-          X = GridMatch(X, DragSpace, 0, ParentWidth-\DftWidth)   ;Align on Grid and remains inside the grid
-          Y = GridMatch(Y, DragSpace, 0, ParentHeight-\DftHeight)
+          X = GridMatch(X, DragSpace, 0, UserScreen_Width-\DftWidth)   ;Align on Grid and remains inside the grid
+          Y = GridMatch(Y, DragSpace, 0, UserScreen_Height-\DftHeight)
           ;Default values from the gadget models table
           Select Left(\Caption, 5)
             Case "#Text", "#TabN"
@@ -1421,12 +1431,12 @@ CompilerIf #PB_Compiler_IsMainFile
       If TmpImage
         Rtn = MessageRequester("SweetyVD Information", "Do you want to resize the gadget to the image size ?", #PB_MessageRequester_Info|#PB_MessageRequester_YesNo)
         If Rtn = 6     ;the YES button was chosen (Result=7 for the NO button)
-          If GadgetX(IdGadget) + ImageWidth(TmpImage) > ParentWidth
-            ResizeSVDGadget(IdGadget, ParentWidth-ImageWidth(TmpImage), -1, -1, -1)
+          If GadgetX(IdGadget) + ImageWidth(TmpImage) > UserScreen_Width
+            ResizeSVDGadget(IdGadget, UserScreen_Width-ImageWidth(TmpImage), -1, -1, -1)
           EndIf
           ResizeSVDGadget(IdGadget, -1, -1, ImageWidth(TmpImage), -1)
-          If GadgetY(IdGadget) + ImageHeight(TmpImage) > ParentHeight
-            ResizeSVDGadget(IdGadget, -1, ParentHeight-ImageHeight(TmpImage), -1, -1)
+          If GadgetY(IdGadget) + ImageHeight(TmpImage) > UserScreen_Height
+            ResizeSVDGadget(IdGadget, -1, UserScreen_Height-ImageHeight(TmpImage), -1, -1)
           EndIf
           ResizeSVDGadget(IdGadget, -1, -1, -1, ImageHeight(TmpImage))
         EndIf
@@ -1484,7 +1494,7 @@ CompilerIf #PB_Compiler_IsMainFile
   EndProcedure
   
   Procedure ResizeDrawArea(Width.i, Height.i)
-    DrawAreaSize(Width, Height)   ;For ParentWidth(Height) with max displacement value
+    DrawAreaSize(Width, Height)   ;For UserScreen_Width(Height) and UserScreen handle for resizing
     DrawGrid()
   EndProcedure
   
@@ -1622,6 +1632,7 @@ CompilerIf #PB_Compiler_IsMainFile
   Init()
   OpenMainWindow(Designer_Width, Designer_Height)
   WindowSize()
+ 
   If FileSize("SweetyVD.json") = -1
     InitModelgadget()   ;Initializing Gadget Model Templates from Datasection + Save JSON file
   Else
@@ -2173,7 +2184,7 @@ CompilerIf #PB_Compiler_IsMainFile
     
     ModelGadgets:   ;31 Gadgets Models +window Model
                     ;"Model","Order","GadgetType","Width","Height","Name","Caption","Option1","Option2","Option3","FrontColor","BackColor","ToolTip","Constants"
-    Data.s "OpenWindow","0","","720","580","Window","#Text","","","","#Nooo","","#Nooo","Window_SystemMenu(x)|Window_MinimizeGadget(x)|Window_MaximizeGadget(x)|Window_SizeGadget(x)|Window_Invisible|Window_TitleBar|Window_Tool|Window_BorderLess|Window_ScreenCentered(x)|Window_WindowCentered|Window_Maximize|Window_Minimize|Window_NoGadgets"
+    Data.s "OpenWindow","0","","640","480","Window","#Text","","","","#Nooo","","#Nooo","Window_SystemMenu(x)|Window_MinimizeGadget(x)|Window_MaximizeGadget(x)|Window_SizeGadget(x)|Window_Invisible|Window_TitleBar|Window_Tool|Window_BorderLess|Window_ScreenCentered(x)|Window_WindowCentered|Window_Maximize|Window_Minimize|Window_NoGadgets"
     Data.s "ButtonGadget","1","1","100","20","Button","#Text","","","","#Nooo","#Nooo","","Button_Right|Button_Left|Button_Default|Button_MultiLine|Button_Toggle"
     Data.s "ButtonImageGadget","2","19","100","20","ButtonImage","","#Imag:0","","","#Nooo","#Nooo","","Button_Toggle"
     Data.s "CalendarGadget","3","20","220","160","Calendar","","#Date:0","","","#Nooo","#Nooo","","Calendar_Borderless"
@@ -2215,13 +2226,13 @@ CompilerEndIf
 ; UseIcon = Include\SweetyVD.ico
 ; Executable = SweetyVD.exe
 ; EnablePurifier
-; Constant = #BuildVersion = "1.9.22"
+; Constant = #BuildVersion = "1.9.23"
 ; IncludeVersionInfo
-; VersionField0 = 1.9.22
-; VersionField1 = 1.9.22
+; VersionField0 = 1.9.23
+; VersionField1 = 1.9.23
 ; VersionField3 = SweetyVD.exe
-; VersionField4 = 1.9.22
-; VersionField5 = 1.9.22
+; VersionField4 = 1.9.23
+; VersionField5 = 1.9.23
 ; VersionField6 = Sweety Visual Designer
 ; VersionField7 = SweetyVD.exe
 ; VersionField8 = SweetyVD.exe
