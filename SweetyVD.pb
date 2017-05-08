@@ -3,8 +3,8 @@
 ;    Description: Sweety Visual Designer
 ;     dependency: SweetyVDmodule.pbi (Sweety Visual Designer Module)
 ;         Author: ChrisR
-;           Date: 2017-05-06
-;        Version: 1.9.22
+;           Date: 2017-05-09
+;        Version: 1.9.24
 ;     PB-Version: 5.60 (x86/x64)
 ;             OS: Windows, Linux, Mac
 ;         Credit: Stargâte: Transformation of gadgets at runtime
@@ -244,6 +244,7 @@ CompilerIf #PB_Compiler_IsMainFile
       WritePreferenceLong("Drag_Space", DragSpace)
       WritePreferenceLong("Show_Grid", ShowGrid)
       WritePreferenceLong("Grid_Size", GridSize)
+      WritePreferenceLong("Hexa_Color", 0)
       ;Init Code Create Window
       PreferenceGroup("CodeCreate")
       WritePreferenceLong("Include_TitleBlock", 1)
@@ -615,8 +616,13 @@ CompilerIf #PB_Compiler_IsMainFile
     Protected ImageExtPath.s, ImageExtFullPath.s, TmpImagePath.s, IncludeFileAdded.s, IncludeFileAddedTmp.s
     Protected Include_CustomAddition.b, TmpCode.s, DateFormat.s="%yyyy-%mm-%dd"
     Protected Code.s, Model.s, Name.s, X.s, Y.s, Width.s, Height.s, Caption.s, Caption7.s
-    Protected Mini.i, Maxi.i, TmpTabName.s, ActiveTab.i=-1, TmpConstants.s, FirstPass.b, INDENT$ = "  ", I.i, J.i
+    Protected Mini.i, Maxi.i, Hexa_Color.b, TmpColor.i, TmpTabName.s, ActiveTab.i=-1, TmpConstants.s, FirstPass.b, INDENT$ = "  ", I.i, J.i
     
+    If OpenPreferences("SweetyVD.ini", #PB_Preference_GroupSeparator)
+      PreferenceGroup("Designer")
+      Hexa_Color =  ReadPreferenceLong("Hexa_Color", Hexa_Color)
+      ClosePreferences()
+    EndIf
     Include_CustomAddition = GetGadgetState(#CodeCustomAddition)
     CopyArray(Gadgets(), Buffer())   ;Sort: Creation of the Model key (Window or Gadget) + Position X + Position Y
     For I=0 To ArraySize(Buffer())
@@ -855,7 +861,12 @@ CompilerIf #PB_Compiler_IsMainFile
       If GetGadgetState(#CodeConstants) = #False : Code +INDENT$+ "If " + Name +#CRLF$ :EndIf
       
       If Left(\BackColor, 5) <> "#Nooo" And \BackColor <> ""   ;Background window color
-        Code +INDENT$+INDENT$+ "SetWindowColor(" + Name + ", " + \BackColor + ")" +#CRLF$
+        TmpColor = Val(\BackColor)
+        If Hexa_Color = 1
+          Code +INDENT$+INDENT$+ "SetWindowColor(" + Name + ", $" + RSet(Hex(Blue(TmpColor)), 2, "0") + RSet(Hex(Green(TmpColor)), 2, "0") + RSet(Hex(Red(TmpColor)), 2, "0") + ")" +#CRLF$   ;Hex value in BGR format
+        Else
+          Code +INDENT$+INDENT$+ "SetWindowColor(" + Name + ", RGB(" + Str(Red(TmpColor)) + ", " + Str(Green(TmpColor)) + ", " + Str(Blue(TmpColor)) + "))" +#CRLF$
+        EndIf
       EndIf
     EndWith
     
@@ -999,10 +1010,22 @@ CompilerIf #PB_Compiler_IsMainFile
         EndSelect
         
         If Left(\FrontColor, 5) <> "#Nooo" And \FrontColor <> ""
-          Code +INDENT$+INDENT$+ "SetGadgetColor(" + Name + ", #PB_Gadget_FrontColor, " + \FrontColor + ")" +#CRLF$
+          TmpColor = Val(\FrontColor)
+          If Hexa_Color = 1
+            Code +INDENT$+INDENT$+ "SetGadgetColor(" + Name + ", #PB_Gadget_FrontColor, $" + RSet(Hex(Blue(TmpColor)), 2, "0") + RSet(Hex(Green(TmpColor)), 2, "0") + RSet(Hex(Red(TmpColor)), 2, "0") + ")" +#CRLF$   ;Hex value in BGR format
+          Else
+            Code +INDENT$+INDENT$+ "SetGadgetColor(" + Name + ", #PB_Gadget_FrontColor, RGB(" + Str(Red(TmpColor)) + ", " + Str(Green(TmpColor)) + ", " + Str(Blue(TmpColor)) + "))" +#CRLF$
+          EndIf
+          ;Code +INDENT$+INDENT$+ "SetGadgetColor(" + Name + ", #PB_Gadget_FrontColor, " + \FrontColor + ")" +#CRLF$
         EndIf
         If Left(\BackColor, 5) <> "#Nooo" And \BackColor <> ""
-          Code +INDENT$+INDENT$+ "SetGadgetColor(" + Name + ", #PB_Gadget_BackColor, " + \BackColor + ")" +#CRLF$
+          TmpColor = Val(\BackColor)
+          If Hexa_Color = 1
+            Code +INDENT$+INDENT$+ "SetGadgetColor(" + Name + ", #PB_Gadget_BackColor, $" + RSet(Hex(Blue(TmpColor)), 2, "0") + RSet(Hex(Green(TmpColor)), 2, "0") + RSet(Hex(Red(TmpColor)), 2, "0") + ")" +#CRLF$   ;Hex value in BGR format
+          Else
+            Code +INDENT$+INDENT$+ "SetGadgetColor(" + Name + ", #PB_Gadget_BackColor, RGB(" + Str(Red(TmpColor)) + ", " + Str(Green(TmpColor)) + ", " + Str(Blue(TmpColor)) + "))" +#CRLF$
+          EndIf
+          ;Code +INDENT$+INDENT$+ "SetGadgetColor(" + Name + ", #PB_Gadget_BackColor, " + \BackColor + ")" +#CRLF$
         EndIf
         
         If \ToolTip <> "#Nooo" And \ToolTip <> ""
@@ -2183,7 +2206,7 @@ CompilerIf #PB_Compiler_IsMainFile
     Data.b $44,$AE,$42,$60,$82
     
     ModelGadgets:   ;31 Gadgets Models +window Model
-                    ;"Model","Order","GadgetType","Width","Height","Name","Caption","Option1","Option2","Option3","FrontColor","BackColor","ToolTip","Constants"
+    ;"Model","Order","GadgetType","Width","Height","Name","Caption","Option1","Option2","Option3","FrontColor","BackColor","ToolTip","Constants"
     Data.s "OpenWindow","0","","640","480","Window","#Text","","","","#Nooo","","#Nooo","Window_SystemMenu(x)|Window_MinimizeGadget(x)|Window_MaximizeGadget(x)|Window_SizeGadget(x)|Window_Invisible|Window_TitleBar|Window_Tool|Window_BorderLess|Window_ScreenCentered(x)|Window_WindowCentered|Window_Maximize|Window_Minimize|Window_NoGadgets"
     Data.s "ButtonGadget","1","1","100","20","Button","#Text","","","","#Nooo","#Nooo","","Button_Right|Button_Left|Button_Default|Button_MultiLine|Button_Toggle"
     Data.s "ButtonImageGadget","2","19","100","20","ButtonImage","","#Imag:0","","","#Nooo","#Nooo","","Button_Toggle"
@@ -2226,13 +2249,13 @@ CompilerEndIf
 ; UseIcon = Include\SweetyVD.ico
 ; Executable = SweetyVD.exe
 ; EnablePurifier
-; Constant = #BuildVersion = "1.9.23"
+; Constant = #BuildVersion = "1.9.24"
 ; IncludeVersionInfo
-; VersionField0 = 1.9.23
-; VersionField1 = 1.9.23
+; VersionField0 = 1.9.24
+; VersionField1 = 1.9.24
 ; VersionField3 = SweetyVD.exe
-; VersionField4 = 1.9.23
-; VersionField5 = 1.9.23
+; VersionField4 = 1.9.24
+; VersionField5 = 1.9.24
 ; VersionField6 = Sweety Visual Designer
 ; VersionField7 = SweetyVD.exe
 ; VersionField8 = SweetyVD.exe
