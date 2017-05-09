@@ -123,7 +123,7 @@ Procedure FullColorRequester()   ;Place CHOOSECOLOR Info into requester()
   COLORREF\RGB[15] = COLORREF16
   
   CHOOSECOLOR\LStructSize = SizeOf(CHOOSECOLOR)
-  CHOOSECOLOR\hwndOwner = 0   ;WindowID(#Window)
+  CHOOSECOLOR\hwndOwner = WindowID(0)
   CHOOSECOLOR\rgbResult = 0   ;Nothing selected
   CHOOSECOLOR\lpCustColors = COLORREF
   CHOOSECOLOR\flags = #CC_ANYCOLOR | #CC_FULLOPEN | #CC_RGBINIT
@@ -156,8 +156,8 @@ EndProcedure
 ;Debug "Color Selected " + FullColorRequester()
 
 ; IDE Options = PureBasic 5.60 (Windows - x64)
-; CursorPosition = 155
-; FirstLine = 99
+; CursorPosition = 125
+; FirstLine = 121
 ; Folding = -
 ; EnableXP
 ; Executable = FullColorRequester.exe
