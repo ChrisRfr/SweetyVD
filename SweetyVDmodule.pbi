@@ -3,11 +3,11 @@
 ;    Description: Sweety Visual Designer Module
 ;         Author: ChrisR
 ;           Date: 2017-05-09
-;        Version: 1.9.24
+;        Version: 1.9.25
 ;     PB-Version: 5.60 (x86/x64)
 ;             OS: Windows, Linux, Mac
-;         Credit: Stargâte: Transformation of gadgets at runtime
-;         Credit: Falsam: Tiny Visual Designer (TVD)
+;         Credit: Stargâte - Transformation of gadgets at runtime
+;         Credit: Falsam - Tiny Visual Designer (TVD)
 ;  English-Forum: http://www.purebasic.fr/english/viewtopic.php?f=27&t=68187
 ;   French-Forum: http://www.purebasic.fr/french/viewtopic.php?f=3&t=16527
 ; ---------------------------------------------------------------------------------------

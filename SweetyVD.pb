@@ -4,11 +4,12 @@
 ;     dependency: SweetyVDmodule.pbi (Sweety Visual Designer Module)
 ;         Author: ChrisR
 ;           Date: 2017-05-09
-;        Version: 1.9.24
+;        Version: 1.9.25
 ;     PB-Version: 5.60 (x86/x64)
 ;             OS: Windows, Linux, Mac
-;         Credit: Stargâte: Transformation of gadgets at runtime
-;         Credit: Falsam: Tiny Visual Designer (TVD)
+;         Credit: Stargâte - Transformation of gadgets at runtime
+;         Credit: Falsam - Tiny Visual Designer (TVD)
+;         Credit: blueb - FullColorRequester
 ;  English-Forum: http://www.purebasic.fr/english/viewtopic.php?f=27&t=68187
 ;   French-Forum: http://www.purebasic.fr/french/viewtopic.php?f=3&t=16527
 ; ---------------------------------------------------------------------------------------
@@ -57,6 +58,9 @@ CompilerIf #PB_Compiler_IsMainFile
   XIncludeFile "GetTempFilename.pb"
   XIncludeFile "DelOldFiles.pb"
   XIncludeFile "TabBarGadget.pbi"
+  CompilerIf #PB_Compiler_OS = #PB_OS_Windows
+    XIncludeFile "FullColorRequester.pb"
+  CompilerEndIf
   
   Enumeration
     #MainWindow
@@ -1992,7 +1996,11 @@ CompilerIf #PB_Compiler_IsMainFile
             Case #FrontColorPick
               IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
               GadgetsElement = GetGadgetElement(IdGadget)
-              SelectedColor = ColorRequester()
+              CompilerIf #PB_Compiler_OS = #PB_OS_Windows
+                SelectedColor = FullColorRequester()
+              CompilerElse
+                SelectedColor = ColorRequester()
+              CompilerEndIf
               If SelectedColor = -1
                 SetGadgetAttribute(#FrontColorPick, #PB_Button_Image, 0)
                 Gadgets(GadgetsElement)\FrontColor = ""
@@ -2014,7 +2022,11 @@ CompilerIf #PB_Compiler_IsMainFile
             Case #BackColorPick
               IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
               GadgetsElement = GetGadgetElement(IdGadget)
-              SelectedColor = ColorRequester()
+              CompilerIf #PB_Compiler_OS = #PB_OS_Windows
+                SelectedColor = FullColorRequester()
+              CompilerElse
+                SelectedColor = ColorRequester()
+              CompilerEndIf
               If SelectedColor = -1
                 SetGadgetAttribute(#BackColorPick, #PB_Button_Image, 0)
                 Gadgets(GadgetsElement)\BackColor = ""
@@ -2251,11 +2263,11 @@ CompilerEndIf
 ; EnablePurifier
 ; Constant = #BuildVersion = "1.9.24"
 ; IncludeVersionInfo
-; VersionField0 = 1.9.24
-; VersionField1 = 1.9.24
+; VersionField0 = 1.9.25
+; VersionField1 = 1.9.25
 ; VersionField3 = SweetyVD.exe
-; VersionField4 = 1.9.24
-; VersionField5 = 1.9.24
+; VersionField4 = 1.9.25
+; VersionField5 = 1.9.25
 ; VersionField6 = Sweety Visual Designer
 ; VersionField7 = SweetyVD.exe
 ; VersionField8 = SweetyVD.exe
