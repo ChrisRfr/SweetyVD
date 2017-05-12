@@ -1,24 +1,24 @@
-﻿;==================================================================
-;
+﻿;==============================================================================
 ; Author:     blueb
 ; Date:       May 8, 2017
 ; Explain:    Create a new ColorRequester that saves User Colors (between calls)
 ; Forum:      http://www.purebasic.fr/english/viewtopic.php?f=12&t=68450
 ; Saved as:   FullColorRequester.pb
-;=========================================================
+; Addition:   ChrisR: ColorPref array + choose color window position
+;==============================================================================
 
 EnableExplicit
-; --------------------------------------------------------------------------
+; -----------------------------------------------------------------------------
 ; Goal - write a 'Unique' preference file in the temporary directory that 
 ; stays in the temporary directory even when user switches to other programs.
 ; It will keep the special colors the user last adjusted.
-; --------------------------------------------------------------------------
+; -----------------------------------------------------------------------------
 Declare InitColorPrefs()
 Declare ExitColorPrefs()
-Declare FullColorRequester()
+Declare FullColorRequester(X.i = 0, Y.i = 0)
 
 Structure COLORREF
-  RGB.l[16]
+  RGB.i[16]
 EndStructure 
 
 ; Structure CHOOSECOLOR ; see PB toolbox
@@ -34,130 +34,84 @@ EndStructure
 ; EndStructure
 
 ; Needed for preferences file.
-Global.i  COLORREF1, COLORREF2, COLORREF3, COLORREF4, COLORREF5, COLORREF6, COLORREF7, COLORREF8, COLORREF9 
-Global.i  COLORREF10, COLORREF11, COLORREF12, COLORREF13, COLORREF14, COLORREF15, COLORREF16
+Global.i Dim ColorPref(15)
 
-Procedure InitColorPrefs()   ;Color Preference file - Storage information
-  If OpenPreferences(GetTemporaryDirectory() + "GetUserColors.prefs") = 0 ; Does not exist, "GetUserColors.prefs" is erased. So create it with Default values
-    CreatePreferences(GetTemporaryDirectory() + "GetUserColors.prefs")
-    WritePreferenceInteger("COLORREF1", COLORREF1)   ;The first color
-    WritePreferenceInteger("COLORREF2", COLORREF2)
-    WritePreferenceInteger("COLORREF3", COLORREF3)
-    WritePreferenceInteger("COLORREF4", COLORREF4)
-    WritePreferenceInteger("COLORREF5", COLORREF5)
-    WritePreferenceInteger("COLORREF6", COLORREF6)
-    WritePreferenceInteger("COLORREF7", COLORREF7)
-    WritePreferenceInteger("COLORREF8", COLORREF8)
-    WritePreferenceInteger("COLORREF9", COLORREF9)
-    WritePreferenceInteger("COLORREF10", COLORREF10)
-    WritePreferenceInteger("COLORREF11", COLORREF11)
-    WritePreferenceInteger("COLORREF12", COLORREF12)
-    WritePreferenceInteger("COLORREF13", COLORREF13)
-    WritePreferenceInteger("COLORREF14", COLORREF14)
-    WritePreferenceInteger("COLORREF15", COLORREF15)
-    WritePreferenceInteger("COLORREF16", COLORREF16)
+Procedure InitColorPrefs()   ;Color Preference file - Storage information in GetCurrentDirectory for SweetyVD instead of GetTemporaryDirectory()
+  Protected I.l
+  If OpenPreferences(GetCurrentDirectory() + "GetUserColors.prefs") = 0 ; Does not exist, "GetUserColors.prefs" is erased. So create it with Default values
+    CreatePreferences(GetCurrentDirectory() + "GetUserColors.prefs")
+    For I = 0 To 15
+      WritePreferenceInteger("COLORREF"+Str(I+1), ColorPref(I))
+    Next
     ClosePreferences()
   Else   ;It exists, retrieve the GetUserColors.prefs information
-    COLORREF1 = ReadPreferenceInteger("COLORREF1", COLORREF1)   ;The first user color
-    COLORREF2 = ReadPreferenceInteger("COLORREF2", COLORREF2)
-    COLORREF3 = ReadPreferenceInteger("COLORREF3", COLORREF3)
-    COLORREF4 = ReadPreferenceInteger("COLORREF4", COLORREF4)
-    COLORREF5 = ReadPreferenceInteger("COLORREF5", COLORREF5)
-    COLORREF6 = ReadPreferenceInteger("COLORREF6", COLORREF6)
-    COLORREF7 = ReadPreferenceInteger("COLORREF7", COLORREF7)
-    COLORREF8 = ReadPreferenceInteger("COLORREF8", COLORREF8)
-    COLORREF9 = ReadPreferenceInteger("COLORREF9", COLORREF9)
-    COLORREF10 = ReadPreferenceInteger("COLORREF10", COLORREF10)
-    COLORREF11 = ReadPreferenceInteger("COLORREF11", COLORREF11)
-    COLORREF12 = ReadPreferenceInteger("COLORREF12", COLORREF12)
-    COLORREF13 = ReadPreferenceInteger("COLORREF13", COLORREF13)
-    COLORREF14 = ReadPreferenceInteger("COLORREF14", COLORREF14)
-    COLORREF15 = ReadPreferenceInteger("COLORREF15", COLORREF15)
-    COLORREF16 = ReadPreferenceInteger("COLORREF16", COLORREF16)
+    For I = 0 To 15
+      ColorPref(I) = ReadPreferenceInteger("COLORREF"+Str(I+1), ColorPref(I))
+    Next
     ClosePreferences()
   EndIf
 EndProcedure
 
 Procedure ExitColorPrefs()
-  If OpenPreferences(GetTemporaryDirectory() + "GetUserColors.prefs")
-    WritePreferenceInteger("COLORREF1", COLORREF1)   ;The first color
-    WritePreferenceInteger("COLORREF2", COLORREF2)
-    WritePreferenceInteger("COLORREF3", COLORREF3)
-    WritePreferenceInteger("COLORREF4", COLORREF4)
-    WritePreferenceInteger("COLORREF5", COLORREF5)
-    WritePreferenceInteger("COLORREF6", COLORREF6)
-    WritePreferenceInteger("COLORREF7", COLORREF7)
-    WritePreferenceInteger("COLORREF8", COLORREF8)
-    WritePreferenceInteger("COLORREF9", COLORREF9)
-    WritePreferenceInteger("COLORREF10", COLORREF10)
-    WritePreferenceInteger("COLORREF11", COLORREF11)
-    WritePreferenceInteger("COLORREF12", COLORREF12)
-    WritePreferenceInteger("COLORREF13", COLORREF13)
-    WritePreferenceInteger("COLORREF14", COLORREF14)
-    WritePreferenceInteger("COLORREF15", COLORREF15)
-    WritePreferenceInteger("COLORREF16", COLORREF16)
+  Protected I.l
+  If OpenPreferences(GetCurrentDirectory() + "GetUserColors.prefs")
+    For I = 0 To 15
+      WritePreferenceInteger("COLORREF"+Str(I+1), ColorPref(I))
+    Next
     ClosePreferences()
    EndIf
 EndProcedure
 
-Procedure FullColorRequester()   ;Place CHOOSECOLOR Info into requester()
-  Protected CHOOSECOLOR.CHOOSECOLOR, COLORREF.COLORREF
-  
+Procedure FullColorRequester(X.i = 0, Y.i = 0)   ;Place CHOOSECOLOR Info into requester()
+  Protected CHOOSECOLOR.CHOOSECOLOR, COLORREF.COLORREF, hwnd.i, I.l
+  hwnd = OpenWindow(#PB_Any, X, Y, 0, 0, "", #PB_Window_Invisible)
+  StickyWindow(hwnd, #True)
   InitColorPrefs()
   ;Place saved colors inside requester()
-  COLORREF\RGB[0] = COLORREF1
-  COLORREF\RGB[1] = COLORREF2
-  COLORREF\RGB[2] = COLORREF3
-  COLORREF\RGB[3] = COLORREF4
-  COLORREF\RGB[4] = COLORREF5
-  COLORREF\RGB[5] = COLORREF6
-  COLORREF\RGB[6] = COLORREF7
-  COLORREF\RGB[7] = COLORREF8
-  COLORREF\RGB[8] = COLORREF9
-  COLORREF\RGB[9] = COLORREF10
-  COLORREF\RGB[10] = COLORREF11
-  COLORREF\RGB[11] = COLORREF12
-  COLORREF\RGB[12] = COLORREF13
-  COLORREF\RGB[13] = COLORREF14
-  COLORREF\RGB[14] = COLORREF15
-  COLORREF\RGB[15] = COLORREF16
+  For I = 0 To 15
+    COLORREF\RGB[I] = ColorPref(I)
+  Next
   
   CHOOSECOLOR\LStructSize = SizeOf(CHOOSECOLOR)
-  CHOOSECOLOR\hwndOwner = WindowID(0)
+  If IsWindow(hwnd)   ;Window Owner
+    CHOOSECOLOR\hwndOwner = WindowID(hwnd)
+  Else   ;No Owner
+    CHOOSECOLOR\hwndOwner = 0
+  EndIf
   CHOOSECOLOR\rgbResult = 0   ;Nothing selected
   CHOOSECOLOR\lpCustColors = COLORREF
-  CHOOSECOLOR\flags = #CC_ANYCOLOR | #CC_FULLOPEN | #CC_RGBINIT
+  CHOOSECOLOR\flags = #CC_ANYCOLOR | #CC_RGBINIT
   
   If ChooseColor_(@CHOOSECOLOR)
-     COLORREF1 =COLORREF\RGB[0]
-     COLORREF2 =COLORREF\RGB[1]
-     COLORREF3 =COLORREF\RGB[2]
-     COLORREF4 =COLORREF\RGB[3]
-     COLORREF5 =COLORREF\RGB[4]
-     COLORREF6 =COLORREF\RGB[5]
-     COLORREF7 =COLORREF\RGB[6]
-     COLORREF8 =COLORREF\RGB[7]
-     COLORREF9 =COLORREF\RGB[8]
-     COLORREF10 =COLORREF\RGB[9]
-     COLORREF11 =COLORREF\RGB[10]
-     COLORREF12 =COLORREF\RGB[11]
-     COLORREF13 =COLORREF\RGB[12]
-     COLORREF14 =COLORREF\RGB[13]
-     COLORREF15 =COLORREF\RGB[14]
-     COLORREF16 =COLORREF\RGB[15]
+    For I = 0 To 15
+      ColorPref(I) = COLORREF\RGB[I]
+    Next
     ExitColorPrefs()   ;Save info and Return Color Selected
+    CloseWindow(hwnd)
+    If CHOOSECOLOR\flags & #CC_FULLOPEN
+      Debug CHOOSECOLOR\flags
+    EndIf
     ProcedureReturn CHOOSECOLOR\rgbResult
   Else   ;No color was selected
     ExitColorPrefs()   ;Save info
+    CloseWindow(hwnd)
     ProcedureReturn -1
   EndIf
 EndProcedure
 
-;Debug "Color Selected " + FullColorRequester()
+; Define SelectedColor.i = FullColorRequester(100, 100)
+; Debug ColorRequester()
+; If SelectedColor = -1
+;   Debug "Canceled by user"
+; Else
+;   Debug "Color Selected: " + SelectedColor
+;   Debug "Hex: " + "$" + RSet(Hex(Blue(SelectedColor)), 2, "0") + RSet(Hex(Green(SelectedColor)), 2, "0") + RSet(Hex(Red(SelectedColor)), 2, "0")   ;Hex value in BGR format
+;   Debug "RGB(" + Str(Red(SelectedColor)) + ", " + Str(Green(SelectedColor)) + ", " + Str(Blue(SelectedColor)) + ")"
+; EndIf
 
 ; IDE Options = PureBasic 5.60 (Windows - x64)
-; CursorPosition = 125
-; FirstLine = 121
+; CursorPosition = 56
+; FirstLine = 82
 ; Folding = -
 ; EnableXP
 ; Executable = FullColorRequester.exe
