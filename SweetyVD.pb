@@ -1099,7 +1099,7 @@ CompilerIf #PB_Compiler_IsMainFile
         WriteStringFormat(hFile, #PB_UTF8)
         WriteStringN(hFile, Code)
         CloseFile(hFile)
-        RunProgram(PBIDEpath, TmpFile, "")
+        RunProgram(PBIDEpath, #DQUOTE$ + TmpFile + #DQUOTE$, "")
         CompilerIf #PB_Compiler_OS = #PB_OS_Windows
           ShowWindow_(WindowID(#MainWindow), #SW_MINIMIZE)
         CompilerElse
@@ -1997,7 +1997,7 @@ CompilerIf #PB_Compiler_IsMainFile
               IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
               GadgetsElement = GetGadgetElement(IdGadget)
               CompilerIf #PB_Compiler_OS = #PB_OS_Windows
-                SelectedColor = FullColorRequester()
+                SelectedColor = FullColorRequester(WindowX(#MainWindow)+220, WindowY(#MainWindow)+245)
               CompilerElse
                 SelectedColor = ColorRequester()
               CompilerEndIf
@@ -2023,7 +2023,7 @@ CompilerIf #PB_Compiler_IsMainFile
               IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
               GadgetsElement = GetGadgetElement(IdGadget)
               CompilerIf #PB_Compiler_OS = #PB_OS_Windows
-                SelectedColor = FullColorRequester()
+                SelectedColor = FullColorRequester(WindowX(#MainWindow)+220, WindowY(#MainWindow)+245)
               CompilerElse
                 SelectedColor = ColorRequester()
               CompilerEndIf
@@ -2261,13 +2261,13 @@ CompilerEndIf
 ; UseIcon = Include\SweetyVD.ico
 ; Executable = SweetyVD.exe
 ; EnablePurifier
-; Constant = #BuildVersion = "1.9.24"
+; Constant = #BuildVersion = "1.9.26"
 ; IncludeVersionInfo
-; VersionField0 = 1.9.25
-; VersionField1 = 1.9.25
+; VersionField0 = 1.9.26
+; VersionField1 = 1.9.26
 ; VersionField3 = SweetyVD.exe
-; VersionField4 = 1.9.25
-; VersionField5 = 1.9.25
+; VersionField4 = 1.9.26
+; VersionField5 = 1.9.26
 ; VersionField6 = Sweety Visual Designer
 ; VersionField7 = SweetyVD.exe
 ; VersionField8 = SweetyVD.exe
