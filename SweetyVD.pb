@@ -764,11 +764,11 @@ CompilerIf #PB_Compiler_IsMainFile
     SetGadgetState(#PosGadgetX, 0) : SetGadgetState(#PosGadgetY, 0)
     SetGadgetState(#PosGadgetWidth, GetGadgetState(#SetDrawWidth)) : SetGadgetState(#PosGadgetHeight, GetGadgetState(#SetDrawHeight))
     LoadGadgetProperties(#MainWindow)
-    HideGadget(#AddMenu, #False) : HideGadget(#AddPopupMenu, #False) : HideGadget(#AddToolBar, #False) : HideGadget(#AddStatusBar, #False)
+    ;HideGadget(#AddMenu, #False) : HideGadget(#AddPopupMenu, #False) : HideGadget(#AddToolBar, #False) : HideGadget(#AddStatusBar, #False)
   EndProcedure
 
   Procedure InitProperties()
-    HideGadget(#AddMenu, #True) : HideGadget(#AddPopupMenu, #True) : HideGadget(#AddToolBar, #True) : HideGadget(#AddStatusBar, #True)
+    ;HideGadget(#AddMenu, #True) : HideGadget(#AddPopupMenu, #True) : HideGadget(#AddToolBar, #True) : HideGadget(#AddStatusBar, #True)
     DisableGadget(#CaptionString,#True)
     DisableGadget(#ToolTipString,#False)
     HideGadget(#MiniText, #True) : HideGadget(#MiniString, #True)
