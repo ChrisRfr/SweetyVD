@@ -18,7 +18,7 @@ Declare ExitColorPrefs()
 Declare FullColorRequester(X.i = 0, Y.i = 0)
 
 Structure COLORREF
-  RGB.i[16]
+  RGB.l[16]
 EndStructure 
 
 ; Structure CHOOSECOLOR ; see PB toolbox
@@ -110,8 +110,6 @@ EndProcedure
 ; EndIf
 
 ; IDE Options = PureBasic 5.60 (Windows - x64)
-; CursorPosition = 56
-; FirstLine = 82
 ; Folding = -
 ; EnableXP
 ; Executable = FullColorRequester.exe
