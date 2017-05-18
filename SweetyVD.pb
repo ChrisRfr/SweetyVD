@@ -7,9 +7,10 @@
 ;        Version: 1.9.25
 ;     PB-Version: 5.60 (x86/x64)
 ;             OS: Windows, Linux, Mac
-;         Credit: Stargâte - Transformation of gadgets at runtime
-;         Credit: Falsam - Tiny Visual Designer (TVD)
-;         Credit: blueb - FullColorRequester
+;         Credit: Stargâte: Transformation of gadgets at runtime
+;                 Falsam: Tiny Visual Designer (TVD)
+;                 blueb: FullColorRequester
+;                 Zebuddi: Add PreFix and SuFix for variable (eg: iButton_1.i)
 ;  English-Forum: http://www.purebasic.fr/english/viewtopic.php?f=27&t=68187
 ;   French-Forum: http://www.purebasic.fr/french/viewtopic.php?f=3&t=16527
 ; ---------------------------------------------------------------------------------------
@@ -20,7 +21,7 @@
 
 CompilerIf #PB_Compiler_IsMainFile
   EnableExplicit
-  
+
   ;Import internal function
   CompilerSelect #PB_Compiler_OS
     CompilerCase #PB_OS_Windows
@@ -37,8 +38,8 @@ CompilerIf #PB_Compiler_IsMainFile
         ImportC "/usr/lib/x86_64-linux-gnu/libwebkitgtk-3.0.so.0" ;Ubuntu/Kubuntu/Xubuntu x64 with GTK3
       CompilerEndIf
     CompilerCase #PB_OS_MacOS
-      #PB_IDE = "PureBasic.app"
-      ImportC ""
+    #PB_IDE = "PureBasic.app"
+    ImportC ""
   CompilerEndSelect
   PB_Object_EnumerateStart( PB_Objects )
   PB_Object_EnumerateNext( PB_Objects, *ID.Integer )
@@ -47,11 +48,11 @@ CompilerIf #PB_Compiler_IsMainFile
   PB_Window_Objects.i
   PB_Gadget_Objects.i
   EndImport
-        
+
   ;Dependency: SweetyVDmodule.pbi (Sweety Visual Designer Module)
   XIncludeFile "SweetyVDmodule.pbi"
   UseModule SVDesigner
-  
+
   IncludePath "Include"
   XIncludeFile "LoadFontWML.pb"
   XIncludeFile "GetPBIDE.pb"
@@ -61,7 +62,7 @@ CompilerIf #PB_Compiler_IsMainFile
   CompilerIf #PB_Compiler_OS = #PB_OS_Windows
     XIncludeFile "FullColorRequester.pb"
   CompilerEndIf
-  
+
   Enumeration
     #MainWindow
     #PopUpMenu
@@ -76,6 +77,10 @@ CompilerIf #PB_Compiler_IsMainFile
     #DragSpace
     #ShowGrid
     #GridSize
+    #AddMenu
+    #AddPopupMenu
+    #AddToolBar
+    #AddStatusBar
     #GadgetList
     #ListGadgets
     #DeleteGadgetButton
@@ -116,39 +121,53 @@ CompilerIf #PB_Compiler_IsMainFile
     #CodeVariable
     #CodeConstants
     #CodePBany
-    #CodeStatusBar
+    #FrameAdd
     #CodeEventLoop
     #CodeSeparator
     #CodeCustomAddition
+    #CodeFrameOption
+    #CodeFrameColor
+    #CodeColorRGB
+    #CodeColorHex
+    #CodeFramePrePost
+    #TextGadget_PreFix
+    #StringGadget_PreFix
+    #CheckBox_Suffix
+    #CodeFrameIndent
+    #Text_SpaceIndent
+    #Spin_SpaceIndent
+    #CheckBox_TabIndent
     #AboutButton
-    #Shortcut_Insert
     #AboutForm
     #AboutBack
     #Licence
+    ;Others
+    #Shortcut_Insert
+    #WinBarHeight
     ;JSON Gadget templates file
     #JSONFile
   EndEnumeration
-  
+
   Enumeration FormImage
     #Vd_Unknow
     #Img_Delete
     #Img_About
   EndEnumeration
-  
+
   #CountModelGadget = 32
-  
+
   Structure GadgetCtrl
     GadgetCtrlImage.i
     GadgetCtrlName.s
   EndStructure
   Global Dim GadgetCtrlArray.GadgetCtrl(0)
-  
+
   Structure ImageBtnPath
     ImageBtn.i
     ImagePath.s
   EndStructure
   Global Dim ImageBtnPathArray.ImageBtnPath(0)
-  
+
   Structure ModelGadgetProperty   ;Structure Gadget templates from Data Section
     Model.s                       ;Gadget Model (ButtonGadget, TextGadget ........)
     Order.i                       ;Tri
@@ -169,12 +188,13 @@ CompilerIf #PB_Compiler_IsMainFile
     CountGadget.i                 ;Gadget Counter by Model
   EndStructure
   Global Dim ModelGadget.ModelGadgetProperty(0)
-  
+
   Structure StructureGadget       ;Structure of gadgets. 0 is reserved for the window Draw Area
     Idgadget.i                    ;Id gadget
     Model.s                       ;Gadget Model (ButtonGadget, TextGadget ........)
     Type.i                        ;Type
     Name.s                        ;Name
+    Vname.s                       ;Variable Name Prefix and Post Fix
     X.i                           ;X
     Y.i                           ;Y
     Width.i                       ;Width
@@ -194,18 +214,14 @@ CompilerIf #PB_Compiler_IsMainFile
   Global Dim Gadgets.StructureGadget(0)
   Global CountGadgets.i, CountImageBtn.i, IdDrawGadgets.i = 1000000000
   Global X.i, Y.i
-  
+
   Declare StartPrefs()
-  Declare ExitPrefs() 
+  Declare ExitPrefs()
   Declare LoadControls()
   Declare InitModelWindow()
   Declare InitModelgadget()
-  Declare InitJSONModelGadget()  
+  Declare InitJSONModelGadget()
   Declare SaveJSONModelGadget()
-  Declare AboutForm()
-  Declare CodeCreateForm()
-  Declare CodeCreate(Dest.s = "Clipboard")
-  Declare.s CustomAddition(Group.s)
   Declare CreateGadgets(Model.s)
   Declare InitWindowSelected()
   Declare InitProperties()
@@ -217,9 +233,11 @@ CompilerIf #PB_Compiler_IsMainFile
   Declare OpenMainWindow(Designer_Width,Designer_Height, X = 0, Y = 0)
   Declare Init()
   Declare Exit()
-  
+
   UsePNGImageDecoder()
   UseJPEGImageDecoder()
+  ;Code Create Form and Code creation
+  XIncludeFile "CodeCreate.pb"
   
   Procedure StartPrefs()
     Global Designer_Width.i = 1000
@@ -230,11 +248,11 @@ CompilerIf #PB_Compiler_IsMainFile
     ShowGrid = #True
     GridSize = 20
     If OpenPreferences("SweetyVD.ini", #PB_Preference_GroupSeparator) = 0   ;Create Default SweetyVD.ini setting
-      ;Canvas_Size_X = 1600  not working
+                                                                            ;Canvas_Size_X = 1600  not working
       CreatePreferences("SweetyVD.ini", #PB_Preference_GroupSeparator)
       PreferenceComment("The size of the drawing area (OpenWindow) is defined in the Gadget templates: SweetyVD.json file")
       ;PreferenceComment("SaveOnExit Save Designer_Width, Designer_Height, Designer_Maximize, Drag_Space, Show_Grid and Grid_Size on Exit")
-      ;PreferenceComment("Boolean value 0/1: SaveOnExit, Designer_Maximize, Show_Grid, Include_TitleBlock, Include_Enumeration, Variable, Include_StatusBar, Include_EventLoop")
+      ;PreferenceComment("Boolean value 0/1: SaveOnExit, Designer_Maximize, Show_Grid, Include_TitleBlock, Include_Enumeration, Variable, Add_StatusBar, Include_EventLoop")
       PreferenceComment("")
       PreferenceGroup("Designer")
       WritePreferenceLong("SaveOnExit", 1)
@@ -248,15 +266,21 @@ CompilerIf #PB_Compiler_IsMainFile
       WritePreferenceLong("Drag_Space", DragSpace)
       WritePreferenceLong("Show_Grid", ShowGrid)
       WritePreferenceLong("Grid_Size", GridSize)
-      WritePreferenceLong("Hexa_Color", 0)
       ;Init Code Create Window
       PreferenceGroup("CodeCreate")
       WritePreferenceLong("Include_TitleBlock", 1)
       WritePreferenceLong("Include_Enumeration", 1)
       WritePreferenceLong("Variable", 0)
-      WritePreferenceLong("Include_StatusBar", 0)
       WritePreferenceLong("Include_EventLoop", 1)
       WritePreferenceLong("Include_CustomAddition", 0)
+      PreferenceGroup("CodeOption")
+      WritePreferenceLong("Hexa_Color", 0)
+      PreferenceComment("Pre/Post fixes for Variables")
+      WritePreferenceString("PreFix", "i")
+      WritePreferenceString("Suffix", ".i")
+      WritePreferenceLong("Suffix_Enabled", 1)
+      WritePreferenceLong("Space_Indentation", 2)
+      WritePreferenceLong("Tab_Indentation", 0)
       ;Default Title Block
       PreferenceGroup("TitleBlock")
       PreferenceComment("Use FormatDate (%yyyy, %yy, %mm, %dd + Separator) to format the current date, variable: %Date%")
@@ -292,7 +316,7 @@ CompilerIf #PB_Compiler_IsMainFile
       WritePreferenceString("Line01", "")
       PreferenceGroup("CustomAddition_Init")
       WritePreferenceString("Line01", "")
-      PreferenceGroup("CustomAddition_Main") 
+      PreferenceGroup("CustomAddition_Main")
       WritePreferenceString("Line01", "")
       PreferenceGroup("CustomAddition_Exit")
       WritePreferenceString("Line01", "")
@@ -306,10 +330,10 @@ CompilerIf #PB_Compiler_IsMainFile
       DragSpace          = ReadPreferenceLong("Drag_Space", DragSpace)
       ShowGrid           = ReadPreferenceLong("Show_Grid", ShowGrid)
       GridSize           = ReadPreferenceLong("Grid_Size", GridSize)
-      ClosePreferences() 
+      ClosePreferences()
     EndIf
   EndProcedure
-  
+
   Procedure ExitPrefs()
     Protected Designer_Maximize.b
     If OpenPreferences("SweetyVD.ini", #PB_Preference_GroupSeparator) = 0 : StartPrefs() : EndIf
@@ -329,7 +353,7 @@ CompilerIf #PB_Compiler_IsMainFile
       EndIf
     EndIf
   EndProcedure
-  
+
   Procedure LoadControls()
     Protected ZipFile.i, GadgetName.s, GadgetImageSize.i, *GadgetImage, GadgetImage, GadgetCtrlCount.l
     Define ZipFileTheme.s = GetCurrentDirectory()+"SilkTheme.zip"
@@ -347,16 +371,16 @@ CompilerIf #PB_Compiler_IsMainFile
     CompilerIf #PB_Compiler_Version > 522
       UseZipPacker()
     CompilerEndIf
-    
+
     GadgetImage = CatchImage(#PB_Any,?Vd_Unknow)
     GadgetCtrlArray(GadgetCtrlCount)\GadgetCtrlImage=GadgetImage
     GadgetCtrlArray(GadgetCtrlCount)\GadgetCtrlName="Unknow"
-    
+
     ZipFile = OpenPack(#PB_Any, ZipFileTheme, #PB_PackerPlugin_Zip)
     If ZipFile
       If ExaminePack(ZipFile)
         While NextPackEntry(ZipFile)
-          
+
           GadgetName = PackEntryName(ZipFile)
           GadgetName = ReplaceString(GadgetName,"chart_bar","vd_tabbargadget")   ;use chart_bar png for TabBarGadget
           GadgetName = ReplaceString(GadgetName,"page_white_edit","vd_scintillagadget")   ;vd_scintillagadget.png not found. Use page_white_edit.png instead
@@ -369,7 +393,7 @@ CompilerIf #PB_Compiler_IsMainFile
             GadgetName = LCase(GadgetName)
             GadgetName = ReplaceString(GadgetName,".png","")
             GadgetName = ReplaceString(GadgetName,"vd_","")
-            
+
             Select PackEntryType(ZipFile)
               Case #PB_Packer_File
                 If GadgetImage
@@ -379,7 +403,7 @@ CompilerIf #PB_Compiler_IsMainFile
                   GadgetCtrlArray(GadgetCtrlCount)\GadgetCtrlName=GadgetName
                 EndIf
             EndSelect
-            
+
             FreeMemory(*GadgetImage)
           EndIf
         Wend
@@ -387,7 +411,7 @@ CompilerIf #PB_Compiler_IsMainFile
       ClosePack(ZipFile)
     EndIf
   EndProcedure
-  
+
   Procedure InitModelWindow()   ;Initializing Window Templates
     Protected I.i
     For I=0 To ArraySize(ModelGadget())
@@ -424,7 +448,7 @@ CompilerIf #PB_Compiler_IsMainFile
           AddGadgetItem(#ListGadgets, -1, Gadgets(0)\Name)
           SetGadgetState(#ListGadgets, 0)
           SetGadgetItemData(#ListGadgets, 0, 0)
-          
+
           AddGadgetItem(#TreeControls, -1, Gadgets(0)\Name, ImageID(\Image), 0)
           SetGadgetState(#TreeControls, 0)
           SetGadgetItemData(#TreeControls, 0, 0)
@@ -432,9 +456,9 @@ CompilerIf #PB_Compiler_IsMainFile
         Break
       EndIf
     Next
-    
+
   EndProcedure
-  
+
   Procedure InitModelgadget()   ;Initializing Gadget Templates
     Protected Buffer.s, GadgetCtrlFound.b, I.i, J.i
     Restore ModelGadgets
@@ -473,7 +497,7 @@ CompilerIf #PB_Compiler_IsMainFile
           Case 0        ;OpenWindow
             \Image=CatchImage(#PB_Any,?Vd_Window)
             InitModelWindow()   ;Draw Area Width and Height and Save Window information
-          Case 50               ;Custom Gadget 
+          Case 50               ;Custom Gadget
             \Image=CatchImage(#PB_Any,?Vd_Custom)
             AddGadgetItem(#CreateControlsList, -1, \Model, ImageID(\Image))
             MenuItem(I, \Model, ImageID(\Image))   ;Add to popup menu
@@ -496,7 +520,7 @@ CompilerIf #PB_Compiler_IsMainFile
       Next
     EndWith
   EndProcedure
-  
+
   Procedure InitJSONModelGadget()
     Protected GadgetCtrlFound.b, I.i, J.i
     If CreateJSON(#JSONFile)
@@ -509,7 +533,7 @@ CompilerIf #PB_Compiler_IsMainFile
             Case 0
               \Image=CatchImage(#PB_Any,?Vd_Window)
               InitModelWindow()   ;Draw Area Width and Height and Save Window information
-            Case 50               ;Custom Gadget 
+            Case 50               ;Custom Gadget
               \Image=CatchImage(#PB_Any,?Vd_Custom)
               AddGadgetItem(#CreateControlsList, -1, \Model, ImageID(\Image))
               MenuItem(I, \Model, ImageID(\Image))   ;Add to popup menu
@@ -533,621 +557,32 @@ CompilerIf #PB_Compiler_IsMainFile
       EndWith
     EndIf
   EndProcedure
-  
+
   Procedure SaveJSONModelGadget()
     CreateJSON(#JSONFile)   ;Create JSON file
     InsertJSONArray(JSONValue(#JSONFile), ModelGadget())   ;Insert ModelGadget list in JSON file
     SaveJSON(#JSONFile, "SweetyVD.json", #PB_JSON_PrettyPrint)                   ;Save JSON file
   EndProcedure
-  
-  Procedure AboutForm()
-    If OpenWindow(#AboutForm, WindowX(#MainWindow)+GadgetX(#CodeCreate), WindowY(#MainWindow)+70 , 310, 220, "SweetyVD: Licence",#PB_Window_TitleBar)
-      ButtonGadget(#AboutBack, 255, 198, 50, 18, "Back")
-      EditorGadget(#Licence, 5, 5, 300, 190, #PB_Editor_ReadOnly)
-      SetGadgetColor(#Licence, #PB_Gadget_BackColor,RGB(225,230,235))
-      AddGadgetItem(#Licence,-1,"SweetyVD is an open and Freeware tool")
-      AddGadgetItem(#Licence,-1,"and is Free of all Cost.")
-      AddGadgetItem(#Licence,-1,"")
-      AddGadgetItem(#Licence,-1,"You may use an unlimited number")
-      AddGadgetItem(#Licence,-1,"of copies of this tool.")
-      AddGadgetItem(#Licence,-1,"")
-      AddGadgetItem(#Licence,-1,"You may freely distribute SweetyVD.")
-      AddGadgetItem(#Licence,-1,"But you can Not sell it.")
-      AddGadgetItem(#Licence,-1,"")
-      AddGadgetItem(#Licence,-1,"SweetyVD is provided "+#DQUOTE$+"As IS"+#DQUOTE$+" without warranty.")
-      AddGadgetItem(#Licence,-1,"The use of the Software is at your own Risk.")
-      AddGadgetItem(#Licence,-1,"")
-      AddGadgetItem(#Licence,-1,"Thanks to Give Credit Where It's Due.")
-      AddGadgetItem(#Licence,-1,Chr(169)+"2017 ChrisR")
-    EndIf
-  EndProcedure
-  
-  Procedure CodeCreateForm()
-    Protected AnyGadgets.b = #False, I.i
-    Protected Include_TitleBlock.b = 1, Include_Enumeration.b = 1, Variable.b = 0, Include_StatusBar.b = 0, Include_EventLoop.b = 1, Include_CustomAddition.b = 0
-    For I = 1 To ArraySize(Gadgets())   ;At least one Gadget is required
-      If Gadgets(I)\Idgadget > 0 And (Gadgets(I)\ModelType=1 Or Gadgets(I)\ModelType=2)
-        AnyGadgets = #True
-        Break
-      EndIf
-    Next
-    
-    If OpenPreferences("SweetyVD.ini", #PB_Preference_GroupSeparator)
-      PreferenceGroup("CodeCreate")
-      Include_TitleBlock  = ReadPreferenceLong("Include_TitleBlock", Include_TitleBlock)
-      Include_Enumeration  = ReadPreferenceLong("Include_Enumeration", Include_Enumeration)
-      Variable = ReadPreferenceLong("Variable", Variable)
-      Include_StatusBar = ReadPreferenceLong("Include_StatusBar", Include_StatusBar)
-      Include_EventLoop = ReadPreferenceLong("Include_EventLoop", Include_EventLoop)
-      Include_CustomAddition = ReadPreferenceLong("Include_CustomAddition", Include_CustomAddition)
-      ClosePreferences()
-    EndIf
-    
-    If AnyGadgets   ;If at least one Gadget
-      If OpenWindow(#CodeForm, WindowX(#MainWindow)+GadgetX(#CodeCreate), WindowY(#MainWindow)+70 , 250 , 215, "SweetyVD: Create PureBasic code",#PB_Window_TitleBar)
-        CheckBoxGadget(#Code_TitleBlock, 30, 5, 160, 25, "Include Title Block") : SetGadgetState(#Code_TitleBlock, Include_TitleBlock)
-        CheckBoxGadget(#CodeEnumeration, 30, 30, 160, 25, "Include Enumeration") : SetGadgetState(#CodeEnumeration, Include_Enumeration)
-        FrameGadget(#CodeVariable, 26, 50, 180, 35, "")
-        OptionGadget(#CodeConstants, 31, 60, 85, 20, "Constants")
-        OptionGadget(#CodePBany, 116, 60, 70, 20, "#PB_Any")
-        If Variable = 1
-          SetGadgetState(#CodePBany,#True)
-        Else
-          SetGadgetState(#CodeConstants,#True)
-        EndIf
-        CheckBoxGadget(#CodeStatusBar, 30, 85, 160, 25, "Add a Status Bar") : SetGadgetState(#CodeStatusBar, Include_StatusBar)
-        CheckBoxGadget(#CodeEventLoop, 30, 110, 160, 25, "Include the Event Loop") : SetGadgetState(#CodeEventLoop, Include_EventLoop)
-        TextGadget(#CodeSeparator, 10, 132, WindowWidth(#CodeForm)-20, 10, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .")
-        CheckBoxGadget(#CodeCustomAddition, 30, 145, 160, 25, "Include Custom Addition") : SetGadgetState(#CodeCustomAddition, Include_CustomAddition)
-        CatchImage(#Img_About,?Img_About)
-        ButtonImageGadget(#AboutButton, 218, 5, 25, 25, ImageID(#Img_About))
-        If FileSize(PBIDEpath) > 1
-          ButtonGadget(#CodeNewTab, 10, 180, 70, 25, "New Tab", #PB_Button_Toggle) : SetGadgetState(#CodeNewTab, #True)
-          ButtonGadget(#CodeClipboard, 90, 180, 70, 25, "Clipboard")
-        Else
-          ButtonGadget(#CodeClipboard, 10, 180, 70, 25, "Clipboard", #PB_Button_Toggle) : SetGadgetState(#CodeClipboard, #True)
-        EndIf
-        ButtonGadget(#CodeCancel, 170, 180, 70, 25, "Cancel")
-      EndIf
-    Else
-      MessageRequester("SweetyVD Information", "Let me play with at least one Gadget. Please  ;)", #PB_MessageRequester_Warning|#PB_MessageRequester_Ok)
-    EndIf
-  EndProcedure
-  
-  Procedure CodeCreate(Dest.s = "Clipboard")
-    Protected Dim Buffer.StructureGadget(0)
-    Protected IdGadget.i, SavModelType = -1
-    Protected ImageExtPath.s, ImageExtFullPath.s, TmpImagePath.s, IncludeFileAdded.s, IncludeFileAddedTmp.s
-    Protected Include_CustomAddition.b, TmpCode.s, DateFormat.s="%yyyy-%mm-%dd"
-    Protected Code.s, Model.s, Name.s, X.s, Y.s, Width.s, Height.s, Caption.s, Caption7.s
-    Protected Mini.i, Maxi.i, Hexa_Color.b, TmpColor.i, TmpTabName.s, ActiveTab.i=-1, TmpConstants.s, FirstPass.b, INDENT$ = "  ", I.i, J.i
-    
-    If OpenPreferences("SweetyVD.ini", #PB_Preference_GroupSeparator)
-      PreferenceGroup("Designer")
-      Hexa_Color =  ReadPreferenceLong("Hexa_Color", Hexa_Color)
-      ClosePreferences()
-    EndIf
-    Include_CustomAddition = GetGadgetState(#CodeCustomAddition)
-    CopyArray(Gadgets(), Buffer())   ;Sort: Creation of the Model key (Window or Gadget) + Position X + Position Y
-    For I=0 To ArraySize(Buffer())
-      With Buffer(I)
-        If \ModelType = 9   ;Gadget Deleted
-          \Key = Str(\ModelType) + RSet("0", 5, "0") + RSet("0", 5, "0")
-        ElseIf \ModelType = 1
-          \Key = Str(\ModelType) + RSet(Str(\Y), 5, "0") + RSet(Str(\X), 5, "0")
-        ElseIf \ModelType = 2
-          \Key = Str(\ModelType) + RSet(Str(\Y), 5, "0") + RSet(Str(\X), 5, "0")
-        Else
-          \Key = Str(\ModelType) + RSet("0", 5, "0") + RSet("0", 5, "0")
-        EndIf
-      EndWith
-    Next
-    SortStructuredArray(Buffer(), #PB_Sort_Ascending, OffsetOf(StructureGadget\Key), TypeOf(StructureGadget\Key))
-    
-    If GetGadgetState(#Code_TitleBlock) = #True   ;-Include Title block
-      If OpenPreferences("SweetyVD.ini", #PB_Preference_GroupSeparator)
-        PreferenceGroup("TitleBlock")
-        DateFormat =  ReadPreferenceString("FormatDate", DateFormat)
-        ExaminePreferenceKeys()
-        While  NextPreferenceKey()
-          If Left(PreferenceKeyName(), 4) = "Line"
-            TmpCode = ReplaceString(PreferenceKeyValue(), "%Date%", FormatDate(DateFormat, Date()), #PB_String_NoCase, 1)
-            If TmpCode <> "" Or Code <> "": Code + TmpCode +#CRLF$ : EndIf
-          EndIf
-        Wend
-        ClosePreferences()
-      EndIf
-    EndIf
-    Code + #CRLF$
-    
-    If GetGadgetState(#CodeEnumeration) = #True
-      Code + "EnableExplicit" +#CRLF$+#CRLF$
-    EndIf
-    
-    If Include_CustomAddition
-      TmpCode = CustomAddition("CustomAddition_Include")
-      If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
-    EndIf
-     
-    For I=0 To ArraySize(Buffer())   ;XIncludeFile "TabBarGadget.pbi" if used
-      With Buffer(I)
-        Select \Type
-          Case 40   ;Type specific TabBar Gadget
-            If FindString(IncludeFileAdded, "TabBarGadget.pbi;", 1) = 0
-              If FileSize(GetCurrentDirectory() + "CustomGadgets\TabBarGadget.pbi") > 1
-                Code + "XIncludeFile " + #DQUOTE$ + GetCurrentDirectory() + "CustomGadgets\TabBarGadget.pbi" + #DQUOTE$ +#CRLF$
-              ElseIf FileSize(GetCurrentDirectory() + "TabBarGadget.pbi") > 1
-                Code + "XIncludeFile " + #DQUOTE$ + GetCurrentDirectory() + "TabBarGadget.pbi" + #DQUOTE$ +#CRLF$
-              Else
-                Code + "XIncludeFile " + #DQUOTE$ + "TabBarGadget.pbi" + #DQUOTE$ +#CRLF$
-              EndIf
-              IncludeFileAdded + "TabBarGadget.pbi;"
-            EndIf
-          Case 50   ;Custom Gadget
-            For J=0 To ArraySize(ModelGadget())
-              If ModelGadget(J)\Type = \Type
-                IncludeFileAddedTmp = ModelGadget(J)\CustomIncludeFile
-                If FindString(IncludeFileAdded, IncludeFileAddedTmp + ";", 1) = 0
-                  Code + "XIncludeFile " + #DQUOTE$ + IncludeFileAddedTmp + #DQUOTE$ +#CRLF$
-                  IncludeFileAdded + IncludeFileAddedTmp + ";"
-                EndIf
-              EndIf
-            Next
-        EndSelect
-      Next
-    EndWith
-    If IncludeFileAdded <> ""
-      Code +#CRLF$
-    EndIf
-    
-    If Include_CustomAddition
-      TmpCode = CustomAddition("CustomAddition_Constante")
-      If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
-    EndIf
-    If GetGadgetState(#CodeConstants) = 0 And Include_CustomAddition
-      TmpCode = CustomAddition("CustomAddition_Structure")
-      If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
-    EndIf
-    If GetGadgetState(#CodeConstants) = 0 And Include_CustomAddition
-      TmpCode = CustomAddition("CustomAddition_Variable")
-      If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
-    EndIf
-    
-    If GetGadgetState(#CodeEnumeration) = #True   ;-Include Enumeration
-      With Buffer(0)
-        If GetGadgetState(#CodeConstants) = #True
-          Code + "Enumeration Window" +#CRLF$
-          Code +INDENT$+ \Name +#CRLF$
-          Code + "EndEnumeration" +#CRLF$+#CRLF$
-        Else
-          Code + "Global " + Mid(\Name,2) +#CRLF$+#CRLF$
-        EndIf
-      EndWith
-      
-      If GetGadgetState(#CodeStatusBar) = #True
-        If GetGadgetState(#CodeConstants) = #True
-          Code + "Enumeration StatusBar" +#CRLF$
-          Code +INDENT$+ "#StatusBar_0" +#CRLF$
-          Code + "EndEnumeration" +#CRLF$+#CRLF$
-        Else
-          Code + "Global StatusBar_0" +#CRLF$+#CRLF$
-        EndIf
-      EndIf
-      
-      If GetGadgetState(#CodeConstants)
-        Code + "Enumeration Gadgets" +#CRLF$
-      EndIf
-      For I=1 To ArraySize(Buffer())
-        With Buffer(I)
-          If \ModelType = 9 : Break : EndIf   ;Gadget Deleted
-          If GetGadgetState(#CodeConstants)
-            Code +INDENT$+ \Name +#CRLF$
-          Else
-            Code + "Global " + Mid(\Name,2) +#CRLF$
-          EndIf
-        EndWith
-      Next
-      If GetGadgetState(#CodeConstants)
-        Code + "EndEnumeration" +#CRLF$+#CRLF$
-      Else
-        Code +#CRLF$
-      EndIf 
-      
-      If ArraySize(ImageBtnPathArray()) > 0   ;Image Enumeration
-        If GetGadgetState(#CodeConstants) : Code + "Enumeration FormImage"+#CRLF$ :EndIf
-        For I = 1 To ArraySize(ImageBtnPathArray())
-          If FileSize(ImageBtnPathArray(I)\ImagePath)
-            If GetGadgetState(#CodeConstants)
-              Code +INDENT$+ "#Img_Window_" + Str(I) +#CRLF$
-            Else
-              Code + "Global Img_Window_" + Str(I) +#CRLF$
-            EndIf
-          EndIf
-        Next
-        If GetGadgetState(#CodeConstants)
-          Code + "EndEnumeration" +#CRLF$+#CRLF$
-        Else
-          Code +#CRLF$
-        EndIf
-      EndIf
-    EndIf
-    
-    If GetGadgetState(#CodeConstants) And Include_CustomAddition
-      TmpCode = CustomAddition("CustomAddition_Structure")
-      If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
-    EndIf
-    
-    If GetGadgetState(#CodeEnumeration) = #True
-      If ArraySize(ImageBtnPathArray()) > 0   ;Image Enumeration
-        For I=1 To ArraySize(ImageBtnPathArray())   ;UseIMAGEDecoder
-          ImageExtPath = LCase(GetExtensionPart(ImageBtnPathArray(I)\ImagePath))
-          If FindString(ImageExtFullPath, "*." + ImageExtPath + ";", 1) = 0
-            Select ImageExtPath
-              Case "bmp"
-              Case "jpg"
-                Code + "UseJPEGImageDecoder()" +#CRLF$
-              Case "png"
-                Code + "UsePNGImageDecoder()" +#CRLF$
-            EndSelect
-            ImageExtFullPath + "*." + ImageExtPath + ";"
-          EndIf
-        Next
-        If ImageExtFullPath <> ""
-          Code +#CRLF$
-        EndIf
-        
-        For I = 1 To ArraySize(ImageBtnPathArray())   ;LoadImage
-          If FileSize(ImageBtnPathArray(I)\ImagePath)
-            If GetGadgetState(#CodeConstants)
-              Code + "LoadImage(#Img_Window_" + Str(I) + ", " + #DQUOTE$ + ImageBtnPathArray(I)\ImagePath + #DQUOTE$ + ")" +#CRLF$
-            Else
-              Code + "Global Img_Window_" + Str(I) + " = LoadImage(#PB_Any, " + #DQUOTE$ + ImageBtnPathArray(I)\ImagePath + #DQUOTE$ + ")" +#CRLF$
-            EndIf
-          EndIf
-        Next
-        Code +#CRLF$
-      EndIf
-    EndIf
-    
-    If GetGadgetState(#CodeConstants) And Include_CustomAddition
-      TmpCode = CustomAddition("CustomAddition_Variable")
-      If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
-    EndIf
-    
-    If GetGadgetState(#CodeEnumeration) = #True
-      Code + "Define.l Event" +#CRLF$+#CRLF$
-    EndIf
-    
-    If Include_CustomAddition
-      TmpCode = CustomAddition("CustomAddition_Declare")
-      If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
-    EndIf
-    
-    ;-Create Window
-    With Buffer(0)
-      If GetGadgetState(#CodeConstants) : Name = \Name : Else : Name = Mid(\Name,2) : EndIf
-      Width = GetGadgetText(#SetDrawWidth) : Height = GetGadgetText(#SetDrawHeight)
-      Caption = Mid(\Caption, 7)
-      
-      Code + "Declare Open_"+Mid(\Name,2)+"(X = 0, Y = 0, Width = "+Width+", Height = "+Height+")" +#CRLF$+#CRLF$
-      
-      If Include_CustomAddition
-        TmpCode = CustomAddition("CustomAddition_Procedure")
-        If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
-      EndIf
-    
-      Code + "Procedure Open_"+Mid(\Name,2)+"(X = 0, Y = 0, Width = "+Width+", Height = "+Height+")" +#CRLF$
-      
-      If GetGadgetState(#CodeConstants)
-        Code +INDENT$+ "If OpenWindow("+Name+", X, Y, Width, Height, "
-      Else
-        Code +INDENT$+ Name + " = OpenWindow(#PB_Any, X, Y, Width, Height, "
-      EndIf
-      Code + #DQUOTE$ + Caption + #DQUOTE$   ;For window model, Caption=#Text:blabla => "blabla", or ""
-      
-      If \Constants <> ""   ;Are there any Constants for the window
-        FirstPass.b = #False
-        For I=1 To CountString(\Constants, "|") + 1
-          TmpConstants = Trim(StringField(\Constants, I, "|"))
-          If Right(TmpConstants, 3) = "(x)"
-            If FirstPass = #False
-              Code + ", "
-              FirstPass = #True
-            Else
-              Code + " | "
-            EndIf
-            Code + "#PB_" + Left(TmpConstants, Len(TmpConstants)-3)
-          EndIf
-        Next
-      EndIf
-      
-      Code + ")" +#CRLF$   ;End of generation of the window code
-      If GetGadgetState(#CodeConstants) = #False : Code +INDENT$+ "If " + Name +#CRLF$ :EndIf
-      
-      If Left(\BackColor, 5) <> "#Nooo" And \BackColor <> ""   ;Background window color
-        TmpColor = Val(\BackColor)
-        If Hexa_Color = 1
-          Code +INDENT$+INDENT$+ "SetWindowColor(" + Name + ", $" + RSet(Hex(Blue(TmpColor)), 2, "0") + RSet(Hex(Green(TmpColor)), 2, "0") + RSet(Hex(Red(TmpColor)), 2, "0") + ")" +#CRLF$   ;Hex value in BGR format
-        Else
-          Code +INDENT$+INDENT$+ "SetWindowColor(" + Name + ", RGB(" + Str(Red(TmpColor)) + ", " + Str(Green(TmpColor)) + ", " + Str(Blue(TmpColor)) + "))" +#CRLF$
-        EndIf
-      EndIf
-    EndWith
-    
-    If GetGadgetState(#CodeStatusBar)   ;Add a Status Bar Enumeration
-      If GetGadgetState(#CodeConstants)
-        Code +INDENT$+INDENT$+ "CreateStatusBar(#StatusBar_0, WindowID(" + Name + "))" +#CRLF$
-      Else
-        Code +INDENT$+INDENT$+ "StatusBar_0 = CreateStatusBar(#PB_Any, WindowID(" + Name + "))" +#CRLF$
-      EndIf
-    EndIf
-    
-    ;-Create Gadgets
-    For I=1 To ArraySize(Buffer())
-      With Buffer(I)
-        If \ModelType = 9 : Break : EndIf   ;Gadget Deleted
-        IdGadget = \IdGadget
-        Model = \Model
-        If GetGadgetState(#CodeConstants) : Name = \Name : Else : Name = Mid(\Name,2) : EndIf
-        X = Str(\X) : Y = Str(\Y)
-        Width = Str(\Width) : Height = Str(\Height)
-        Caption = Mid(\Caption, 7)   ;
-        
-        If Model = "ScintillaGadget"   ;Specific ScintillaGadget: If InitScintilla() : ScintillaGadget(xxx) : EndIf
-          Code +INDENT$+INDENT$+ "If InitScintilla()" +#CRLF$+INDENT$
-        EndIf
-        
-        If GetGadgetState(#CodeConstants)
-          Code +INDENT$+INDENT$+ Model + "(" + Name + ", " + X + ", " + Y + ", " + Width + ", " + Height   ;Common part
-        Else
-          Code +INDENT$+INDENT$+ Name + " = " + Model + "(#PB_Any, " + X + ", " + Y + ", " + Width + ", " + Height   ;Common part
-        EndIf
-        
-        Select Left(\Caption, 5)
-          Case "#Text" : Code + ", " + #DQUOTE$ + Caption + #DQUOTE$   ;Caption=#Text:blabla => "blabla", or ""
-          Case "#Date"
-            If Caption <> "" : Code + ", " + #DQUOTE$ + Caption + #DQUOTE$ : EndIf   ;;"%dd/%mm/%yyyy". If empty, nothing and no comma for the default value
-          Case "#Dir$"
-            If Caption <> "" And FileSize(Caption) <> -2 : Caption = "" : EndIf   ;check folder: Empty if it is not a folder
-            Code + ", " + #DQUOTE$ + Caption + #DQUOTE$
-          Case "#Url$" : Code + ", " + #DQUOTE$ + Caption + #DQUOTE$   ;It should be a valid Url
-        EndSelect
-        
-        Select Left(\Option1, 5)
-          Case "#Mini" : Code + ", " + Mid(\Option1, 7)
-          Case "#InrW" : Code + ", " + Mid(\Option1, 7)
-          Case "#Hard" : Code + ", " + Mid(\Option1, 7)
-          Case "#Titl" : Code + ", " +#DQUOTE$+ Name +#DQUOTE$
-          Case "#Imag"
-            TmpImagePath = Mid(\Option1, 7)
-            If TmpImagePath = "0"
-              Code + ", 0"
-            Else
-              For J=1 To ArraySize(ImageBtnPathArray())   ;LoadImage
-                If ImageBtnPathArray(J)\ImagePath =TmpImagePath
-                  If GetGadgetState(#CodeConstants)
-                    Code + ", ImageID(#Img_Window_" + Str(J) + ")"
-                  Else
-                    Code + ", ImageID(Img_Window_" + Str(J) + ")"
-                  EndIf
-                  
-                  Break
-                EndIf
-              Next
-            EndIf
-        EndSelect
-        
-        Select Left(\Option2, 5)
-          Case "#Maxi" : Code + ", " + Mid(\Option2, 7)
-          Case "#InrH" : Code + ", " + Mid(\Option2, 7)
-          Case "#Widh" : Code + ", " + Mid(\Option2, 7)
-        EndSelect
-        
-        ;Specific addition
-        Select Model
-          Case "ScrollBarGadget" : Code + ", 0"                      ;Specific ScrollBarGadget: Page length
-          Case "ScrollAreaGadget" : Code + ", " + Mid(\Option3, 7)   ;Specific ScrollAreaGadget: Displacement Value
-            
-        EndSelect
-        
-        If \Constants <> ""   ;Are there any Constants for the window
-          FirstPass.b = #False
-          For J=1 To CountString(\Constants, "|") + 1
-            TmpConstants = Trim(StringField(\Constants, J, "|"))
-            If Right(TmpConstants, 3) = "(x)"
-              If FirstPass = #False
-                Code + ", "
-                FirstPass = #True
-              Else
-                Code + " | "
-              EndIf
-              Select \Type
-                Case 40   ;Specific TabBar Gadget
-                  Code + "#TabBarGadget_" + Left(TmpConstants, Len(TmpConstants)-3)
-                Case 50   ;Specific Custom Gadget
-                  Code + Left(TmpConstants, Len(TmpConstants)-3)
-                Default
-                  Code + "#PB_" + Left(TmpConstants, Len(TmpConstants)-3)
-              EndSelect
-            EndIf
-          Next
-        EndIf
-        
-        If Model = "TabBarGadget"   ;Specific TabBar Gadget
-          If FirstPass = #False : Code + ", 0" :EndIf
-          If GetGadgetState(#CodeConstants) : Code + ", " + Buffer(0)\Name : Else : Code + ", " + Mid(Buffer(0)\Name,2) : EndIf
-        EndIf
-        
-        Code + ")" +#CRLF$   ;End of generation of the gadget code
-        
-        ;Specific addition
-        Select Model
-          Case "ComboBoxGadget"
-            Code +INDENT$+INDENT$+ "AddGadgetItem("+ Name + ", -1, " + #DQUOTE$ + Mid(\Name,2) + #DQUOTE$ + ")" +#CRLF$
-            Code +INDENT$+INDENT$+ "SetGadgetState("+ Name + ", 0)" +#CRLF$
-          Case "EditorGadget"
-            Code +INDENT$+INDENT$+ "AddGadgetItem("+ Name + ", -1, " + #DQUOTE$ + Mid(\Name,2) + #DQUOTE$ + ")" +#CRLF$
-          Case "IPAddressGadget"
-            Code +INDENT$+INDENT$+ "SetGadgetState("+ Name + ", MakeIPAddress(127, 0, 0, 1))" +#CRLF$
-          Case "PanelGadget"
-            For J=0 To CountString(Caption, "|")   ;Draw Tab + Text (eg: "Tab1|Tab2(x)|Tab3"
-              TmpTabName = Trim(StringField(Caption, J+1, "|"))
-              If TmpTabName <> ""
-                If Right(TmpTabName, 3) = "(x)"
-                  TmpTabName = Left(TmpTabName, Len(TmpTabName)-3)
-                  Code +INDENT$+INDENT$+ "AddGadgetItem("+ Name + ", -1, " + #DQUOTE$ + TmpTabName + #DQUOTE$ + ")" +#CRLF$
-                  ActiveTab = J
-                Else
-                  Code +INDENT$+INDENT$+ "AddGadgetItem("+ Name + ", -1, " + #DQUOTE$ + TmpTabName + #DQUOTE$ + ")" +#CRLF$
-                EndIf
-              EndIf
-            Next
-            If ActiveTab = -1 : ActiveTab = 0 : EndIf
-            Code +INDENT$+INDENT$+ "SetGadgetState(" + Name + ", " + ActiveTab + ")" +#CRLF$
-          Case "ScintillaGadget"
-            : Code +INDENT$+INDENT$+ "EndIf" +#CRLF$
-          Case "ProgressBarGadget", "SpinGadget", "TrackBarGadget"   ;Set progression 2/3 Cosmetic
-            Mini = Val(Mid(\Option1, 7)) : Maxi = Val(Mid(\Option2, 7))
-            Code +INDENT$+INDENT$+ "SetGadgetState("+ Name + ", " + Str(Mini+(Maxi-Mini)*2/3) + ")" +#CRLF$
-          Case "TabBarGadget"
-            Code +INDENT$+INDENT$+ "AddTabBarGadgetItem("+ Name + ", #PB_Default, " + #DQUOTE$ + Caption + #DQUOTE$ + ")" +#CRLF$
-        EndSelect
-        
-        If Left(\FrontColor, 5) <> "#Nooo" And \FrontColor <> ""
-          TmpColor = Val(\FrontColor)
-          If Hexa_Color = 1
-            Code +INDENT$+INDENT$+ "SetGadgetColor(" + Name + ", #PB_Gadget_FrontColor, $" + RSet(Hex(Blue(TmpColor)), 2, "0") + RSet(Hex(Green(TmpColor)), 2, "0") + RSet(Hex(Red(TmpColor)), 2, "0") + ")" +#CRLF$   ;Hex value in BGR format
-          Else
-            Code +INDENT$+INDENT$+ "SetGadgetColor(" + Name + ", #PB_Gadget_FrontColor, RGB(" + Str(Red(TmpColor)) + ", " + Str(Green(TmpColor)) + ", " + Str(Blue(TmpColor)) + "))" +#CRLF$
-          EndIf
-          ;Code +INDENT$+INDENT$+ "SetGadgetColor(" + Name + ", #PB_Gadget_FrontColor, " + \FrontColor + ")" +#CRLF$
-        EndIf
-        If Left(\BackColor, 5) <> "#Nooo" And \BackColor <> ""
-          TmpColor = Val(\BackColor)
-          If Hexa_Color = 1
-            Code +INDENT$+INDENT$+ "SetGadgetColor(" + Name + ", #PB_Gadget_BackColor, $" + RSet(Hex(Blue(TmpColor)), 2, "0") + RSet(Hex(Green(TmpColor)), 2, "0") + RSet(Hex(Red(TmpColor)), 2, "0") + ")" +#CRLF$   ;Hex value in BGR format
-          Else
-            Code +INDENT$+INDENT$+ "SetGadgetColor(" + Name + ", #PB_Gadget_BackColor, RGB(" + Str(Red(TmpColor)) + ", " + Str(Green(TmpColor)) + ", " + Str(Blue(TmpColor)) + "))" +#CRLF$
-          EndIf
-          ;Code +INDENT$+INDENT$+ "SetGadgetColor(" + Name + ", #PB_Gadget_BackColor, " + \BackColor + ")" +#CRLF$
-        EndIf
-        
-        If \ToolTip <> "#Nooo" And \ToolTip <> ""
-          Code +INDENT$+INDENT$+ "GadgetToolTip(" + Name + ", " + #DQUOTE$ + \ToolTip + #DQUOTE$ + ")" +#CRLF$
-        EndIf
-        
-        Select Model
-          Case "ContainerGadget", "PanelGadget", "ScrollAreaGadget"
-            Code +INDENT$+INDENT$+ "CloseGadgetList()" +#CRLF$
-        EndSelect
-        
-      EndWith
-    Next
-    
-    Code +INDENT$+ "EndIf" +#CRLF$
-    Code + "EndProcedure" +#CRLF$+#CRLF$
-    
-    If Include_CustomAddition
-      TmpCode = CustomAddition("CustomAddition_Init")
-      If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
-    EndIf
 
-    Code + "Open_" + Mid(Buffer(0)\Name,2) + "()" +#CRLF$+#CRLF$
-    
-    If Include_CustomAddition
-      TmpCode = CustomAddition("CustomAddition_Main")
-      If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
-    EndIf
-    
-    If GetGadgetState(#CodeEventLoop) = #True   ;-Include Event Loop
-      Code + "Repeat" +#CRLF$
-      Code +INDENT$+ "Event = WaitWindowEvent()" +#CRLF$
-      Code +INDENT$+ "Select Event" +#CRLF$
-      Code +INDENT$+INDENT$+ "Case #PB_Event_Menu" +#CRLF$
-      Code +INDENT$+INDENT$+INDENT$+ "Select EventMenu()" +#CRLF$
-      Code +INDENT$+INDENT$+INDENT$+ "EndSelect" +#CRLF$+#CRLF$
-      Code +INDENT$+INDENT$+ "Case #PB_Event_Gadget" +#CRLF$
-      Code +INDENT$+INDENT$+INDENT$+ "Select EventGadget()" +#CRLF$
-      For I=1 To ArraySize(Buffer())
-        If Buffer(I)\ModelType = 9 : Break : EndIf   ;Gadget Deleted
-        If Buffer(I)\Type = 1                        ;Button
-          If GetGadgetState(#CodeConstants)
-            Code +INDENT$+INDENT$+INDENT$+INDENT$+ "Case " + Buffer(I)\Name +#CRLF$
-          Else
-            Code +INDENT$+INDENT$+INDENT$+INDENT$+ "Case " + Mid(Buffer(I)\Name,2) +#CRLF$
-          EndIf
-        EndIf
-      Next
-      Code +INDENT$+INDENT$+INDENT$+ "EndSelect" +#CRLF$+#CRLF$
-      Code +INDENT$+INDENT$+ "Case #PB_Event_CloseWindow" +#CRLF$
-      Code +INDENT$+INDENT$+INDENT$+ "End" +#CRLF$
-      Code +INDENT$+ "EndSelect" +#CRLF$
-      Code + "ForEver" +#CRLF$
-    EndIf
-    
-    If Include_CustomAddition
-      TmpCode = CustomAddition("CustomAddition_Exit")
-      If TmpCode <> "" : Code +#CRLF$ + TmpCode : EndIf
-    EndIf
-    
-    FreeArray(Buffer())
-    CloseWindow(#CodeForm)
-    If Dest.s = "NewTab"
-      Define hWnd.i, hFile.i, TmpFile.s = GetTempFilename("~SweetyVD", 6, ".pb")
-      hFile = CreateFile(#PB_Any, TmpFile)
-      If hFile
-        WriteStringFormat(hFile, #PB_UTF8)
-        WriteStringN(hFile, Code)
-        CloseFile(hFile)
-        RunProgram(PBIDEpath, #DQUOTE$ + TmpFile + #DQUOTE$, "")
-        CompilerIf #PB_Compiler_OS = #PB_OS_Windows
-          ShowWindow_(WindowID(#MainWindow), #SW_MINIMIZE)
-        CompilerElse
-          MessageRequester("SweetyVD Information", "The Created Code is copied to a New Tab  :)", #PB_MessageRequester_Info|#PB_MessageRequester_Ok)
-        CompilerEndIf
-      Else
-        SetClipboardText(Code)
-        MessageRequester("SweetyVD Information", "The Created Code is copied to the Clipboard  :)", #PB_MessageRequester_Info|#PB_MessageRequester_Ok)
-      EndIf
-    Else
-      SetClipboardText(Code)   ;Copy the code to the clipboard
-      MessageRequester("SweetyVD Information", "The Created Code is copied to the Clipboard  :)", #PB_MessageRequester_Info|#PB_MessageRequester_Ok)
-    EndIf
-  EndProcedure
-  
-  Procedure.s CustomAddition(Group.s)
-    Protected Code.s, TmpCode.s
-    If OpenPreferences("SweetyVD.ini", #PB_Preference_GroupSeparator)
-      PreferenceGroup(Group)
-      ExaminePreferenceKeys()
-      While  NextPreferenceKey()
-        If Left(PreferenceKeyName(), 4) = "Line"
-          ;TmpCode = ReplaceString(PreferenceKeyValue(), "%Indent% ", "  ", #PB_String_NoCase, 1)
-          ;TmpCode = ReplaceString(TmpCode, "%Indent%", "  ", #PB_String_NoCase, 1)
-          TmpCode = PreferenceKeyValue()
-          If Left(TmpCode, 1) = "." : TmpCode = Mid(TmpCode, 2) : EndIf
-          If TmpCode <> "" Or Code <> "": Code + TmpCode +#CRLF$ : EndIf
-        EndIf
-      Wend
-      ClosePreferences()
-    EndIf
-    ProcedureReturn Code
-  EndProcedure
-    
   Procedure CreateGadgets(Model.s)
-    Protected IdGadget.i, ModelType.i, DrawGadget.b, TmpCaption.s, Mini.i, Maxi.i, StepValue.i, I.i
+    Protected IdGadget.i, ModelType.i, DrawGadget.b, TmpCaption.s, Mini.i, Maxi.i, MinY.i, MaxY.i, StepValue.i, I.i
     InitProperties()
     OpenGadgetList(#ScrollDrawArea)   ;Required when changing apps(ex: test generated code) to reopen the GadgetList
     For I=0 To ArraySize(ModelGadget())
       If ModelGadget(I)\Model = Model
         With ModelGadget(I)
-          
+
           \CountGadget=\CountGadget+1   ;Updating the gadget counter by model
           CountGadgets=CountGadgets+1
           ReDim Gadgets(CountGadgets)
-          
+
+          MinY = 0
+          If AddMenu = #True : MinY + AddMenuHeight : EndIf
+          If AddToolBar = #True : MinY + AddToolBarHeight : EndIf
+          MaxY = UserScreen_Height-\DftHeight
+          If AddStatusBar = #True : MaxY-AddStatusBarHeight+1 : EndIf
           X = GridMatch(X, DragSpace, 0, UserScreen_Width-\DftWidth)   ;Align on Grid and remains inside the grid
-          Y = GridMatch(Y, DragSpace, 0, UserScreen_Height-\DftHeight)
+          Y = GridMatch(Y, DragSpace, MinY, MaxY)
           ;Default values from the gadget models table
           Select Left(\Caption, 5)
             Case "#Text", "#TabN"
@@ -1166,7 +601,7 @@ CompilerIf #PB_Compiler_IsMainFile
           EndSelect
           ModelType=2
           DrawGadget=#False
-          
+
           Select Model   ;Create Gadget depending on model
             Case "ButtonGadget" : IdGadget=ButtonGadget(#PB_Any, X, Y, \DftWidth, \DftHeight, TmpCaption)
             Case "ButtonImageGadget" : IdGadget=ButtonImageGadget(#PB_Any, X, Y, \DftWidth, \DftHeight, 0)
@@ -1267,7 +702,7 @@ CompilerIf #PB_Compiler_IsMainFile
                 EndIf
               EndIf
           EndSelect
-          
+
           ;SetGadgetData(IdGadget, CountGadgets)
           If Model <> "TabBarGadget" And DrawGadget = #False : SetGadgetData(IdGadget, CountGadgets) : EndIf   ;Add Gadget Counter to Gadget Data
           CompilerIf #PB_Compiler_OS = #PB_OS_MacOS
@@ -1291,7 +726,7 @@ CompilerIf #PB_Compiler_IsMainFile
             Case "#TabN" : Gadgets(CountGadgets)\Caption = "#TabN:" + TmpCaption
             Default : Gadgets(CountGadgets)\Caption=\Caption
           EndSelect
-          
+
           Gadgets(CountGadgets)\Option1=\Option1
           Gadgets(CountGadgets)\Option2=\Option2
           Gadgets(CountGadgets)\Option3=\Option3
@@ -1299,15 +734,15 @@ CompilerIf #PB_Compiler_IsMainFile
           Gadgets(CountGadgets)\BackColor=\BackColor
           Gadgets(CountGadgets)\ToolTip=\ToolTip
           Gadgets(CountGadgets)\Constants=\Constants
-          
+
           Gadgets(CountGadgets)\ModelType=ModelType
           Gadgets(CountGadgets)\DrawGadget=DrawGadget
-          
+
           ;Add Gadget to List Gadgets ComboBox with IdGadget as Data. Element 0 is reserved for Window Draw Area
           AddGadgetItem(#ListGadgets, -1, Gadgets(CountGadgets)\Name)
           SetGadgetState(#ListGadgets, CountGadgetItems(#ListGadgets)-1)
           SetGadgetItemData(#ListGadgets, CountGadgetItems(#ListGadgets)-1, IdGadget)
-          
+
           AddGadgetItem(#TreeControls, -1, Gadgets(CountGadgets)\Name, ImageID(\Image), 1)
           SetGadgetState(#TreeControls, CountGadgetItems(#TreeControls)-1)
           SetGadgetItemData(#TreeControls, CountGadgetItems(#TreeControls)-1, IdGadget)
@@ -1322,16 +757,18 @@ CompilerIf #PB_Compiler_IsMainFile
       EndIf
     Next
   EndProcedure
-  
+
   Procedure InitWindowSelected()
     SetGadgetState(#ListGadgets, #MainWindow)
     SetGadgetState(#TreeControls, #MainWindow)
     SetGadgetState(#PosGadgetX, 0) : SetGadgetState(#PosGadgetY, 0)
     SetGadgetState(#PosGadgetWidth, GetGadgetState(#SetDrawWidth)) : SetGadgetState(#PosGadgetHeight, GetGadgetState(#SetDrawHeight))
     LoadGadgetProperties(#MainWindow)
+    HideGadget(#AddMenu, #False) : HideGadget(#AddPopupMenu, #False) : HideGadget(#AddToolBar, #False) : HideGadget(#AddStatusBar, #False)
   EndProcedure
-  
+
   Procedure InitProperties()
+    HideGadget(#AddMenu, #True) : HideGadget(#AddPopupMenu, #True) : HideGadget(#AddToolBar, #True) : HideGadget(#AddStatusBar, #True)
     DisableGadget(#CaptionString,#True)
     DisableGadget(#ToolTipString,#False)
     HideGadget(#MiniText, #True) : HideGadget(#MiniString, #True)
@@ -1339,7 +776,7 @@ CompilerIf #PB_Compiler_IsMainFile
     HideGadget(#ImageText, #True) : HideGadget(#ImageString, #True) : HideGadget(#ImagePick, #True)
     HideGadget(#FrontColorText, #True) : HideGadget(#FrontColorPick, #True)
     HideGadget(#BackColorText, #True) : HideGadget(#BackColorPick, #True)
-    
+
     SetGadgetText(#CaptionText, "") : SetGadgetText(#CaptionString, "")
     SetGadgetText(#ToolTipText, "ToolTip") : SetGadgetText(#ToolTipString, "")
     SetGadgetText(#MiniText, "Mini") : SetGadgetText(#MaxiText, "Maxi")
@@ -1347,7 +784,7 @@ CompilerIf #PB_Compiler_IsMainFile
     SetGadgetText(#ImageString, "")
     ClearGadgetItems(#Constants)
   EndProcedure
-  
+
   Procedure LoadGadgetProperties(IdGadget.i)
     Protected GadgetsElement.i, TmpConstants.s, I.i
     InitProperties()
@@ -1370,7 +807,7 @@ CompilerIf #PB_Compiler_IsMainFile
           SetGadgetText(#CaptionText, "Tab name")
           SetGadgetText(#CaptionString, Mid(\Caption, 7)) : DisableGadget(#CaptionString,#False)
       EndSelect
-      
+
       If \Model = "ScrollAreaGadget" : SetGadgetText(#MiniText, "InnerW") : SetGadgetText(#MaxiText, "InnerH") : EndIf
       If Left(\ToolTip, 5) = "#Nooo"
         SetGadgetText(#ToolTipText, "")
@@ -1435,7 +872,7 @@ CompilerIf #PB_Compiler_IsMainFile
       Next
     EndWith
   EndProcedure
-  
+
   Procedure GetGadgetElement(IdGadget.i)
     Protected GadgetsElement.i = -1, I.i
     If IsGadget(IdGadget) : GadgetsElement = GetGadgetData(IdGadget) : EndIf   ;Element number in the Gadgets structure array
@@ -1450,7 +887,7 @@ CompilerIf #PB_Compiler_IsMainFile
     EndIf
     ProcedureReturn GadgetsElement
   EndProcedure
-  
+
   Procedure DrawSelectedImage(IdGadget.i, ImagePath.s)
     Protected TmpImage.i, ImageBtn.i, Rtn.i, I.i
     If ImagePath
@@ -1519,12 +956,12 @@ CompilerIf #PB_Compiler_IsMainFile
       Gadgets(GetGadgetData(IdGadget))\Option1 = "#Imag:0"
     EndIf
   EndProcedure
-  
+
   Procedure ResizeDrawArea(Width.i, Height.i)
     DrawAreaSize(Width, Height)   ;For UserScreen_Width(Height) and UserScreen handle for resizing
     DrawGrid()
   EndProcedure
-  
+
   Procedure WindowSize()
     Protected DrawMaxWidth.i, DrawMaxHeight.i, ScrollMargin = 20
     ;Adjust width and height of the scroll drawing area according to window size
@@ -1547,9 +984,9 @@ CompilerIf #PB_Compiler_IsMainFile
       ReDrawHandle()
     EndIf
   EndProcedure
-  
+
   Procedure OpenMainWindow(Designer_Width, Designer_Height, X = 0, Y = 0)
-    Protected GadgetObj.i, Designer_Maximize.b = 0, ScrollArea_MaxWidth.l = 1920, ScrollArea_MaxHeight.l = 1020 
+    Protected GadgetObj.i, Designer_Maximize.b = 0, ScrollArea_MaxWidth.l = 1920, ScrollArea_MaxHeight.l = 1020
     Protected Flags.i = #PB_Window_SizeGadget | #PB_Window_MinimizeGadget | #PB_Window_MaximizeGadget | #PB_Window_ScreenCentered | #PB_Window_SystemMenu
     If OpenPreferences("SweetyVD.ini", #PB_Preference_GroupSeparator)
       PreferenceGroup("Designer")
@@ -1559,23 +996,28 @@ CompilerIf #PB_Compiler_IsMainFile
       ClosePreferences()
     EndIf
     If Designer_Maximize  = 1 : Flags = Flags | #PB_Window_Maximize : EndIf
-    
+
     OpenWindow(#MainWindow, x, y, Designer_Width, Designer_Height, "SweetyVD (Visual Designer) " + #BuildVersion, Flags)
     CreatePopupImageMenu(#PopUpMenu)
     ButtonGadget(#CodeCreate, 5, 5, 100, 25, "Create Code")
     ButtonGadget(#EnableSVD, 115, 5, 100, 25, "Preview", #PB_Button_Toggle)
-    
+
     ContainerGadget(#SettingContainer, 220, 5, 650, 30, #PB_Container_Raised)
-    TextGadget(#SetDrawSizeText, 10, 4, 30, 20, "Size")
-    SpinGadget(#SetDrawWidth, 40, 1, 70, 20, 1, ScrollArea_MaxWidth, #PB_Spin_Numeric)
-    TextGadget(#SetDrawSizeTextX, 110, 4, 10, 20, "x", #PB_Text_Center)
-    SpinGadget(#SetDrawHeight, 120, 1, 70, 20, 1, ScrollArea_MaxHeight, #PB_Spin_Numeric)
-    TextGadget(#DragText, 215, 4, 75, 20, "Drag space")
-    SpinGadget(#DragSpace, 290, 1, 50, 20, 1, 20, #PB_Spin_Numeric)  : SetGadgetState(#DragSpace, DragSpace)
-    CheckBoxGadget(#ShowGrid, 375, 2, 85, 20, "Show grid") : SetGadgetState(#ShowGrid, ShowGrid)
-    SpinGadget(#GridSize, 460, 1, 50, 20, 1, 50, #PB_Spin_Numeric) : SetGadgetState(#GridSize, GridSize)
+    TextGadget(#SetDrawSizeText, 5, 4, 30, 20, "Size")
+    SpinGadget(#SetDrawWidth, 35, 1, 70, 20, 1, ScrollArea_MaxWidth, #PB_Spin_Numeric)
+    TextGadget(#SetDrawSizeTextX, 105, 4, 10, 20, "x", #PB_Text_Center)
+    SpinGadget(#SetDrawHeight, 115, 1, 70, 20, 1, ScrollArea_MaxHeight, #PB_Spin_Numeric)
+    TextGadget(#DragText, 200, 4, 75, 20, "Drag space")
+    SpinGadget(#DragSpace, 275, 1, 50, 20, 1, 20, #PB_Spin_Numeric)  : SetGadgetState(#DragSpace, DragSpace)
+    CheckBoxGadget(#ShowGrid, 340, 2, 85, 20, "Show grid") : SetGadgetState(#ShowGrid, ShowGrid)
+    SpinGadget(#GridSize, 425, 1, 50, 20, 1, 50, #PB_Spin_Numeric) : SetGadgetState(#GridSize, GridSize)
+
+    CheckBoxGadget(#AddMenu, 490, 2, 55, 20, "Menu")
+    CheckBoxGadget(#AddPopupMenu, 545, 2, 60, 20, "Popup")
+    CheckBoxGadget(#AddToolBar, 605, 2, 65, 20, "ToolBar")
+    CheckBoxGadget(#AddStatusBar, 670, 2, 75, 20, "StatusBar")
     CloseGadgetList()
-    
+
     CompilerIf #PB_Compiler_OS = #PB_OS_MacOS
       PanelGadget(#PanelControls, 0, 35, 220, 215)
       AddGadgetItem(#PanelControls, -1, " Create Controls ")
@@ -1591,7 +1033,7 @@ CompilerIf #PB_Compiler_IsMainFile
       TreeGadget(#TreeControls, 0, 0, 205, 180, #PB_Tree_AlwaysShowSelection)
       CloseGadgetList()
     CompilerEndIf
-    
+
     ContainerGadget(#GadgetList, 5, 245, 210, 110, #PB_Container_Raised)
     ComboBoxGadget(#ListGadgets, 2 ,5, 174, 22) ;Liste des gadgets
     CatchImage(#Img_Delete,?Img_Delete)
@@ -1601,7 +1043,7 @@ CompilerIf #PB_Compiler_IsMainFile
     SpinGadget(#PosGadgetWidth, 133, 56, 70, 20, 1, ScrollArea_MaxWidth, #PB_Spin_Numeric)
     SpinGadget(#PosGadgetHeight, 68, 80, 70, 20, 1, ScrollArea_MaxHeight, #PB_Spin_Numeric)
     CloseGadgetList()
-    
+
     ContainerGadget(#PropertiesContainer, 5, 360, 210, 95, #PB_Container_Raised)
     StringGadget(#CaptionText, 0, 2, 65, 22, "Caption", #PB_String_ReadOnly)
     StringGadget(#CaptionString, 65, 2, 141, 22, "")
@@ -1622,18 +1064,18 @@ CompilerIf #PB_Compiler_IsMainFile
     CreateImage(#BackColorImg, 22, 22)
     CloseGadgetList()
     TreeGadget(#Constants, 5, 460, 210, 130, #PB_Tree_NoLines | #PB_Tree_NoButtons | #PB_Tree_CheckBoxes)
-    
+
     ScrollAreaGadget(#ScrollDrawArea, 220, 35, WindowWidth(#MainWindow)-220-10, WindowHeight(#MainWindow)-35-10, ScrollArea_MaxWidth + 10, ScrollArea_MaxHeight + 10, 20, #PB_ScrollArea_Single)   ;InnerWidth,InnerHeight + 10 for the resize handle of the drawing window
-    
+
     EnableGadgetDrop(#CreateControlsList, #PB_Drop_Text, #PB_Drag_Copy)
     EnableGadgetDrop(#ScrollDrawArea, #PB_Drop_Text, #PB_Drag_Copy)
-    
+
     ;All interface Objects must have #PB_Ignore as data. To not load them later when loading Designer
     PB_Object_EnumerateStart(PB_Gadget_Objects)
     While PB_Object_EnumerateNext(PB_Gadget_Objects, @GadgetObj)
       SetGadgetData(GadgetObj, #PB_Ignore)
     Wend
-    
+
     If GetGadgetState(#ShowGrid) = #PB_Checkbox_Checked And GetGadgetState(#EnableSVD) = #False
       ShowGrid = #True
     Else
@@ -1642,52 +1084,61 @@ CompilerIf #PB_Compiler_IsMainFile
     ;*** Important *** Call InitSVD just after the ScrollArea and before creating Gadets on it: default param CountGadget.i = 144
     InitSVD()
   EndProcedure
-  
+
   Procedure Init()
+    DelOldFiles(GetTemporaryDirectory(), "~SweetyVD*.pb", 2)   ;Cleaning, Keep 2 days temporary files
     StartPrefs()
     PBIDEpath = GetPBIDE()
     LoadFontWML()
     LoadControls()
-    DelOldFiles(GetTemporaryDirectory(), "~SweetyVD*.pb", 2)   ;Cleaning, Keep 2 days temporary files
+    ;Menu, ToolBar, StatusBar default Height
+    OpenWindow(#WinBarHeight, 0, 0, 0, 0, "", #PB_Window_Invisible)
+    CreateMenu(0, WindowID(#WinBarHeight))
+    CreateToolBar(0, WindowID(#WinBarHeight))
+    CreateStatusBar(0, WindowID(#WinBarHeight))
+    AddMenuHeight = MenuHeight()
+    AddToolBarHeight = ToolBarHeight(0)
+    AddStatusBarHeight = StatusBarHeight(0)
+    CloseWindow(#WinBarHeight)
   EndProcedure
-  
+
   ;- Main
   Define *PosDim.PosDim
   Define IdGadget.i, GadgetsElement.i, ImagePath.s, TmpImage.i, SelectedColor.i, TmpConstants.s, I.i
   Define Model.s, GadgetsListElement.i, OldGadgetsListElement.i, ListHightLight.i = $D77800
-  
+
   Init()
   OpenMainWindow(Designer_Width, Designer_Height)
   WindowSize()
- 
+
   If FileSize("SweetyVD.json") = -1
     InitModelgadget()   ;Initializing Gadget Model Templates from Datasection + Save JSON file
   Else
     InitJSONModelGadget()   ;;Initializing Gadget Model Templates from JSON file
   EndIf
   BindEvent(#PB_Event_SizeWindow, @WindowSize())
-  
+
   InitWindowSelected()
   EnableSVD()
   DrawGrid()
-  
+
   Repeat   ;- Event Loop
     Select WaitWindowEvent()
       Case #PB_Event_CloseWindow
         Exit()
-        
+
       Case #PB_Event_GadgetDrop
         If EventGadget() = #ScrollDrawArea
           X=WindowMouseX(#MainWindow)-GadgetX(#ScrollDrawArea) + GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_X) : Y=WindowMouseY(#MainWindow)-GadgetY(#ScrollDrawArea) + GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_Y)  ;Keep the coordinates of the mouse before creating the gadget
           CreateGadgets(EventDropText())
         EndIf
-        
+
       Case #PB_Event_Menu   ;-> Event Menu
         Select EventMenu()
           Case 1 To ArraySize(ModelGadget())   ;Popup menu for creating gadgets
             Model = GetMenuItemText(#PopUpMenu, EventMenu())
             CreateGadgets(Model)
-            
+
           Case #Shortcut_Delete   ;AddKeyboardShortcut is added on #PB_EventType_Focus and RemoveKeyboardShortcut on #PB_EventType_LostFocus in module, proc SVD_Callback
             If GetGadgetState(#ListGadgets) > 0 And MouseOverDrawArea() = #True
               GadgetsListElement = GetGadgetState(#ListGadgets)
@@ -1705,7 +1156,7 @@ CompilerIf #PB_Compiler_IsMainFile
               InitWindowSelected()
             EndIf
         EndSelect
-        
+
       Case #PB_Event_Gadget   ;-> Event Gadget
         If EventWindow()=#MainWindow
           Select EventGadget()
@@ -1723,14 +1174,10 @@ CompilerIf #PB_Compiler_IsMainFile
                   HideGadget(#Constants,#True)
                   SetGadgetState(#EnableSVD, #True)
                   DisableSVD()
-                  
+
                 Case #False   ;EnableSVD Parameters: drawing area, Drag Space
                   SetGadgetText(#EnableSVD, "Preview")
-                  If GetGadgetState(#ShowGrid) = #PB_Checkbox_Checked
-                    ShowGrid = #True
-                  Else
-                    ShowGrid = #False
-                  EndIf
+                  ShowGrid = GetGadgetState(#ShowGrid)
                   DrawGrid()
                   CompilerIf #PB_Compiler_OS = #PB_OS_Linux : AddKeyboardShortcut(#MainWindow, #PB_Shortcut_Insert, #Shortcut_Insert) : CompilerEndIf   ;Insert key as Right Click replacement under Linux
                   InitWindowSelected()
@@ -1742,10 +1189,10 @@ CompilerIf #PB_Compiler_IsMainFile
                   SetGadgetState(#EnableSVD, #False)
                   EnableSVD()
               EndSelect
-              
+
             Case #CodeCreate ;Génération du code
               CodeCreateForm()
-              
+
             Case #ListGadgets
               If GetGadgetState(#ListGadgets) = 0
                 SetActiveGadget(#DrawArea)
@@ -1755,7 +1202,7 @@ CompilerIf #PB_Compiler_IsMainFile
                 IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
                 SelectSVDGadget(IdGadget)
               EndIf
-              
+
             Case #TreeControls
               If GetGadgetState(#TreeControls) = 0
                 SetActiveGadget(#DrawArea)
@@ -1765,7 +1212,7 @@ CompilerIf #PB_Compiler_IsMainFile
                 IdGadget=GetGadgetItemData(#TreeControls, GetGadgetState(#TreeControls))
                 SelectSVDGadget(IdGadget)
               EndIf
-              
+
             Case #DeleteGadgetButton
               If GetGadgetState(#ListGadgets) > 0
                 GadgetsListElement = GetGadgetState(#ListGadgets)
@@ -1782,59 +1229,63 @@ CompilerIf #PB_Compiler_IsMainFile
                 DeleteSVDGadget(IdGadget)
                 InitWindowSelected()
               EndIf
-              
+
             Case #CreateControlsList   ;Element beging at 0 -> Element+1
               Select EventType()
                 Case #PB_EventType_LeftDoubleClick
                   X = DragSpace : Y = DragSpace   ;coordinates for creating gadget inside #ScrollDrawArea
+                  If AddMenu = #True : Y + AddMenuHeight : EndIf
+                  If AddToolBar = #True : Y + AddToolBarHeight : EndIf
                   Model = GetGadgetItemText(#CreateControlsList, GetGadgetState(#CreateControlsList))
                   CreateGadgets(Model)
                 Case #PB_EventType_DragStart
                   Model = GetGadgetItemText(#CreateControlsList, GetGadgetState(#CreateControlsList))
                   DragText(Model)
               EndSelect
-              
-            Case #DragSpace
-              DragSpace = GetGadgetState(#DragSpace)
-              
-            Case #ShowGrid
-              If GetGadgetState(#ShowGrid) = #PB_Checkbox_Checked
-                ShowGrid = #True
-              Else
-                ShowGrid = #False
-              EndIf
-              DrawGrid()
-              
+
+            Case #DragSpace : DragSpace = GetGadgetState(#DragSpace)
+
+            Case #ShowGrid : ShowGrid = GetGadgetState(#ShowGrid) : DrawGrid()
+
             Case #GridSize
               GridSize = GetGadgetState(#GridSize)
               If ShowGrid = #True And GetGadgetState(#EnableSVD) = #False   ;Not to call it the first time on Linux
                 DrawGrid()
               EndIf
-              
+
+            Case #AddMenu : AddMenu = GetGadgetState(#AddMenu) : DrawGrid()
+            Case #AddPopupMenu : AddPopupMenu = GetGadgetState(#AddPopupMenu)
+            Case #AddToolBar : AddToolBar = GetGadgetState(#AddToolBar) : DrawGrid()
+            Case #AddStatusBar : AddStatusBar = GetGadgetState(#AddStatusBar) : DrawGrid()
+
             Case  #SetDrawWidth
               If GetGadgetState(#ListGadgets) = 0 : InitWindowSelected() : EndIf
               If EventType() = #PB_EventType_Change And IsGadget(#ScrollDrawArea)
                 ResizeDrawArea(GetGadgetState(#SetDrawWidth), GetGadgetState(#SetDrawHeight))
               EndIf
-              
+
             Case #SetDrawHeight
               If GetGadgetState(#ListGadgets) = 0 : InitWindowSelected() : EndIf
               If EventType() = #PB_EventType_Change And IsGadget(#ScrollDrawArea)
                 ResizeDrawArea(GetGadgetState(#SetDrawWidth), GetGadgetState(#SetDrawHeight))
               EndIf
-              
+
             Case #PosGadgetX
               If EventType() = #PB_EventType_Change And GetGadgetState(#ListGadgets) > 0
                 IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
                 ResizeSVDGadget(IdGadget, GetGadgetState(#PosGadgetX), -1, -1, -1)
               EndIf
-              
+
             Case #PosGadgetY
               If EventType() = #PB_EventType_Change And GetGadgetState(#ListGadgets) > 0
                 IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
-                ResizeSVDGadget(IdGadget, -1, GetGadgetState(#PosGadgetY), -1, -1)
+                If AddMenu = #True
+                  ResizeSVDGadget(IdGadget, -1, GetGadgetState(#PosGadgetY)+AddMenuHeight, -1, -1)
+                Else
+                  ResizeSVDGadget(IdGadget, -1, GetGadgetState(#PosGadgetY), -1, -1)
+                EndIf
               EndIf
-              
+
             Case #PosGadgetWidth
               If EventType() = #PB_EventType_Change
                 If GetGadgetState(#ListGadgets) = 0
@@ -1853,7 +1304,7 @@ CompilerIf #PB_Compiler_IsMainFile
                   EndIf
                 EndIf
               EndIf
-              
+
             Case #PosGadgetHeight
               If EventType() = #PB_EventType_Change
                 If GetGadgetState(#ListGadgets) = 0
@@ -1872,7 +1323,7 @@ CompilerIf #PB_Compiler_IsMainFile
                   EndIf
                 EndIf
               EndIf
-              
+
               ;->> Event Gadget Properties
             Case #CaptionString
               If EventType() = #PB_EventType_Change
@@ -1896,7 +1347,7 @@ CompilerIf #PB_Compiler_IsMainFile
                           StopDrawing()
                         EndIf
                       EndIf
-                      
+
                     Case "#Date"
                       If GetGadgetText(#CaptionString) <> ""
                         If Gadgets(GadgetsElement)\DrawGadget = #False
@@ -1934,7 +1385,7 @@ CompilerIf #PB_Compiler_IsMainFile
                   EndSelect
                 EndIf
               EndIf
-              
+
             Case #ToolTipString
               If EventType() = #PB_EventType_Change
                 IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
@@ -1942,7 +1393,7 @@ CompilerIf #PB_Compiler_IsMainFile
                   Gadgets(GetGadgetData(IdGadget))\ToolTip = GetGadgetText(#ToolTipString)
                 EndIf
               EndIf
-              
+
             Case #MiniString
               If EventType() = #PB_EventType_Change
                 IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
@@ -1960,7 +1411,7 @@ CompilerIf #PB_Compiler_IsMainFile
               ;If EventType() = #PB_EventType_LostFocus   ;No control for easy entry, with Maxi = 0)
               ;If Val(GetGadgetText(#MiniString)) > Val(GetGadgetText(#MaxiString)) : SetGadgetText(#MiniString, GetGadgetText(#MaxiString)) : EndIf
               ;EndIf
-              
+
             Case #MaxiString
               If EventType() = #PB_EventType_Change
                 IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
@@ -1985,14 +1436,14 @@ CompilerIf #PB_Compiler_IsMainFile
                   EndIf
                 EndIf
               EndIf
-              
+
             Case #ImagePick
               IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
               ;GadgetsElement = GetGadgetElement(IdGadget)
               ImagePath = OpenFileRequester("Select image",GetCurrentDirectory(),"Picture (*.bmp; *.jpg; *.png)|*.bmp;*.jpg;*.png", 1)
               If IsGadget(IdGadget) : DrawSelectedImage(IdGadget, ImagePath) : EndIf
               SelectSVDGadget(IdGadget)
-              
+
             Case #FrontColorPick
               IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
               GadgetsElement = GetGadgetElement(IdGadget)
@@ -2018,7 +1469,7 @@ CompilerIf #PB_Compiler_IsMainFile
                   EndIf
                 EndIf
               EndIf
-              
+
             Case #BackColorPick
               IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
               GadgetsElement = GetGadgetElement(IdGadget)
@@ -2050,7 +1501,7 @@ CompilerIf #PB_Compiler_IsMainFile
                   EndIf
                 EndIf
               EndIf
-              
+
             Case #Constants
               If EventType() = #PB_EventType_Change
                 IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
@@ -2067,10 +1518,10 @@ CompilerIf #PB_Compiler_IsMainFile
                 Next
                 Gadgets(GadgetsElement)\Constants = TmpConstants
               EndIf
-              
+
           EndSelect   ;#PB_Event_Gadget #MainWindow
         EndIf
-        
+
         If EventWindow()=#CodeForm   ;Code Generation window
           Select EventGadget()
             Case #AboutButton
@@ -2084,7 +1535,7 @@ CompilerIf #PB_Compiler_IsMainFile
               CodeCreate("NewTab")
           EndSelect
         EndIf
-        
+
         If EventWindow()=#AboutForm   ;About Form window
           Select EventGadget()
             Case #AboutBack
@@ -2092,7 +1543,7 @@ CompilerIf #PB_Compiler_IsMainFile
               CodeCreateForm()
           EndSelect
         EndIf
-        
+
         Select EventType()   ;-> Receives Module Events
           Case  #SVD_Gadget_Focus
             *PosDim = EventData()
@@ -2106,18 +1557,26 @@ CompilerIf #PB_Compiler_IsMainFile
               EndIf
             Next
             SetGadgetState(#PosGadgetX, *PosDim\X)
-            SetGadgetState(#PosGadgetY, *PosDim\Y)
+            If AddMenu = #True
+              SetGadgetState(#PosGadgetY, *PosDim\Y-AddMenuHeight)
+            Else
+              SetGadgetState(#PosGadgetY, *PosDim\Y)
+            EndIf
             SetGadgetState(#PosGadgetWidth, *PosDim\Width)
             SetGadgetState(#PosGadgetHeight, *PosDim\Height)
             LoadGadgetProperties(EventGadget())
-            
+
           Case #SVD_Gadget_LostFocus
-            
+
           Case #SVD_Gadget_Resize
             If GetGadgetState(#EnableSVD) = #False   ;Designer mode. The TabBar Gadget is resized on click on the preview mode. Thanks JHPJHP
               *PosDim = EventData()
               SetGadgetState(#PosGadgetX, *PosDim\X)
-              SetGadgetState(#PosGadgetY, *PosDim\Y)
+              If AddMenu = #True
+                SetGadgetState(#PosGadgetY, *PosDim\Y-AddMenuHeight)
+              Else
+                SetGadgetState(#PosGadgetY, *PosDim\Y)
+              EndIf
               SetGadgetState(#PosGadgetWidth, *PosDim\Width)
               SetGadgetState(#PosGadgetHeight, *PosDim\Height)
               GadgetsElement = GetGadgetElement(EventGadget())
@@ -2136,12 +1595,12 @@ CompilerIf #PB_Compiler_IsMainFile
                 EndIf
               EndIf
             EndIf
-            
+
           Case  #SVD_Window_Focus
             If GetGadgetState(#EnableSVD) = #False ;And MouseOverDrawArea() = #True
               InitWindowSelected()
             EndIf
-            
+
           Case #SVD_Window_ReSize
             *PosDim = EventData()
             SetGadgetState(#SetDrawWidth, *PosDim\Width)
@@ -2151,29 +1610,29 @@ CompilerIf #PB_Compiler_IsMainFile
               SetGadgetState(#PosGadgetHeight, *PosDim\Height)
             EndIf
             ResizeDrawArea(GetGadgetState(#SetDrawWidth), GetGadgetState(#SetDrawHeight))
-            
+
           Case #SVD_DrawArea_RightClick
             If GetGadgetState(#EnableSVD) = #False And  MouseOverDrawArea() = #True
               X=WindowMouseX(#MainWindow)-GadgetX(#ScrollDrawArea) + GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_X) : Y=WindowMouseY(#MainWindow)-GadgetY(#ScrollDrawArea) + GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_Y)  ;Keep the coordinates of the mouse before creating the gadget
               DisplayPopupMenu(#PopUpMenu,WindowID(#MainWindow))
             EndIf
-            
+
           Case #SVD_DrawArea_Focus
             If GetGadgetState(#EnableSVD) = #False ;And MouseOverDrawArea() = #True
               InitWindowSelected()
             EndIf
-            
+
         EndSelect   ;EventType()
     EndSelect
   ForEver
-  
+
   Procedure Exit()
     FreeArray(ModelGadget())
     FreeArray(Gadgets())
     ExitPrefs()
     End   ;Do I need to free things?
   EndProcedure
-  
+
   DataSection   ;- Data Section (Model)
     #Img_Delete:
     Data.q $A1A0A0D474E5089,$524448490D000000,$E0000000E000000,$2D481F0000000608,$47527301000000D1,$E91CCEAE0042,$414D41670400,$561FC0B8FB1,$735948700900,$C701C30E0000C30E,$741900000064A86F,$7774666F53745845,$6E69617000657261,$2E342074656E2E74,$7A5B033433312E30
@@ -2184,7 +1643,7 @@ CompilerIf #PB_Compiler_IsMainFile
     Data.q $56542C3B66C589E5,$6706F06F08D9B4C2,$6154C3C45C20F30A,$76A19398D9E90C2E,$B28A87EE1C2E42A2,$10B575C20386F844,$58BA8983386198B0,$8C8BA745C99233CA,$C877E0084292910,$FB421B3ECAC71E9,$2C1D636CFAECF479,$D21859FCE0403536,$2217216B2B021B31,$4CD89AD9231DA9B0
     Data.q $3E7144E1B8F30F09,$B4DA8A395BA9B174,$839EB49CDF859F7A,$3C4E5776930E7A67,$FE2E9E45EFA29C89,$4EAFD53ABC09B4EE,$7674882F78055646,$8561AC539BA10AB1,$3EA971753C4E567F,$FAB513D211AD4B27,$E44097C6770976C0,$975227880FF88BA5,$1C285E1BF4202494,$5DDBFE0391
     Data.q $6042AE444E454900,$82
-    
+
     #Img_About:
     Data.q $A1A0A0D474E5089,$524448490D000000,$1200000012000000,$8ECE560000000608,$4752730100000057,$E91CCEAE0042,$414D41670400,$561FC0B8FB1,$735948700900,$C701C30E0000C30E,$741900000064A86F,$7774666F53745845,$6E69617000657261,$2E342074656E2E74,$7A5B033433312E30
     Data.q $54414449F2010000,$D2D38C05C0634F38,$7D705039E3E3ED58,$CC6C60489A540B3D,$7D3E0F75C3DEE3BA,$FA2007E7D3F0F07A,$500E6D74BC2F1036,$2F2F200888A20996,$FFF78BB3E9EBB1CF,$F1026F88077FFFFF,$A03EC6E9719E2025,$D068003115442B34,$3E6A009D2F4FC79A,$FFDFD378807BC40C
@@ -2192,14 +1651,14 @@ CompilerIf #PB_Compiler_IsMainFile
     Data.q $7ED6CC4340CEFF9F,$4F2A12BB3D95AFFA,$D6FFD0A9BB99F03C,$9AD7FF3EEB21886F,$54345D604ABFFAF6,$F9D8393550E0789A,$57FEDFD3218877C8,$16D82CD14FF07FA8,$B337480FD03C4D2A,$C6F910C81FEEFD5C,$9514FC2FD325FFE7,$B4A40F134A8150B1,$2A52BF4EDBF5656D,$F157C4E52255FF3F
     Data.q $A184A57979778D80,$2E634949460124D2,$1E7B51511E7B2D51,$1229106241B2006,$F46D354473C7DBD8,$736BBCB02DB09AA9,$108B191F72DE4060,$4E3AD340F134A84E,$6F45B2BFE1E3BDDB,$F73CDFFD7BCE97FE,$34A83D5F1D453FDA,$E62C4F4230CD40F1,$82F9FF1B90BE3FEA,$524FFF3BF6E7FC6F
     Data.q $D4503C4D2A08DDC3,$CF94F2DEF31354F3,$F8DB7016104BEB7D,$124D2A1345D54254,$E0E0E294E4E4E160,$6241A5B20610790,$105000C0C074291,$179F04224BF0,$42AE444E45490000,$8260
-    
+
     #Vd_Unknow:
     Data.q $0A1A0A0D474E5089,$524448490D000000,$1000000010000000,$FFF31F0000000608,$4144496B01000061,$3010A06463DA7854,$CCD4A5CFBB658882,$C4DC4F8BDEE132DC,$1F949864E0111268,$A41187346AE51A98,$DE999D5523EAE279,$ED7AD9444A06F68A,$F3F755F6A4864BC1,$FE9A429518DA6D43
     Data.q $0C335620628AADCF,$396DB9219770BC1C,$EC1EFFFF25360BD0,$1F80C92264646060,$0C4134797030BEDF,$9595958199A7B1F8,$3FE54281103FE181,$7FFFC31313132142,$1FFFF89405A180FF,$E22B017EBFDF6A1C,$03576DF018856AF1,$0B0B23581B2B0B03,$EA81BFBFDFE3580B,$FB7C0818987CE119
     Data.q $0CC276FBF34C09F2,$1CB300C2C4DA07A8,$3E03500CA24811CD,$5F01885E80A16980,$20DFEFFFE492D7B6,$C5E031089E0D102E,$19FBF8600C920A9A,$70F018854F84494C,$81BF1859FA492169,$ADC0620B351D25BD,$1DFAC1C01924D979,$F1146063CEC5CB4C,$9C4197DABABFFDA9,$CC7F3C1E4324805F
     Data.q $A3949401807FD710,$31D7F62D2AEC96BA,$E7EDF34A24125630,$1E54B85D96EA191F,$CCC0514CCB09D1E7,$6067A5444CCC0CD4,$CCC0F94CCC037A66,$0000F80D18918CB4,$EFF21D717890888A,$444E454900000000
     Data.b $AE,$42,$60,$82
-    
+
     #Vd_Custom:
     Data.q $0A1A0A0D474E5089,$524448490D000000,$1000000010000000,$FFF31F0000000608,$4752730100000061,$0000E91CCEAE0042,$0000414D41670400,$00000561FC0B8FB1,$0000735948700900,$C701C30E0000C30E,$741900000064A86F,$7774666F53745845,$6E69617000657261,$2E342074656E2E74
     Data.q $4FFE60DD35312E30,$5441444927020000,$5113684B93AD4F38,$48A2316A17078614,$373BA08A5C6E2A37,$4685F15882A9B95D,$2890483084A218A2,$F112D051B1569455,$52D2695D0889456D,$4892D62924351749,$64D1E4EE6C6A04D3,$EB18E931B1353692,$2EA15BC5B99BF1E4,$FF3DCCCCBBE07A02
@@ -2209,16 +1668,16 @@ CompilerIf #PB_Compiler_IsMainFile
     Data.q $E8CE242032590EA1,$3DB424C6EDA18BE8,$0F185D268C3E2A04,$E46CF04D9A3E0806,$428878C907787FE0,$0A10FA8D74B1940D,$7DA5A24CB1EC6591,$F97DE197CCFBBD82,$CAD23A4E9C3B3E9C,$CAFE35BA9E77AB28,$0FF44348C0A116F6,$DFDA2A0E6343B03A,$A96D28CB1F5D41F7,$C16FFC4CB395EA01
     Data.q $911380C5A500BF71,$49000000004FC404
     Data.b $45,$4E,$44,$AE,$42,$60,$82
-    
+
     #Vd_Window:
     Data.q $0A1A0A0D474E5089,$524448490D000000,$1000000010000000,$FFF31F0000000608,$4752730100000061,$0000E91CCEAE0042,$0000414D41670400,$00000561FC0B8FB1,$0000735948700900,$C701C30E0000C30E,$741900000064A86F,$7774666F53745845,$6E69617000657261,$2E342074656E2E74
     Data.q $7A5B033433312E30,$544144490D010000,$FBB6580AA0634F38,$9B0617D348528A5C,$0C0D0943F0B8FF92,$79B3583FE75E477C,$8FFDDFCE077BA4DA,$F637E3065410BC0F,$00610C83620C60BE,$FFFF3BB9FF7FFCDA,$EB780CC31787FBFD,$FF7F79C8006A8216,$400CC31909AAC1FE,$1A477ABD5E0370C6
     Data.q $2203E1C18C1CF17E,$ECF17E124D7F3F9E,$F1F8F018463F1009,$F880F7C7B3F09273,$84931FF7FB80C22E,$6E0370C609BC3C9F,$3AFF747E12407EDF,$FFE6F57CB80DC318,$B9DFEF8D12EF379B,$8E0308F3B5FAFFFE,$44DBF5FAFFFF3E9E,$F4783FFE6E379BE3,$FBFFDA9F1100C430,$922DDAED7FFA9F8F
     Data.q $82F483FF7BBDB6F0,$C5F9C77C41947292,$5128E176BFFCB6EB,$DB63F5FF6DF6E378,$30145332C2F4822E,$B40C08893B05DF49,$01818065335C35F9,$B3553835ADCF4F00,$4E4549000000006C
     Data.b $44,$AE,$42,$60,$82
-    
+
     ModelGadgets:   ;31 Gadgets Models +window Model
-    ;"Model","Order","GadgetType","Width","Height","Name","Caption","Option1","Option2","Option3","FrontColor","BackColor","ToolTip","Constants"
+                    ;"Model","Order","GadgetType","Width","Height","Name","Caption","Option1","Option2","Option3","FrontColor","BackColor","ToolTip","Constants"
     Data.s "OpenWindow","0","","640","480","Window","#Text","","","","#Nooo","","#Nooo","Window_SystemMenu(x)|Window_MinimizeGadget(x)|Window_MaximizeGadget(x)|Window_SizeGadget(x)|Window_Invisible|Window_TitleBar|Window_Tool|Window_BorderLess|Window_ScreenCentered(x)|Window_WindowCentered|Window_Maximize|Window_Minimize|Window_NoGadgets"
     Data.s "ButtonGadget","1","1","100","20","Button","#Text","","","","#Nooo","#Nooo","","Button_Right|Button_Left|Button_Default|Button_MultiLine|Button_Toggle"
     Data.s "ButtonImageGadget","2","19","100","20","ButtonImage","","#Imag:0","","","#Nooo","#Nooo","","Button_Toggle"
@@ -2241,14 +1700,14 @@ CompilerIf #PB_Compiler_IsMainFile
     Data.s "OpenGLGadget","19","34","100","20","OpenGL","","","","","#Nooo","#Nooo","","OpenGL_Keyboard"
     Data.s "OptionGadget","20","5","100","20","Option","#Text","","","","#Nooo","#Nooo","",""
     Data.s "PanelGadget","21","28","300","200","Panel","#TabN:Tab1(x)|Tab2|Tab3","","","","#Nooo","#Nooo","",""
-    Data.s "ProgressBarGadget","22","14","140","12","ProgressBar","","#Mini:0","#Maxi:0","","","","","ProgressBar_Smooth|ProgressBar_Vertical"
-    Data.s "ScintillaGadget","23","31","140","40","Scintilla","","#Hard:0","","","#Nooo","#Nooo","#Nooo",""
+    Data.s "ProgressBarGadget","22","14","140","12","ProgressBar","","#Mini:0","#Maxi:100","","","","","ProgressBar_Smooth|ProgressBar_Vertical"
+    Data.s "ScintillaGadget","23","31","160","60","Scintilla","","#Hard:0","","","#Nooo","#Nooo","#Nooo",""
     Data.s "ScrollAreaGadget","24","16","300","200","ScrollArea","","#InrW:600","#InrH:400","#Step:10","#Nooo","","#Nooo","ScrollArea_Flat|ScrollArea_Raised|ScrollArea_Single|ScrollArea_BorderLess|ScrollArea_Center"
-    Data.s "ScrollBarGadget","25","15","140","16","Scrollbar","","#Mini:0","#Maxi:0","#Long:0","#Nooo","#Nooo","","ScrollBar_Vertical"
-    Data.s "SpinGadget","26","26","100","20","Spin","","#Mini:0","#Maxi:0","","","","","Spin_ReadOnly|Spin_Numeric(x)"
+    Data.s "ScrollBarGadget","25","15","140","16","Scrollbar","","#Mini:0","#Maxi:100","#Long:0","#Nooo","#Nooo","","ScrollBar_Vertical"
+    Data.s "SpinGadget","26","26","100","20","Spin","","#Mini:0","#Maxi:100","","","","","Spin_ReadOnly|Spin_Numeric(x)"
     Data.s "StringGadget","27","2","100","20","String","#Text","","","","","","","String_Numeric|String_Password|String_ReadOnly|String_LowerCase|String_UpperCase|String_BorderLess"
     Data.s "TextGadget","28","3","100","20","Text","#Text","","","","","","#Nooo","Text_Center|Text_Right|Text_Border"
-    Data.s "TrackBarGadget","29","17","100","20","TrackBar","","#Mini:0","#Maxi:0","","","#Nooo","#Nooo","TrackBar_Ticks|TrackBar_Vertical"
+    Data.s "TrackBarGadget","29","17","100","20","TrackBar","","#Mini:0","#Maxi:100","","","#Nooo","#Nooo","TrackBar_Ticks|TrackBar_Vertical"
     Data.s "TreeGadget","30","27","100","20","Tree","","","","","","","","Tree_AlwaysShowSelection|Tree_NoLines|Tree_NoButtons|Tree_CheckBoxes|Tree_ThreeState"
     Data.s "WebGadget","31","18","260","125","WebView","#Url$:https://www.purebasic.fr/","","","","#Nooo","#Nooo","#Nooo",""
     Data.s "TabBarGadget","32","40","140","27","TabBar","#TabN","","","","#Nooo","#Nooo","#Nooo","BottomLine(x)|CheckBox|CloseButton(x)|Editable|MirroredTabs|MultiLine|MultiSelect|NewTab|NoTabMoving|PopupButton|ReverseOrdering|SelectedCloseButton|TextCutting|Vertical"
@@ -2256,18 +1715,18 @@ CompilerIf #PB_Compiler_IsMainFile
 CompilerEndIf
 
 ; IDE Options = PureBasic 5.60 (Windows - x64)
-; Folding = ------
+; Folding = -----
 ; EnableXP
 ; UseIcon = Include\SweetyVD.ico
 ; Executable = SweetyVD.exe
 ; EnablePurifier
-; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.3"
 ; IncludeVersionInfo
-; VersionField0 = 1.9.26
-; VersionField1 = 1.9.26
+; VersionField0 = 1.9.3
+; VersionField1 = 1.9.3
 ; VersionField3 = SweetyVD.exe
-; VersionField4 = 1.9.26
-; VersionField5 = 1.9.26
+; VersionField4 = 1.9.3
+; VersionField5 = 1.9.3
 ; VersionField6 = Sweety Visual Designer
 ; VersionField7 = SweetyVD.exe
 ; VersionField8 = SweetyVD.exe
