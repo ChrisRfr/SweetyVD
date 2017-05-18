@@ -3,8 +3,8 @@
 ;    Description: Sweety Visual Designer
 ;     dependency: CodeCreate.pb (Sweety Visual Designer Code Form and Code creation)
 ;         Author: ChrisR
-;           Date: 2017-05-09
-;        Version: 1.9.25
+;           Date: 2017-05-18
+;        Version: 1.9.3
 ;     PB-Version: 5.60 (x86/x64)
 ;             OS: Windows, Linux, Mac
 ;         Credit: Stargâte: Transformation of gadgets at runtime
@@ -810,5 +810,33 @@ Procedure.s CustomAddition(Group.s)
 EndProcedure
 
 ; IDE Options = PureBasic 5.60 (Windows - x64)
-; Folding = -
+; Folding = --
 ; EnableXP
+; UseIcon = Include\SweetyVD.ico
+; Executable = SweetyVD.exe
+; EnablePurifier
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
+; Constant = #BuildVersion = "1.9.26"
