@@ -1,10 +1,10 @@
 ﻿  Enumeration Font
     #FontWML
   EndEnumeration
-  
+
   Declare.f AjustFontSize(Size.l)
   Declare LoadFontWML()
-  
+
   Procedure.f AjustFontSize(lSize.l)   ;Windows DPI aware by using the font size based on the number of pixels per inch along the screen
     Define.i iimage
     Static.f fPpp
@@ -24,7 +24,7 @@
       ProcedureReturn (lSize * 96) / fPpp
     CompilerEndIf
   EndProcedure
-  
+
   Procedure LoadFontWML()   ;Most common fonts on Windows, Mac, and linux/Unix OS with +- a similar size: Verdana, Arial, courrier New.
     If LoadFont(#FontWML, "Verdana", AjustFontSize(8))
       SetGadgetFont(#PB_Default, FontID(#FontWML))   ; Set the loaded Verdana 8 font as new default font for all Gadgets
@@ -34,6 +34,5 @@
   EndProcedure
 
 ; IDE Options = PureBasic 5.60 (Windows - x64)
-; CursorPosition = 6
 ; Folding = -
 ; EnableXP

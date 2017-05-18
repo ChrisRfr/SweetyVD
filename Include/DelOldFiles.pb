@@ -11,7 +11,7 @@ Procedure DelOldFiles(Folder.s, Filtre.s = "*.*", NbDay.l = 365)
     Folder + "/"
   EndIf
   If FileSize(Folder) <> -2 : ProcedureReturn : EndIf
-  If ExamineDirectory(0, Folder, Filtre)  
+  If ExamineDirectory(0, Folder, Filtre)
     While NextDirectoryEntry(0)
       If DirectoryEntryType(0) = #PB_DirectoryEntry_File
         If GetFileDate(Folder + DirectoryEntryName(0), #PB_Date_Modified) < DateRef
@@ -22,7 +22,7 @@ Procedure DelOldFiles(Folder.s, Filtre.s = "*.*", NbDay.l = 365)
     FinishDirectory(0)
   EndIf
 EndProcedure
+
 ; IDE Options = PureBasic 5.60 (Windows - x64)
-; CursorPosition = 23
 ; Folding = -
 ; EnableXP

@@ -52,7 +52,7 @@ Procedure CodeCreateForm()
       Break
     EndIf
   Next
-  
+
   If OpenPreferences("SweetyVD.ini", #PB_Preference_GroupSeparator)
     PreferenceGroup("CodeCreate")
     Include_TitleBlock  = ReadPreferenceLong("Include_TitleBlock", Include_TitleBlock)
@@ -69,7 +69,7 @@ Procedure CodeCreateForm()
     Tab_Indentation = ReadPreferenceLong("Tab_Indentation", Tab_Indentation)
     ClosePreferences()
   EndIf
-  
+
   If AnyGadgets   ;If at least one Gadget
     If OpenWindow(#CodeForm, WindowX(#MainWindow)+GadgetX(#CodeCreate), WindowY(#MainWindow)+70 , 420 , 205, "SweetyVD: Create PureBasic code",#PB_Window_TitleBar)
       CheckBoxGadget(#Code_TitleBlock, 20, 5, 160, 25, "Include Title Block") : SetGadgetState(#Code_TitleBlock, Include_TitleBlock)
@@ -82,11 +82,11 @@ Procedure CodeCreateForm()
       Else
         SetGadgetState(#CodeConstants,#True)
       EndIf
-      
+
       CheckBoxGadget(#CodeEventLoop, 20, 103, 160, 25, "Include the Event Loop") : SetGadgetState(#CodeEventLoop, Include_EventLoop)
       TextGadget(#CodeSeparator, 10, 122, 190, 15, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .")
       CheckBoxGadget(#CodeCustomAddition, 20, 135, 160, 25, "Include Custom Addition") : SetGadgetState(#CodeCustomAddition, Include_CustomAddition)
-      
+
       FrameGadget(#CodeFrameOption, 210, 5, 200, 160, "Option")
       FrameGadget(#CodeFrameColor, 220, 20, 180, 35, "Color")
       OptionGadget(#CodeColorRGB, 225, 33, 85, 20, "RGB")
@@ -96,17 +96,17 @@ Procedure CodeCreateForm()
       Else
         SetGadgetState(#CodeColorHex,#True)
       EndIf
-      
+
       FrameGadget(#CodeFramePrePost, 220, 60, 180, 45, "Variable (#PB_Any)")
       TextGadget(#TextGadget_PreFix, 225, 80, 60, 20, "PreFix")
       StringGadget(#StringGadget_PreFix, 285, 78, 40, 20, PreFix)
       CheckBoxGadget(#CheckBox_Suffix, 335, 78, 60, 20, "Suffix") : SetGadgetState(#CheckBox_Suffix, Suffix_Enabled)
-      
+
       FrameGadget(#CodeFrameIndent, 220, 110, 180, 45, "Indentation")
       TextGadget(#Text_SpaceIndent, 225, 130, 60, 20, "Nb Space")
       SpinGadget(#Spin_SpaceIndent, 285, 128, 40, 20, 0, 9, #PB_Spin_Numeric | #PB_Spin_ReadOnly) : SetGadgetState(#Spin_SpaceIndent, Space_Indentation)
       CheckBoxGadget(#CheckBox_TabIndent, 335, 128, 60, 20, "#TAB$") : SetGadgetState(#CheckBox_TabIndent, Tab_Indentation)
-      
+
       If FileSize(PBIDEpath) > 1
         ButtonGadget(#CodeNewTab, 10, 170, 70, 25, "New Tab", #PB_Button_Toggle) : SetGadgetState(#CodeNewTab, #True)
         ButtonGadget(#CodeClipboard, 90, 170, 70, 25, "Clipboard")
@@ -134,7 +134,7 @@ Procedure CodeCreate(Dest.s = "Clipboard")
   Protected Code.s, Model.s, Name.s, X.s, Y.s, Width.s, Height.s, Caption.s, Caption7.s
   Protected Mini.i, Maxi.i, Hexa_Color.b, TmpColor.i, TmpTabName.s, ActiveTab.i=-1, TmpConstants.s, INDENT$ = "  ", FirstPass.b, I.i, J.i
   Protected WinName.s, sPreF.s, sSuFF.s = ".i", iVarNameLength.i
-  
+
   CodeConstants = GetGadgetState(#CodeConstants)
   Include_CustomAddition = GetGadgetState(#CodeCustomAddition)
   Hexa_Color = GetGadgetState(#CodeColorHex)
@@ -162,9 +162,9 @@ Procedure CodeCreate(Dest.s = "Clipboard")
     WritePreferenceLong("Tab_Indentation", GetGadgetState(#CheckBox_TabIndent))
     ClosePreferences()
   EndIf
-  
+
   CopyArray(Gadgets(), Buffer())   ;Sort: Creation of the Model key (Window or Gadget) + Position X + Position Y
-  
+
   For I = 0 To ArraySize(Buffer())
     Buffer(I)\VName = sPreF + Mid(Buffer(I)\Name, 2)   ;get var with prefix
     If Len(Buffer(I)\Vname) > iVarNameLength
@@ -191,11 +191,11 @@ Procedure CodeCreate(Dest.s = "Clipboard")
       iVarNameLength = Len(sPreF + "StatusBar")
     EndIf
   EndIf
-  
+
   For I = 0 To ArraySize(Buffer())
     Buffer(I)\Vname = sStringToLength(Buffer(I)\Vname, iVarNameLength)   ; Expand all gadget names to max name length
   Next
-  
+
   For I=0 To ArraySize(Buffer())
     With Buffer(I)
       If \ModelType = 9   ;Gadget Deleted
@@ -210,7 +210,7 @@ Procedure CodeCreate(Dest.s = "Clipboard")
     EndWith
   Next
   SortStructuredArray(Buffer(), #PB_Sort_Ascending, OffsetOf(StructureGadget\Key), TypeOf(StructureGadget\Key))
-  
+
   If GetGadgetState(#Code_TitleBlock) = #True   ;-Include Title block
     If OpenPreferences("SweetyVD.ini", #PB_Preference_GroupSeparator)
       PreferenceGroup("TitleBlock")
@@ -226,16 +226,16 @@ Procedure CodeCreate(Dest.s = "Clipboard")
     EndIf
   EndIf
   Code + #CRLF$
-  
+
   If GetGadgetState(#CodeEnumeration) = #True
     Code + "EnableExplicit" +#CRLF$+#CRLF$
   EndIf
-  
+
   If Include_CustomAddition
     TmpCode = CustomAddition("CustomAddition_Include")
     If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
   EndIf
-  
+
   For I=0 To ArraySize(Buffer())   ;XIncludeFile "TabBarGadget.pbi" if used
     With Buffer(I)
       Select \Type
@@ -266,7 +266,7 @@ Procedure CodeCreate(Dest.s = "Clipboard")
   If IncludeFileAdded <> ""
     Code +#CRLF$
   EndIf
-  
+
   If Include_CustomAddition
     TmpCode = CustomAddition("CustomAddition_Constante")
     If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
@@ -279,7 +279,7 @@ Procedure CodeCreate(Dest.s = "Clipboard")
     TmpCode = CustomAddition("CustomAddition_Variable")
     If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
   EndIf
-  
+
   ;window global declaration code
   If GetGadgetState(#CodeEnumeration) = #True   ;-Include Enumeration
     With Buffer(0)
@@ -291,7 +291,7 @@ Procedure CodeCreate(Dest.s = "Clipboard")
         Code + "Global " + Trim(\Vname) + sSuFF +#CRLF$+#CRLF$
       EndIf
     EndWith
-    
+
     If CodeConstants = #True And (AddMenu + AddPopupMenu + AddToolBar + AddStatusBar) > 0
       Code + "Enumeration" +#CRLF$
     EndIf
@@ -313,7 +313,7 @@ Procedure CodeCreate(Dest.s = "Clipboard")
         Code +#CRLF$
       EndIf
     EndIf
-    
+
     If CodeConstants
       Code + "Enumeration Gadgets" +#CRLF$
     EndIf
@@ -332,7 +332,7 @@ Procedure CodeCreate(Dest.s = "Clipboard")
     Else
       Code +#CRLF$
     EndIf
-    
+
     If ArraySize(ImageBtnPathArray()) > 0   ;Image Enumeration
       If CodeConstants : Code + "Enumeration FormImage"+#CRLF$ :EndIf
       For I = 1 To ArraySize(ImageBtnPathArray())
@@ -351,12 +351,12 @@ Procedure CodeCreate(Dest.s = "Clipboard")
       EndIf
     EndIf
   EndIf
-  
+
   If CodeConstants And Include_CustomAddition
     TmpCode = CustomAddition("CustomAddition_Structure")
     If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
   EndIf
-  
+
   If AddToolBar = #True
     Code + "UsePNGImageDecoder()" +#CRLF$
     ImageExtFullPath + "*.png" + ";"
@@ -379,7 +379,7 @@ Procedure CodeCreate(Dest.s = "Clipboard")
       If ImageExtFullPath <> ""
         Code +#CRLF$
       EndIf
-      
+
       For I = 1 To ArraySize(ImageBtnPathArray())   ;LoadImage
         If FileSize(ImageBtnPathArray(I)\ImagePath)
           If CodeConstants
@@ -392,36 +392,36 @@ Procedure CodeCreate(Dest.s = "Clipboard")
       Code +#CRLF$
     EndIf
   EndIf
-  
+
   If CodeConstants And Include_CustomAddition
     TmpCode = CustomAddition("CustomAddition_Variable")
     If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
   EndIf
-  
+
   If GetGadgetState(#CodeEnumeration) = #True
     Code + "Define iEvent.i" +#CRLF$+#CRLF$
   EndIf
-  
+
   If Include_CustomAddition
     TmpCode = CustomAddition("CustomAddition_Declare")
     If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
   EndIf
-  
+
   ;-Create Window
   With Buffer(0)
     If CodeConstants : Name = \Name : Else : Name = \Vname : EndIf
     Width = GetGadgetText(#SetDrawWidth) : Height = GetGadgetText(#SetDrawHeight)
     Caption = Mid(\Caption, 7)
-    
+
     Code + "Declare Open_"+Mid(\Name,2)+"(X = 0, Y = 0, Width = "+Width+", Height = "+Height+")" +#CRLF$+#CRLF$
-    
+
     If Include_CustomAddition
       TmpCode = CustomAddition("CustomAddition_Procedure")
       If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
     EndIf
-    
+
     Code + "Procedure Open_"+Mid(\Name,2)+"(X = 0, Y = 0, Width = "+Width+", Height = "+Height+")" +#CRLF$
-    
+
     WinName = Trim(Name)
     If CodeConstants
       Code +INDENT$+ "If OpenWindow(" + Name + ", X, Y, Width, Height, "
@@ -429,7 +429,7 @@ Procedure CodeCreate(Dest.s = "Clipboard")
       Code +INDENT$+ Trim(Name) + " = OpenWindow(#PB_Any, X, Y, Width, Height, "
     EndIf
     Code + #DQUOTE$ + Caption + #DQUOTE$   ;For window model, Caption=#Text:blabla => "blabla", or ""
-    
+
     If \Constants <> ""   ;Are there any Constants for the window
       FirstPass.b = #False
       For I=1 To CountString(\Constants, "|") + 1
@@ -445,10 +445,10 @@ Procedure CodeCreate(Dest.s = "Clipboard")
         EndIf
       Next
     EndIf
-    
+
     Code + ")" +#CRLF$   ;End of generation of the window code
     If CodeConstants = #False : Code +INDENT$+ "If " + Name +#CRLF$ :EndIf
-    
+
     If Left(\BackColor, 5) <> "#Nooo" And \BackColor <> ""   ;Background window color
       TmpColor = Val(\BackColor)
       If Hexa_Color = 1
@@ -458,7 +458,7 @@ Procedure CodeCreate(Dest.s = "Clipboard")
       EndIf
     EndIf
   EndWith
-  
+
   If AddMenu   ;-Add Menu
     If CodeConstants = #True
       Code +#CRLF$+INDENT$+INDENT$+ "If CreateMenu(#MainMenu, WindowID(" + WinName + "))" +#CRLF$
@@ -525,7 +525,7 @@ Procedure CodeCreate(Dest.s = "Clipboard")
   If (AddMenu + AddPopupMenu + AddToolBar + AddStatusBar) > 0
     Code +#CRLF$
   EndIf
-  
+
   ;-Create Gadgets
   For I=1 To ArraySize(Buffer())
     With Buffer(I)
@@ -537,11 +537,11 @@ Procedure CodeCreate(Dest.s = "Clipboard")
       If AddMenu = #True : Y = Str(\Y - AddMenuHeight) : EndIf
       Width = Str(\Width) : Height = Str(\Height)
       Caption = Mid(\Caption, 7)
-      
+
       If Model = "ScintillaGadget"   ;Specific ScintillaGadget: If InitScintilla() : ScintillaGadget(xxx) : EndIf
         Code +#CRLF$+INDENT$+INDENT$+ "If InitScintilla()" +#CRLF$+INDENT$
       EndIf
-      
+
       If CodeConstants
         Code +INDENT$+INDENT$+ Model + "(" + Name + ", " + X + ", " + Y + ", " + Width + ", " + Height   ;Common part
       Else
@@ -551,7 +551,7 @@ Procedure CodeCreate(Dest.s = "Clipboard")
           Code +INDENT$+INDENT$+ Name +INDENT$+ " = " + Model + "(#PB_Any, " + X + ", " + Y + ", " + Width + ", " + Height   ;Common part
         EndIf
       EndIf
-      
+
       Select Left(\Caption, 5)
         Case "#Text" : Code + ", " + #DQUOTE$ + Caption + #DQUOTE$   ;Caption=#Text:blabla => "blabla", or ""
         Case "#Date"
@@ -561,7 +561,7 @@ Procedure CodeCreate(Dest.s = "Clipboard")
           Code + ", " + #DQUOTE$ + Caption + #DQUOTE$
         Case "#Url$" : Code + ", " + #DQUOTE$ + Caption + #DQUOTE$   ;It should be a valid Url
       EndSelect
-      
+
       Select Left(\Option1, 5)
         Case "#Mini" : Code + ", " + Mid(\Option1, 7)
         Case "#InrW" : Code + ", " + Mid(\Option1, 7)
@@ -579,26 +579,26 @@ Procedure CodeCreate(Dest.s = "Clipboard")
                 Else
                   Code + ", ImageID(" + sPreF + "Img_Window_" + Str(J) + ")"
                 EndIf
-                
+
                 Break
               EndIf
             Next
           EndIf
       EndSelect
-      
+
       Select Left(\Option2, 5)
         Case "#Maxi" : Code + ", " + Mid(\Option2, 7)
         Case "#InrH" : Code + ", " + Mid(\Option2, 7)
         Case "#Widh" : Code + ", " + Mid(\Option2, 7)
       EndSelect
-      
+
       ;Specific addition
       Select Model
         Case "ScrollBarGadget" : Code + ", 0"                      ;Specific ScrollBarGadget: Page length
         Case "ScrollAreaGadget" : Code + ", " + Mid(\Option3, 7)   ;Specific ScrollAreaGadget: Displacement Value
-          
+
       EndSelect
-      
+
       If \Constants <> ""   ;Are there any Constants for the window
         FirstPass.b = #False
         For J=1 To CountString(\Constants, "|") + 1
@@ -621,14 +621,14 @@ Procedure CodeCreate(Dest.s = "Clipboard")
           EndIf
         Next
       EndIf
-      
+
       If Model = "TabBarGadget"   ;Specific TabBar Gadget
         If FirstPass = #False : Code + ", 0" :EndIf
         If CodeConstants : Code + ", " + Buffer(0)\Name : Else : Code + ", " + sPreF + Mid(Buffer(0)\Name,2) : EndIf
       EndIf
-      
+
       Code + ")" +#CRLF$   ;End of generation of the gadget code
-      
+
       ;Specific addition
       Select Model
         Case "ComboBoxGadget"
@@ -661,7 +661,7 @@ Procedure CodeCreate(Dest.s = "Clipboard")
         Case "TabBarGadget"
           Code +INDENT$+INDENT$+INDENT$+ "AddTabBarGadgetItem("+ Trim(Name) + ", #PB_Default, " + #DQUOTE$ + Caption + #DQUOTE$ + ")" +#CRLF$
       EndSelect
-      
+
       If Left(\FrontColor, 5) <> "#Nooo" And \FrontColor <> ""
         TmpColor = Val(\FrontColor)
         If Hexa_Color = 1
@@ -680,39 +680,39 @@ Procedure CodeCreate(Dest.s = "Clipboard")
         EndIf
         ;Code +INDENT$+INDENT$+INDENT$+ "SetGadgetColor(" + Trim(Name) + ", #PB_Gadget_BackColor, " + \BackColor + ")" +#CRLF$
       EndIf
-      
+
       If \ToolTip <> "#Nooo" And \ToolTip <> ""
         Code +INDENT$+INDENT$+INDENT$+ "GadgetToolTip(" + Trim(Name) + ", " + #DQUOTE$ + \ToolTip + #DQUOTE$ + ")" +#CRLF$
       EndIf
-      
+
       Select Model
         Case "ContainerGadget", "PanelGadget", "ScrollAreaGadget"
           Code +INDENT$+INDENT$+INDENT$+ "CloseGadgetList()" +#CRLF$
       EndSelect
-      
+
     EndWith
   Next
-  
+
   Code +INDENT$+ "EndIf" +#CRLF$
   Code + "EndProcedure" +#CRLF$+#CRLF$
-  
+
   If Include_CustomAddition
     TmpCode = CustomAddition("CustomAddition_Init")
     If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
   EndIf
-  
+
   Code + "Open_" + Mid(Buffer(0)\Name,2) + "()" +#CRLF$+#CRLF$
-  
+
   If Include_CustomAddition
     TmpCode = CustomAddition("CustomAddition_Main")
     If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
   EndIf
-  
+
   If GetGadgetState(#CodeEventLoop) = #True   ;-Include Event Loop
     Code + "Repeat" +#CRLF$
     Code +INDENT$+ "iEvent = WaitWindowEvent()" +#CRLF$
     Code +INDENT$+ "Select iEvent" +#CRLF$
-    
+
     CompilerIf #PB_Compiler_OS = #PB_OS_Windows
       If AddPopupMenu
         Code +INDENT$+INDENT$+ "Case #WM_RBUTTONDOWN   ;Windows right click" +#CRLF$
@@ -723,7 +723,7 @@ Procedure CodeCreate(Dest.s = "Clipboard")
         EndIf
       EndIf
     CompilerEndIf
-    
+
     Code +INDENT$+INDENT$+ "Case #PB_Event_Menu" +#CRLF$
     Code +INDENT$+INDENT$+INDENT$+ "Select EventMenu()" +#CRLF$
     If AddMenu
@@ -737,7 +737,7 @@ Procedure CodeCreate(Dest.s = "Clipboard")
       Code +INDENT$+INDENT$+INDENT$+INDENT$+INDENT$+ "MessageRequester(" + #DQUOTE$ + "Information" + #DQUOTE$ + ", " + #DQUOTE$ + "ToolBar Or Menu ID: " + #DQUOTE$ + " + Str(EventMenu()), 0)" +#CRLF$
     EndIf
     Code +INDENT$+INDENT$+INDENT$+ "EndSelect" +#CRLF$+#CRLF$
-    
+
     Code +INDENT$+INDENT$+ "Case #PB_Event_Gadget" +#CRLF$
     Code +INDENT$+INDENT$+INDENT$+ "Select EventGadget()" +#CRLF$
     For I=1 To ArraySize(Buffer())
@@ -753,18 +753,18 @@ Procedure CodeCreate(Dest.s = "Clipboard")
       EndWith
     Next
     Code +INDENT$+INDENT$+INDENT$+ "EndSelect" +#CRLF$+#CRLF$
-    
+
     Code +INDENT$+INDENT$+ "Case #PB_Event_CloseWindow" +#CRLF$
     Code +INDENT$+INDENT$+INDENT$+ "End" +#CRLF$
     Code +INDENT$+ "EndSelect" +#CRLF$
     Code + "ForEver" +#CRLF$
   EndIf
-  
+
   If Include_CustomAddition
     TmpCode = CustomAddition("CustomAddition_Exit")
     If TmpCode <> "" : Code +#CRLF$ + TmpCode : EndIf
   EndIf
-  
+
   FreeArray(Buffer())
   CloseWindow(#CodeForm)
   If Dest.s = "NewTab"
@@ -810,35 +810,5 @@ Procedure.s CustomAddition(Group.s)
 EndProcedure
 
 ; IDE Options = PureBasic 5.60 (Windows - x64)
-; CursorPosition = 18
-; FirstLine = 7
-; Folding = --
+; Folding = -
 ; EnableXP
-; UseIcon = Include\SweetyVD.ico
-; Executable = SweetyVD.exe
-; EnablePurifier
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"

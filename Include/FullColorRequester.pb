@@ -9,7 +9,7 @@
 
 EnableExplicit
 ; -----------------------------------------------------------------------------
-; Goal - write a 'Unique' preference file in the temporary directory that 
+; Goal - write a 'Unique' preference file in the temporary directory that
 ; stays in the temporary directory even when user switches to other programs.
 ; It will keep the special colors the user last adjusted.
 ; -----------------------------------------------------------------------------
@@ -19,7 +19,7 @@ Declare FullColorRequester(X.i = 0, Y.i = 0)
 
 Structure COLORREF
   RGB.l[16]
-EndStructure 
+EndStructure
 
 ; Structure CHOOSECOLOR ; see PB toolbox
 ;      lStructSize.l
@@ -71,7 +71,7 @@ Procedure FullColorRequester(X.i = 0, Y.i = 0)   ;Place CHOOSECOLOR Info into re
   For I = 0 To 15
     COLORREF\RGB[I] = ColorPref(I)
   Next
-  
+
   CHOOSECOLOR\LStructSize = SizeOf(CHOOSECOLOR)
   If IsWindow(hwnd)   ;Window Owner
     CHOOSECOLOR\hwndOwner = WindowID(hwnd)
@@ -81,7 +81,7 @@ Procedure FullColorRequester(X.i = 0, Y.i = 0)   ;Place CHOOSECOLOR Info into re
   CHOOSECOLOR\rgbResult = 0   ;Nothing selected
   CHOOSECOLOR\lpCustColors = COLORREF
   CHOOSECOLOR\flags = #CC_ANYCOLOR | #CC_RGBINIT
-  
+
   If ChooseColor_(@CHOOSECOLOR)
     For I = 0 To 15
       ColorPref(I) = COLORREF\RGB[I]
@@ -112,4 +112,3 @@ EndProcedure
 ; IDE Options = PureBasic 5.60 (Windows - x64)
 ; Folding = -
 ; EnableXP
-; Executable = FullColorRequester.exe

@@ -12,6 +12,7 @@ Procedure.s GetTempFilename(BaseName.s, NbRamdomLetter.l, ext.s)
     ProcedureReturn GetTempFilename(BaseName.s, NbRamdomLetter.l, ext)
   EndIf
 EndProcedure
+
 ; IDE Options = PureBasic 5.60 (Windows - x64)
 ; Folding = -
 ; EnableXP
