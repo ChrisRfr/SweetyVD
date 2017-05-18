@@ -3,8 +3,8 @@
 ;    Description: Sweety Visual Designer
 ;     dependency: SweetyVDmodule.pbi (Sweety Visual Designer Module)
 ;         Author: ChrisR
-;           Date: 2017-05-09
-;        Version: 1.9.25
+;           Date: 2017-05-18
+;        Version: 1.9.3
 ;     PB-Version: 5.60 (x86/x64)
 ;             OS: Windows, Linux, Mac
 ;         Credit: Stargâte: Transformation of gadgets at runtime
