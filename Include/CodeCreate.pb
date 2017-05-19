@@ -3,8 +3,8 @@
 ;    Description: Sweety Visual Designer
 ;     dependency: CodeCreate.pb (Sweety Visual Designer Code Form and Code creation)
 ;         Author: ChrisR
-;           Date: 2017-05-18
-;        Version: 1.9.3
+;           Date: 2017-05-19
+;        Version: 1.9.31
 ;     PB-Version: 5.60 (x86/x64)
 ;             OS: Windows, Linux, Mac
 ;         Credit: Stargâte: Transformation of gadgets at runtime
@@ -13,6 +13,7 @@
 ;                 Zebuddi: Add PreFix and SuFix for variable (eg: iButton_1.i)
 ;  English-Forum: http://www.purebasic.fr/english/viewtopic.php?f=27&t=68187
 ;   French-Forum: http://www.purebasic.fr/french/viewtopic.php?f=3&t=16527
+;         Github: https://github.com/ChrisRfr/SweetyVD
 ; ---------------------------------------------------------------------------------------
 
 Declare AboutForm()
@@ -812,31 +813,5 @@ EndProcedure
 ; IDE Options = PureBasic 5.60 (Windows - x64)
 ; Folding = --
 ; EnableXP
-; UseIcon = Include\SweetyVD.ico
 ; Executable = SweetyVD.exe
 ; EnablePurifier
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
-; Constant = #BuildVersion = "1.9.26"
