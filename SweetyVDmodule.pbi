@@ -2,14 +2,15 @@
 ;           Name: SweetyVDmodule
 ;    Description: Sweety Visual Designer Module
 ;         Author: ChrisR
-;           Date: 2017-05-18
-;        Version: 1.9.3
+;           Date: 2017-05-19
+;        Version: 1.9.31
 ;     PB-Version: 5.60 (x86/x64)
 ;             OS: Windows, Linux, Mac
 ;         Credit: Stargâte - Transformation of gadgets at runtime
 ;         Credit: Falsam - Tiny Visual Designer (TVD)
 ;  English-Forum: http://www.purebasic.fr/english/viewtopic.php?f=27&t=68187
 ;   French-Forum: http://www.purebasic.fr/french/viewtopic.php?f=3&t=16527
+;         Github: https://github.com/ChrisRfr/SweetyVD
 ; ---------------------------------------------------------------------------------------
 
 DeclareModule SVDesigner
@@ -54,6 +55,7 @@ DeclareModule SVDesigner
   Declare ReDrawHandle()
   Declare MouseOverDrawArea()
   Declare.i GridMatch(Value.i, Grid.i=1, Min.i=0, Max.i=$7FFFFFFF)
+  Declare ParentPosDim()
   Declare ResizeSVDGadget(Gadget.i, X.i, Y.i, Width.i, Height.i)
   Declare ResizeHandle(Gadget)
   Declare SVD_Callback()
@@ -249,7 +251,7 @@ Module SVDesigner
           GridBackground = WinBackColor
         EndIf
       EndIf
-      If StartDrawing(CanvasOutput(#DrawArea))
+      If StartDrawing(CanvasOutput(#DrawArea))   ;Draw Grid Background and grid
         TextH = TextHeight("Text")
         DrawingMode(#PB_2DDrawing_Default)
         Box(0, 0, OutputWidth(), OutputHeight(), ScrollAreaColor)
@@ -262,7 +264,7 @@ Module SVDesigner
           Line(X,0,1,UserScreen_Height,GridColor)
           X+Spacing-1
         Next
-        ;AddMenu.b, AddPopupMenu.b, AddToolBar.b, AddStatusBar.b, AddMenuHeight.l, AddToolBarHeight.l, AddStatusBarHeight.l
+        ;AddMenu According to AddMenuHeight obtained in SweetyVD:Init()
         Y = 0
         If AddMenu = #True
           DrawingMode(#PB_2DDrawing_Default)
@@ -272,6 +274,7 @@ Module SVDesigner
           Y + AddMenuHeight
           Line(0, Y, UserScreen_Width, 1, $646464)
         EndIf
+        ;AddToolBar According to AddToolBarHeight obtained in SweetyVD:Init()
         If AddToolBar = #True
           DrawingMode(#PB_2DDrawing_Default)
           If Y = 0
@@ -284,6 +287,7 @@ Module SVDesigner
           Y + AddToolBarHeight
           Line(0, Y, UserScreen_Width, 1, $646464)
         EndIf
+        ;AddStatusBar According to AddStatusBarHeight obtained in SweetyVD:Init()
         If AddStatusBar = #True
           DrawingMode(#PB_2DDrawing_Default)
           Box(0, UserScreen_Height-AddStatusBarHeight, UserScreen_Width, AddStatusBarHeight, DftBackColor)
@@ -381,12 +385,28 @@ Module SVDesigner
       EndIf
     EndProcedure
 
+    Procedure ParentPosDim()
+;         \ParentGadget = 1000000001
+;         If \ParentGadget = #ScrollDrawArea
+              MinX = 0 : MaxX = UserScreen_Width : MinY = 0 : MaxY = UserScreen_Height
+              If AddMenu = #True : MinY + AddMenuHeight : EndIf
+              If AddToolBar = #True : MinY + AddToolBarHeight : EndIf
+              If AddStatusBar = #True : MaxY-AddStatusBarHeight+1 : EndIf
+;         Else
+;           ForEach SVDListParentGadget()
+;             If SVDListParentGadget()\ParentGadget = \ParentGadget
+;               MinX = SVDListParentGadget()\X
+;               MaxX = MinX + SVDListParentGadget()\Width
+;               MinY = SVDListParentGadget()\Y
+;               MaxY = MinY + SVDListParentGadget()\Height
+;             EndIf
+;           Next
+;         EndIf
+    EndProcedure
+
     Procedure ResizeSVDGadget(Gadget.i, X.i, Y.i, Width.i, Height.i)
       Protected *SVDListGadget.SVDGadget
-      Protected MinX = 0 : MaxX = UserScreen_Width : MinY = 0 : MaxY = UserScreen_Height
-      If AddMenu = #True : MinY + AddMenuHeight : EndIf
-      If AddToolBar = #True : MinY + AddToolBarHeight : EndIf
-      If AddStatusBar = #True : MaxY-AddStatusBarHeight+1 : EndIf
+      ParentPosDim()
       With SVDListGadget()
         ForEach SVDListGadget()
           If \Gadget = Gadget
@@ -484,22 +504,7 @@ Module SVDesigner
                 If IsGadget(LastGadgetFocus) : ResizeGadget(LastGadgetFocus, #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore) : EndIf
                 DrawAreaHandleBorder(LastGadgetFocus, #FreeHandelColor)
               EndIf
-;         \ParentGadget = 1000000001
-;         If \ParentGadget = #ScrollDrawArea
-              MinX = 0 : MaxX = UserScreen_Width : MinY = 0 : MaxY = UserScreen_Height
-              If AddMenu = #True : MinY + AddMenuHeight : EndIf
-              If AddToolBar = #True : MinY + AddToolBarHeight : EndIf
-              If AddStatusBar = #True : MaxY-AddStatusBarHeight+1 : EndIf
-;         Else
-;           ForEach SVDListParentGadget()
-;             If SVDListParentGadget()\ParentGadget = \ParentGadget
-;               Define MinX = SVDListParentGadget()\X
-;               Define MaxX = MinX + SVDListParentGadget()\Width
-;               Define MinY = SVDListParentGadget()\Y
-;               Define MaxY = MinY + SVDListParentGadget()\Height
-;             EndIf
-;           Next
-;         EndIf
+              ParentPosDim()
               SelectedDrawGadget = -1
               LastDragHandleFocus = \DragHandle
               LastGadgetFocus = \Gadget
@@ -666,10 +671,7 @@ Module SVDesigner
             With SVDListGadget()
               ForEach SVDListGadget()
                 If \Gadget = SelectedDrawGadget
-                  MinX = 0 : MaxX = UserScreen_Width : MinY = 0 : MaxY = UserScreen_Height
-                  If AddMenu = #True : MinY + AddMenuHeight : EndIf
-                  If AddToolBar = #True : MinY + AddToolBarHeight : EndIf
-                  If AddStatusBar = #True : MaxY-AddStatusBarHeight+1 : EndIf
+                  ParentPosDim()
                   Select GetGadgetAttribute(EventGadget(),#PB_Canvas_Key)
                     Case #PB_Shortcut_Up
                       If GetGadgetAttribute(#DrawArea, #PB_Canvas_Modifiers) = #PB_Canvas_Shift And IsGadget(\Handle[1])
@@ -715,10 +717,7 @@ Module SVDesigner
 
         Case #PB_EventType_LeftButtonDown
           If MouseOverGadget <> -1
-            MinX = 0 : MaxX = UserScreen_Width : MinY = 0 : MaxY = UserScreen_Height
-            If AddMenu = #True : MinY + AddMenuHeight : EndIf
-            If AddToolBar = #True : MinY + AddToolBarHeight : EndIf
-            If AddStatusBar = #True : MaxY-AddStatusBarHeight+1 : EndIf
+            ParentPosDim()
             SelectedDrawGadget = MouseOverGadget
             SetActiveDrawGadget(SelectedDrawGadget)
             MouseDown = #True
@@ -791,10 +790,8 @@ Module SVDesigner
       Select EventType()
         Case #PB_EventType_LeftButtonDown
           Selected = #True
-          MinY = #MinSize
-          If AddMenu = #True : MinY + AddMenuHeight : EndIf
-          If AddToolBar = #True : MinY + AddToolBarHeight : EndIf
-          If AddStatusBar = #True : MinY+AddStatusBarHeight : EndIf
+          ParentPosDim()
+          If AddStatusBar = #True : MinY+AddStatusBarHeight : EndIf   ;Add the height of the status bar to MinY for the minimum height of the window
           ;SetActiveGadget(-1)   ;Lost Focus on last Gadget (DragHandle) Selected
           SetActiveDrawAera()
           ;PostEvent(#PB_Event_Gadget, GetActiveWindow(), WinHandle, #SVD_Window_Focus)
@@ -817,8 +814,8 @@ Module SVDesigner
           If Selected = #True
             WinWidth = WindowMouseX(0)-OffsetX-ScrollX - 1 : WinHeight = WindowMouseY(0)-OffsetY-ScrollY - 1   ;The border is drawn at +1
             ;<== FOR DEBUG: WinWidth = WindowMouseX(GetActiveWindow())-OffsetX-ScrollX - 1 : WinHeight = WindowMouseY(GetActiveWindow())-OffsetY-ScrollY - 1
-            WinWidth = GridMatch(WinWidth, DragSpace, #MinSize, GetGadgetAttribute(ParentGadget, #PB_ScrollArea_InnerWidth) - 10)
-            WinHeight = GridMatch(WinHeight, DragSpace, MinY, GetGadgetAttribute(ParentGadget, #PB_ScrollArea_InnerHeight) - 10)
+            WinWidth = GridMatch(WinWidth, DragSpace, MinX+#MinSize, GetGadgetAttribute(ParentGadget, #PB_ScrollArea_InnerWidth) - 10)
+            WinHeight = GridMatch(WinHeight, DragSpace, MinY+#MinSize, GetGadgetAttribute(ParentGadget, #PB_ScrollArea_InnerHeight) - 10)
             SavPosDim\X = 0 : SavPosDim\Y = 0 : SavPosDim\Width = WinWidth : SavPosDim\Height = WinHeight
             ;PostEvent(#PB_Event_Gadget, GetActiveWindow(), WinHandle, #SVD_Window_ReSize, @SavPosDim)
             PostEvent(#PB_Event_Gadget, 0, WinHandle, #SVD_Window_ReSize, @SavPosDim)   ;Updates the 4 SpinGadget(Width,Height)+UserScreen_Width,UserScreen_Height+Resize(WinHandle)+DrawGrid
@@ -856,10 +853,10 @@ Module SVDesigner
           If \Gadget = Gadget
             If LastDragHandleFocus > 0 And IsGadget(LastDragHandleFocus) : DrawHandleBorder(LastDragHandleFocus, #FreeHandelColor) : EndIf
             If LastGadgetFocus > 1 And IsGadget(LastGadgetFocus) : ResizeGadget(LastGadgetFocus, #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore) : EndIf
-            ;             If LastGadgetFocus > 1
-            ;               If IsGadget(LastGadgetFocus) : ResizeGadget(LastGadgetFocus, #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore) : EndIf
-            ;               DrawAreaHandleBorder(LastGadgetFocus, #FreeHandelColor)
-            ;             EndIf
+            ;If LastGadgetFocus > 1
+            ;  If IsGadget(LastGadgetFocus) : ResizeGadget(LastGadgetFocus, #PB_Ignore, #PB_Ignore, #PB_Ignore, #PB_Ignore) : EndIf
+            ;  DrawAreaHandleBorder(LastGadgetFocus, #FreeHandelColor)
+            ;EndIf
             LastGadgetFocus = Gadget
             LastDragHandleFocus = \DragHandle   ;DrawHandleBorder(\DragHandle, #FreeHandelColor)
             SelectedDrawGadget = Gadget
@@ -873,10 +870,7 @@ Module SVDesigner
             AddKeyboardShortcut(0, #PB_Shortcut_Delete, #Shortcut_Delete)
             If \DrawGadget = #True
               SavPosDim\X = \X : SavPosDim\Y = \Y : SavPosDim\Width = \Width : SavPosDim\Height = \Height
-              MinX = 0 : MaxX = UserScreen_Width : MinY = 0 : MaxY = UserScreen_Height
-              If AddMenu = #True : MinY + AddMenuHeight : EndIf
-              If AddToolBar = #True : MinY + AddToolBarHeight : EndIf
-              If AddStatusBar = #True : MaxY-AddStatusBarHeight+1 : EndIf
+              ParentPosDim()
               ;PostEvent(#PB_Event_Gadget, GetActiveWindow(), Gadget, #SVD_Gadget_Focus, @SavPosDim)
               PostEvent(#PB_Event_Gadget, 0, Gadget, #SVD_Gadget_Focus, SavPosDim)   ;For Debug
             EndIf

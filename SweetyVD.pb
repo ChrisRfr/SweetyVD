@@ -3,8 +3,8 @@
 ;    Description: Sweety Visual Designer
 ;     dependency: SweetyVDmodule.pbi (Sweety Visual Designer Module)
 ;         Author: ChrisR
-;           Date: 2017-05-18
-;        Version: 1.9.3
+;           Date: 2017-05-19
+;        Version: 1.9.31
 ;     PB-Version: 5.60 (x86/x64)
 ;             OS: Windows, Linux, Mac
 ;         Credit: Stargâte: Transformation of gadgets at runtime
@@ -13,6 +13,7 @@
 ;                 Zebuddi: Add PreFix and SuFix for variable (eg: iButton_1.i)
 ;  English-Forum: http://www.purebasic.fr/english/viewtopic.php?f=27&t=68187
 ;   French-Forum: http://www.purebasic.fr/french/viewtopic.php?f=3&t=16527
+;         Github: https://github.com/ChrisRfr/SweetyVD
 ; ---------------------------------------------------------------------------------------
 ; Note Linux: In order to use the WebGadget you have to utilize WebKitGTK
 ;   See Shardik's post http://www.purebasic.fr/english/viewtopic.php?f=15&t=54049
@@ -21,6 +22,8 @@
 
 CompilerIf #PB_Compiler_IsMainFile
   EnableExplicit
+
+  #BuildVersion = "1.9.3.1"
 
   ;Import internal function
   CompilerSelect #PB_Compiler_OS
@@ -238,7 +241,7 @@ CompilerIf #PB_Compiler_IsMainFile
   UseJPEGImageDecoder()
   ;Code Create Form and Code creation
   XIncludeFile "CodeCreate.pb"
-  
+
   Procedure StartPrefs()
     Global Designer_Width.i = 1000
     Global Designer_Height.i = 660
@@ -565,7 +568,7 @@ CompilerIf #PB_Compiler_IsMainFile
   EndProcedure
 
   Procedure CreateGadgets(Model.s)
-    Protected IdGadget.i, ModelType.i, DrawGadget.b, TmpCaption.s, Mini.i, Maxi.i, MinY.i, MaxY.i, StepValue.i, I.i
+    Protected IdGadget.i, ModelType.i, DrawGadget.b, TmpCaption.s, Mini.i, Maxi.i, StepValue.i, I.i
     InitProperties()
     OpenGadgetList(#ScrollDrawArea)   ;Required when changing apps(ex: test generated code) to reopen the GadgetList
     For I=0 To ArraySize(ModelGadget())
@@ -576,13 +579,9 @@ CompilerIf #PB_Compiler_IsMainFile
           CountGadgets=CountGadgets+1
           ReDim Gadgets(CountGadgets)
 
-          MinY = 0
-          If AddMenu = #True : MinY + AddMenuHeight : EndIf
-          If AddToolBar = #True : MinY + AddToolBarHeight : EndIf
-          MaxY = UserScreen_Height-\DftHeight
-          If AddStatusBar = #True : MaxY-AddStatusBarHeight+1 : EndIf
-          X = GridMatch(X, DragSpace, 0, UserScreen_Width-\DftWidth)   ;Align on Grid and remains inside the grid
-          Y = GridMatch(Y, DragSpace, MinY, MaxY)
+          ParentPosDim()
+          X = GridMatch(X, DragSpace, MinX, MaxX-\DftWidth)   ;Align on Grid and remains inside the grid
+          Y = GridMatch(Y, DragSpace, MinY, MaxY-\DftHeight)
           ;Default values from the gadget models table
           Select Left(\Caption, 5)
             Case "#Text", "#TabN"
@@ -1114,7 +1113,7 @@ CompilerIf #PB_Compiler_IsMainFile
   If FileSize("SweetyVD.json") = -1
     InitModelgadget()   ;Initializing Gadget Model Templates from Datasection + Save JSON file
   Else
-    InitJSONModelGadget()   ;;Initializing Gadget Model Templates from JSON file
+    InitJSONModelGadget()   ;Initializing Gadget Model Templates from JSON file
   EndIf
   BindEvent(#PB_Event_SizeWindow, @WindowSize())
 
@@ -1190,7 +1189,7 @@ CompilerIf #PB_Compiler_IsMainFile
                   EnableSVD()
               EndSelect
 
-            Case #CodeCreate ;Génération du code
+            Case #CodeCreate   ;Générate code Included in CodeCreate.pb
               CodeCreateForm()
 
             Case #ListGadgets
@@ -1233,9 +1232,8 @@ CompilerIf #PB_Compiler_IsMainFile
             Case #CreateControlsList   ;Element beging at 0 -> Element+1
               Select EventType()
                 Case #PB_EventType_LeftDoubleClick
-                  X = DragSpace : Y = DragSpace   ;coordinates for creating gadget inside #ScrollDrawArea
-                  If AddMenu = #True : Y + AddMenuHeight : EndIf
-                  If AddToolBar = #True : Y + AddToolBarHeight : EndIf
+                  ParentPosDim()
+                  X = MinX + DragSpace : Y = MinY + DragSpace   ;coordinates for creating gadget inside #ScrollDrawArea
                   Model = GetGadgetItemText(#CreateControlsList, GetGadgetState(#CreateControlsList))
                   CreateGadgets(Model)
                 Case #PB_EventType_DragStart
@@ -1717,17 +1715,5 @@ CompilerEndIf
 ; IDE Options = PureBasic 5.60 (Windows - x64)
 ; Folding = -----
 ; EnableXP
-; UseIcon = Include\SweetyVD.ico
 ; Executable = SweetyVD.exe
 ; EnablePurifier
-; Constant = #BuildVersion = "1.9.3"
-; IncludeVersionInfo
-; VersionField0 = 1.9.3
-; VersionField1 = 1.9.3
-; VersionField3 = SweetyVD.exe
-; VersionField4 = 1.9.3
-; VersionField5 = 1.9.3
-; VersionField6 = Sweety Visual Designer
-; VersionField7 = SweetyVD.exe
-; VersionField8 = SweetyVD.exe
-; VersionField9 = @ChrisR
