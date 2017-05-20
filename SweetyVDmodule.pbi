@@ -154,6 +154,11 @@ Module SVDesigner
       Protected TextW, TextH
       If Text <> ""
         TextW = TextWidth(Text) : TextH = TextHeight(Text)
+        If Height < TextH : Text = "" :EndIf
+        While TextW + 15 > Width And Text <> ""
+          Text = Left(Text, Len(Text)-1)
+          TextW = TextWidth(Text)
+        Wend
       Else
         TextW = TextWidth("X") : TextH = TextHeight("X")
       EndIf
@@ -172,33 +177,41 @@ Module SVDesigner
       Protected TextW, TextH, TabW, TabH, I.i, TmpTabName.s, ActiveTab.i=-1
       TextW = TextWidth(Text) / (CountString(Text, "|") + 1) : TabW = TextW+20
       TextH = TextHeight(Text) : TabH = 20
-      For I=0 To CountString(Text, "|")   ;Draw Tab + Text (eg: "Tab1|Tab2(x)|Tab3"
-        TmpTabName = Trim(StringField(Text, I+1, "|"))
-        If TmpTabName <> ""
-          DrawingMode(#PB_2DDrawing_Default)
-          If Right(TmpTabName, 3) = "(x)"
-            TmpTabName = Left(TmpTabName, Len(TmpTabName)-3)
-            ActiveTab = I
-            Box(X+I*TabW, Y, TabW+1, TabH, RGB(255, 255, 255))
-            DrawingMode(#PB_2DDrawing_Outlined)
-            Box(X+I*TabW, Y, TabW+1, TabH, RGB(0, 0, 0))
-            DrawingMode(#PB_2DDrawing_Transparent)
-            DrawText(X+I*TabW+10, Y+(TabH-TextH)/2, TmpTabName, RGB(0, 0, 0))
-          Else
-            Box(X+I*TabW, Y+2, TabW+1, TabH-2, RGB(240, 240, 240))
-            DrawingMode(#PB_2DDrawing_Outlined)
-            Box(X+I*TabW, Y+2, TabW+1, TabH-2, RGB(95, 95, 95))
-            DrawingMode(#PB_2DDrawing_Transparent)
-            DrawText(X+I*TabW+10, Y+(TabH-TextH)/2+1, TmpTabName, RGB(66, 66, 66))
+      If Height > TabH
+        For I=0 To CountString(Text, "|")   ;Draw Tab + Text (eg: "Tab1|Tab2(x)|Tab3"
+          TmpTabName = Trim(StringField(Text, I+1, "|"))
+          If TmpTabName <> ""
+            DrawingMode(#PB_2DDrawing_Default)
+            If Right(TmpTabName, 3) = "(x)"
+              TmpTabName = Left(TmpTabName, Len(TmpTabName)-3)
+              ActiveTab = I
+              If (I*TabW)+TabW+1 <= Width
+                Box(X+I*TabW, Y, TabW+1, TabH, RGB(255, 255, 255))
+                DrawingMode(#PB_2DDrawing_Outlined)
+                Box(X+I*TabW, Y, TabW+1, TabH, RGB(0, 0, 0))
+                DrawingMode(#PB_2DDrawing_Transparent)
+                DrawText(X+I*TabW+10, Y+(TabH-TextH)/2, TmpTabName, RGB(0, 0, 0))
+              EndIf
+            Else
+              If (I*TabW)+TabW+1 <= Width
+                Box(X+I*TabW, Y+2, TabW+1, TabH-2, RGB(240, 240, 240))
+                DrawingMode(#PB_2DDrawing_Outlined)
+                Box(X+I*TabW, Y+2, TabW+1, TabH-2, RGB(95, 95, 95))
+                DrawingMode(#PB_2DDrawing_Transparent)
+                DrawText(X+I*TabW+10, Y+(TabH-TextH)/2+1, TmpTabName, RGB(66, 66, 66))
+              EndIf
+            EndIf
           EndIf
-        EndIf
-      Next
+        Next
 
-      DrawingMode(#PB_2DDrawing_Outlined)
-      Box(X, Y+(TabH-1), Width, Height-(TabH-1), RGB(0, 0, 0))   ;Inner Panel
-      If ActiveTab = -1 : ActiveTab = 0 : EndIf
-      Box(X+ActiveTab*TabW, Y, TabW+1, TabH, RGB(0, 0, 0))   ;Active Tab
-      Box(X+ActiveTab*TabW+1, Y+(TabH-1), TabW-1, 1, BackColor)   ;Active Tab
+        DrawingMode(#PB_2DDrawing_Outlined)
+        Box(X, Y+(TabH-1), Width, Height-(TabH-1), RGB(0, 0, 0))   ;Inner Panel
+        If ActiveTab = -1 : ActiveTab = 0 : EndIf
+        If (ActiveTab*TabW)+TabW+1 <= Width
+          Box(X+ActiveTab*TabW, Y, TabW+1, TabH, RGB(0, 0, 0))   ;Active Tab
+          Box(X+ActiveTab*TabW+1, Y+(TabH-1), TabW-1, 1, BackColor)   ;Active Tab
+        EndIf
+      EndIf
     EndProcedure
 
     Procedure DrawScrollArea(X, Y, Width, Height, InnerW, InnerH, ScrollX, ScrollY)
