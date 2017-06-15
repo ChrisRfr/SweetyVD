@@ -8,20 +8,20 @@
   <section name="data">
     <explorer view="Include\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2017-05-19 19:24" user="ChrisR" host="PC-CHRISR"/>
+    <lastopen date="2017-06-15 22:38" user="ChrisR" host="PC-CHRISR"/>
   </section>
   <section name="files">
     <file name="Include\CodeCreate.pb">
-      <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="a1d0bd21d5084f8c0b56a6c3e94815fc"/>
+      <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
+      <fingerprint md5="3d29c9d367ad0378675a8383d7fd3667"/>
     </file>
     <file name="Include\DelOldFiles.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
       <fingerprint md5="6a0a30e639ed0e43c08d2385d3099461"/>
     </file>
     <file name="Include\FullColorRequester.pb">
-      <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="3760f168c9784cccb4b24e002ddf7f9c"/>
+      <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
+      <fingerprint md5="512128d6b002e81afeb5c547ded5b072"/>
     </file>
     <file name="Include\GetPBIDE.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
@@ -41,11 +41,11 @@
     </file>
     <file name="SweetyVD.pb">
       <config load="1" scan="1" panel="1" warn="1" lastopen="1" panelstate="+"/>
-      <fingerprint md5="b3693da91518ad0f0487525034b48cd7"/>
+      <fingerprint md5="4e447a72c228f836cd5c07aeb83e7144"/>
     </file>
     <file name="SweetyVDmodule.pbi">
-      <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="+"/>
-      <fingerprint md5="ab5a287e625ef05a68bfee03adcbb1db"/>
+      <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="+"/>
+      <fingerprint md5="97c02122ad57e1531e77c178d018b324"/>
     </file>
   </section>
   <section name="targets">
@@ -57,11 +57,11 @@
       <purifier enable="1"/>
       <icon enable="1">Include\SweetyVD.ico</icon>
       <versioninfo enable="1">
-        <field0 value="1.9.3.1"/>
-        <field1 value="1.9.3.1"/>
+        <field0 value="1.9.5.0"/>
+        <field1 value="1.9.5.0"/>
         <field3 value="SweetyVD.exe"/>
-        <field4 value="1.9.3.1"/>
-        <field5 value="1.9.3.1"/>
+        <field4 value="1.9.5.0"/>
+        <field5 value="1.9.5.0"/>
         <field6 value="Sweety Visual Designer"/>
         <field7 value="SweetyVD.exe"/>
         <field8 value="SweetyVD.exe"/>
