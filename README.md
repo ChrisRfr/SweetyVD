@@ -6,8 +6,8 @@ A tiny Visual Designer Develop in PureBasic to create PureBasic interface
 ![Alt text](/ScreenShot/SweetyVD.png?raw=true "SweetyVD")
 
 Author: ChrisR <br />
-Date: 2017-05-19 <br />
-Version: 1.9.3.1 <br />
+Date: 2017-06-15 <br />
+Version: 1.9.5 <br />
 PB-Version: 5.60 (x86/x64) <br />
 OS: Windows, Linux, Mac <br />
 Credit: Stargâte Transformation of gadgets at runtime <br />
