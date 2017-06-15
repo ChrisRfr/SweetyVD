@@ -3,8 +3,8 @@
 ;    Description: Sweety Visual Designer
 ;     dependency: CodeCreate.pb (Sweety Visual Designer Code Form and Code creation)
 ;         Author: ChrisR
-;           Date: 2017-06-15
-;        Version: 1.9.5.0
+;           Date: 2017-05-25
+;        Version: 1.9.5.1
 ;     PB-Version: 5.60 (x86/x64)
 ;             OS: Windows, Linux, Mac
 ;         Credit: Stargâte: Transformation of gadgets at runtime
@@ -49,7 +49,7 @@ EndProcedure
 Procedure CodeCreateForm()
   Protected CodeTitleBlock.b = 1, CodeEnumeration.b = 1, Variable.b = 0, CodeEventLoop.b = 1, CodeCustomAddition.b = 0
   Protected Hexa_Color.b = 0, PreFix.s, Suffix.s, Suffix_Enabled.b = 0, Space_Indentation.l = 2, Tab_Indentation = 0
-  
+
   If MapSize(SVDListGadget()) > 1   ;At least one Gadget
     If OpenPreferences("SweetyVD.ini", #PB_Preference_GroupSeparator)
       PreferenceGroup("CodeCreate")
@@ -67,7 +67,7 @@ Procedure CodeCreateForm()
       Tab_Indentation = ReadPreferenceLong("Tab_Indentation", Tab_Indentation)
       ClosePreferences()
     EndIf
-    
+
     If OpenWindow(#CodeForm, WindowX(#MainWindow)+GadgetX(#CodeCreate), WindowY(#MainWindow)+70 , 420 , 205, "SweetyVD: Create PureBasic code",#PB_Window_TitleBar)
       ;StickyWindow(#CodeForm, #True)
       CheckBoxGadget(#Code_TitleBlock, 20, 5, 160, 25, "Include Title Block") : SetGadgetState(#Code_TitleBlock, CodeTitleBlock)
@@ -141,7 +141,7 @@ Procedure CodeCreate(Dest.s = "")
   Protected Mini.i, Maxi.i, Hexa_Color.b, TmpColor.i, TmpTabName.s, ActiveTab.i=-1, TmpConstants.s, INDENT$ = "  ", FirstPass.b, I.i, J.i
   Protected WinName.s, sPreF.s, sSuFF.s = ".i", iVarNameLength.i
   Protected sFilePath.s, hFile.i
-  
+
   If Dest.s = ""
     If OpenPreferences("SweetyVD.ini", #PB_Preference_GroupSeparator)
       PreferenceGroup("CodeCreate")
@@ -402,7 +402,7 @@ Procedure CodeCreate(Dest.s = "")
         Code +#CRLF$
       EndIf
     EndIf
-    
+
     If ListSize(FontStructArray()) > 0   ;Font Enumeration
       If CodeConstants : Code + "Enumeration FormFont"+#CRLF$ :EndIf
       ResetList(FontStructArray())
@@ -449,7 +449,7 @@ Procedure CodeCreate(Dest.s = "")
       If ImageExtFullPath <> ""
         Code +#CRLF$
       EndIf
-      
+
       ResetList(ImageBtnPathArray())
       While NextElement(ImageBtnPathArray())
         If CodeConstants
@@ -460,14 +460,14 @@ Procedure CodeCreate(Dest.s = "")
       Wend
       Code +#CRLF$
     EndIf
-    
+
     If ListSize(FontStructArray()) > 0   ;LoadFont(#Font_MainWindow_2,"Arial", 8, #PB_Font_Bold)
       ResetList(FontStructArray())
       While NextElement(FontStructArray())
         sFontStyle = ""
         If FontStructArray()\FontStyle
           sFontStyle = ", "
-          If FontStructArray()\FontStyle & #PB_Font_Bold 
+          If FontStructArray()\FontStyle & #PB_Font_Bold
             sFontStyle + "#PB_Font_Bold"
           EndIf
           If FontStructArray()\FontStyle & #PB_Font_Italic
@@ -478,7 +478,7 @@ Procedure CodeCreate(Dest.s = "")
           EndIf
           If FontStructArray()\FontStyle & #PB_Font_Underline
             sFontStyle + "#PB_Font_Underline"
-          EndIf 
+          EndIf
           If FontStructArray()\FontStyle & #PB_Font_HighQuality
             sFontStyle + "#PB_Font_HighQuality"
           EndIf
@@ -492,7 +492,7 @@ Procedure CodeCreate(Dest.s = "")
       Wend
       Code +#CRLF$
     EndIf
-    
+
   EndIf
 
   If CodeConstants And CodeCustomAddition
@@ -573,10 +573,16 @@ Procedure CodeCreate(Dest.s = "")
     Code +INDENT$+INDENT$+INDENT$+INDENT$+ "MenuItem(1, " + #DQUOTE$ + "Open" + #DQUOTE$ + ")" +#CRLF$
     Code +INDENT$+INDENT$+INDENT$+INDENT$+ "MenuItem(2, " + #DQUOTE$ + "Save" + #DQUOTE$ + ")" +#CRLF$
     Code +INDENT$+INDENT$+INDENT$+INDENT$+ "MenuBar()" +#CRLF$
-    Code +INDENT$+INDENT$+INDENT$+INDENT$+ "MenuItem(3, " + #DQUOTE$ + "&Quit" + #DQUOTE$ + ")" +#CRLF$
-    Code +INDENT$+INDENT$+INDENT$+INDENT$+ ""+ #CRLF$
-    Code +INDENT$+INDENT$+INDENT$+INDENT$+ "MenuTitle(" + #DQUOTE$ + "?" + #DQUOTE$ + ")" +#CRLF$
-    Code +INDENT$+INDENT$+INDENT$+INDENT$+ "MenuItem(4, " + #DQUOTE$ + "About" + #DQUOTE$ + ")" +#CRLF$
+    CompilerIf #PB_Compiler_OS = #PB_OS_MacOS
+      Code +INDENT$+INDENT$+INDENT$+INDENT$+ ""+ #CRLF$
+      Code +INDENT$+INDENT$+INDENT$+INDENT$+ "MenuItem(#PB_Menu_About, " + #DQUOTE$ +#DQUOTE$ + ")" +#CRLF$
+      Code +INDENT$+INDENT$+INDENT$+INDENT$+ "MenuItem(#PB_Menu_Preferences, " + #DQUOTE$ +#DQUOTE$ + ")" +#CRLF$
+    CompilerElse
+      Code +INDENT$+INDENT$+INDENT$+INDENT$+ "MenuItem(3, " + #DQUOTE$ + "&Quit" + #DQUOTE$ + ")" +#CRLF$
+      Code +INDENT$+INDENT$+INDENT$+INDENT$+ ""+ #CRLF$
+      Code +INDENT$+INDENT$+INDENT$+INDENT$+ "MenuTitle(" + #DQUOTE$ + "?" + #DQUOTE$ + ")" +#CRLF$
+      Code +INDENT$+INDENT$+INDENT$+INDENT$+ "MenuItem(4, " + #DQUOTE$ + "About" + #DQUOTE$ + ")" +#CRLF$
+    CompilerEndIf
     Code +INDENT$+INDENT$+ "EndIf" +#CRLF$
   EndIf
   If AddPopupMenu   ;-Add PopupMenu
@@ -781,11 +787,11 @@ Procedure CodeCreate(Dest.s = "")
         EndIf
         ;Code +INDENT$+INDENT$+INDENT$+ "SetGadgetColor(" + Trim(Name) + ", #PB_Gadget_BackColor, " + \BackColor + ")" +#CRLF$
       EndIf
-      
+
       If \ToolTip <> "#Nooo" And \ToolTip <> ""
         Code +INDENT$+INDENT$+INDENT$+ "GadgetToolTip(" + Trim(Name) + ", " + #DQUOTE$ + \ToolTip + #DQUOTE$ + ")" +#CRLF$
       EndIf
-      
+
       If \FontID <> 0
         ResetList(FontStructArray())
         While NextElement(FontStructArray())
@@ -799,14 +805,14 @@ Procedure CodeCreate(Dest.s = "")
           EndIf
         Wend
       EndIf
-      
+
       If \Hide = #PB_Checkbox_Checked
         Code +INDENT$+INDENT$+INDENT$+ "HideGadget(" + Trim(Name) + ", #True)" +#CRLF$
       EndIf
       If \Disable = #PB_Checkbox_Checked
         Code +INDENT$+INDENT$+INDENT$+ "DisableGadget(" + Trim(Name) + ", #True)" +#CRLF$
       EndIf
-      
+
       Select Model
         Case "ContainerGadget", "PanelGadget", "ScrollAreaGadget"
           Code +INDENT$+INDENT$+INDENT$+ "CloseGadgetList()" +#CRLF$
@@ -849,12 +855,23 @@ Procedure CodeCreate(Dest.s = "")
     Code +INDENT$+INDENT$+ "Case #PB_Event_Menu" +#CRLF$
     Code +INDENT$+INDENT$+INDENT$+ "Select EventMenu()" +#CRLF$
     If AddMenu
-      Code +INDENT$+INDENT$+INDENT$+INDENT$+ "Case 3   ;Quit" +#CRLF$
+      CompilerIf #PB_Compiler_OS = #PB_OS_MacOS
+        Code +INDENT$+INDENT$+INDENT$+INDENT$+ "Case #PB_Menu_Quit" +#CRLF$
+      CompilerElse
+        Code +INDENT$+INDENT$+INDENT$+INDENT$+ "Case 3   ;Quit" +#CRLF$
+      CompilerEndIf
       Code +INDENT$+INDENT$+INDENT$+INDENT$+INDENT$+ "End" +#CRLF$
     EndIf
     If (AddMenu + AddPopupMenu + AddToolBar) > 0
-      Code +INDENT$+INDENT$+INDENT$+INDENT$+ "Case 4   ;About" +#CRLF$
-      Code +INDENT$+INDENT$+INDENT$+INDENT$+INDENT$+ "MessageRequester(" + #DQUOTE$ + "About" + #DQUOTE$ + ", " + #DQUOTE$ + "Menu Sample" + #DQUOTE$ + ", 0)" +#CRLF$
+      CompilerIf #PB_Compiler_OS = #PB_OS_MacOS
+        Code +INDENT$+INDENT$+INDENT$+INDENT$+ "Case #PB_Menu_About" +#CRLF$
+        Code +INDENT$+INDENT$+INDENT$+INDENT$+INDENT$+ "MessageRequester(" + #DQUOTE$ + "About" + #DQUOTE$ + ", " + #DQUOTE$ + "Menu Sample" + #DQUOTE$ + ", 0)" +#CRLF$
+        Code +INDENT$+INDENT$+INDENT$+INDENT$+ "Case #PB_Menu_Preferences" +#CRLF$
+        Code +INDENT$+INDENT$+INDENT$+INDENT$+INDENT$+ "MessageRequester(" + #DQUOTE$ + "Preferences" + #DQUOTE$ + ", " + #DQUOTE$ + "Menu Preferences" + #DQUOTE$ + ", 0)" +#CRLF$
+      CompilerElse
+        Code +INDENT$+INDENT$+INDENT$+INDENT$+ "Case 4   ;About" +#CRLF$
+        Code +INDENT$+INDENT$+INDENT$+INDENT$+INDENT$+ "MessageRequester(" + #DQUOTE$ + "About" + #DQUOTE$ + ", " + #DQUOTE$ + "Menu Sample" + #DQUOTE$ + ", 0)" +#CRLF$
+      CompilerEndIf
       Code +INDENT$+INDENT$+INDENT$+INDENT$+ "Default" +#CRLF$
       Code +INDENT$+INDENT$+INDENT$+INDENT$+INDENT$+ "MessageRequester(" + #DQUOTE$ + "Information" + #DQUOTE$ + ", " + #DQUOTE$ + "ToolBar Or Menu ID: " + #DQUOTE$ + " + Str(EventMenu()), 0)" +#CRLF$
     EndIf
