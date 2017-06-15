@@ -3,8 +3,8 @@
 ;    Description: Sweety Visual Designer
 ;     dependency: SweetyVDmodule.pbi (Sweety Visual Designer Module)
 ;         Author: ChrisR
-;           Date: 2017-06-15
-;        Version: 1.9.5.0
+;           Date: 2017-05-25
+;        Version: 1.9.5.1
 ;     PB-Version: 5.60 (x86/x64)
 ;             OS: Windows, Linux, Mac
 ;         Credit: Stargâte: Transformation of gadgets at runtime
@@ -23,7 +23,7 @@
 CompilerIf #PB_Compiler_IsMainFile
   EnableExplicit
 
-  #BuildVersion = "1.9.5.0"
+  #BuildVersion = "1.9.5.1"
 
   ;Import internal function
   CompilerSelect #PB_Compiler_OS
@@ -904,7 +904,7 @@ Procedure LoadGadgetProperties(IdGadget.i)
       SetGadgetState(#DisableGadget, \Disable)
       SetGadgetState(#LockGadget, \Lock)
       DisableGadget(#PosGadgetX, \Lock) : DisableGadget(#PosGadgetY, \Lock) : DisableGadget(#PosGadgetWidth, \Lock) : DisableGadget(#PosGadgetHeight, \Lock)
-      
+
       Select Left(\Caption, 5)
         Case "#Text"
           SetGadgetText(#CaptionText, "Text")
@@ -1597,14 +1597,14 @@ Repeat   ;- Event Loop
             If EventType() = #PB_EventType_Change And IsGadget(#ScrollDrawArea)
               ResizeDrawArea(GetGadgetState(#SetDrawWidth), GetGadgetState(#SetDrawHeight))
             EndIf
-            
+
           Case #HideGadget
             IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
             If FindMapElement(SVDListGadget(), Str(IdGadget))
               SVDListGadget()\Hide = GetGadgetState(#HideGadget)
               HideSVDGadget(IdGadget)
             EndIf
-            
+
           Case #DisableGadget
             IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
             If FindMapElement(SVDListGadget(), Str(IdGadget))
@@ -1614,7 +1614,7 @@ Repeat   ;- Event Loop
               CompilerEndIf
               SelectSVDGadget(IdGadget)
             EndIf
-            
+
           Case #LockGadget
             IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
             If FindMapElement(SVDListGadget(), Str(IdGadget))
@@ -1624,7 +1624,7 @@ Repeat   ;- Event Loop
               DisableGadget(#PosGadgetWidth, SVDListGadget()\Lock)
               DisableGadget(#PosGadgetHeight, SVDListGadget()\Lock)
             EndIf
-            
+
           Case #PosGadgetX
             If EventType() = #PB_EventType_Change And GetGadgetState(#ListGadgets) > 0
               IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
@@ -1681,6 +1681,7 @@ Repeat   ;- Event Loop
 
           Case #ParentPick
             MessageRequester("SweetyVD Information", "Todo, If (and when) free time will allow" +#CRLF$+#CRLF$+ "Source is opened for any contribution ;)", #PB_MessageRequester_Info|#PB_MessageRequester_Ok)
+
             ;->> Event Gadget Properties
           Case #CaptionString
             If EventType() = #PB_EventType_Change

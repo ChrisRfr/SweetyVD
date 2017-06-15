@@ -3,7 +3,7 @@
 ;    Description: Sweety Visual Designer Module
 ;         Author: ChrisR
 ;           Date: 2017-06-15
-;        Version: 1.9.5.0
+;        Version: 1.9.5.1
 ;     PB-Version: 5.60 (x86/x64)
 ;             OS: Windows, Linux, Mac
 ;         Credit: Stargâte - Transformation of gadgets at runtime
@@ -778,7 +778,7 @@ Module SVDesigner
 
         Case #PB_EventType_KeyUp
           ReDrawGadgetHandleBorder()   ;Redraw all Gadget to avoid overlay effects
-          
+
         Case #PB_EventType_LeftButtonDown
           If MouseOverGadget <> -1
             ParentPosDim()
@@ -972,7 +972,7 @@ Module SVDesigner
         EndIf
       EndWith
     EndProcedure
-    
+
     Procedure HideSVDGadget(Gadget.i)
       Protected I.i
       With SVDListGadget()
@@ -988,7 +988,7 @@ Module SVDesigner
         EndIf
       EndWith
     EndProcedure
-    
+
     Procedure DeleteSVDGadget(Gadget.i)
       Protected I.i, K.i
       With SVDListGadget()

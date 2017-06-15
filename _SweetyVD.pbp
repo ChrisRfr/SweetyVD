@@ -8,7 +8,7 @@
   <section name="data">
     <explorer view="Include\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2017-06-15 22:38" user="ChrisR" host="PC-CHRISR"/>
+    <lastopen date="2017-05-23 22:38" user="ChrisR" host="PC-CHRISR"/>
   </section>
   <section name="files">
     <file name="Include\CodeCreate.pb">
@@ -57,11 +57,11 @@
       <purifier enable="1"/>
       <icon enable="1">Include\SweetyVD.ico</icon>
       <versioninfo enable="1">
-        <field0 value="1.9.5.0"/>
-        <field1 value="1.9.5.0"/>
+        <field0 value="1.9.5.1"/>
+        <field1 value="1.9.5.1"/>
         <field3 value="SweetyVD.exe"/>
-        <field4 value="1.9.5.0"/>
-        <field5 value="1.9.5.0"/>
+        <field4 value="1.9.5.1"/>
+        <field5 value="1.9.5.1"/>
         <field6 value="Sweety Visual Designer"/>
         <field7 value="SweetyVD.exe"/>
         <field8 value="SweetyVD.exe"/>
