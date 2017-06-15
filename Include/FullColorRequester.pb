@@ -66,7 +66,7 @@ Procedure FullColorRequester(X.i = 0, Y.i = 0)   ;Place CHOOSECOLOR Info into re
   Protected CHOOSECOLOR.CHOOSECOLOR, COLORREF.COLORREF, hwnd.i, I.l
   hwnd = OpenWindow(#PB_Any, X, Y, 0, 0, "", #PB_Window_Invisible)
   StickyWindow(hwnd, #True)
-  InitColorPrefs()
+  ;InitColorPrefs()   ;Done once in SweetyVD Init() proc 
   ;Place saved colors inside requester()
   For I = 0 To 15
     COLORREF\RGB[I] = ColorPref(I)
@@ -86,19 +86,17 @@ Procedure FullColorRequester(X.i = 0, Y.i = 0)   ;Place CHOOSECOLOR Info into re
     For I = 0 To 15
       ColorPref(I) = COLORREF\RGB[I]
     Next
-    ExitColorPrefs()   ;Save info and Return Color Selected
+    ;ExitColorPrefs()   ;Save info, done once in SweetyVD Exit() proc. Return Color Selected
     CloseWindow(hwnd)
-    If CHOOSECOLOR\flags & #CC_FULLOPEN
-      Debug CHOOSECOLOR\flags
-    EndIf
     ProcedureReturn CHOOSECOLOR\rgbResult
   Else   ;No color was selected
-    ExitColorPrefs()   ;Save info
+    ;ExitColorPrefs()   ;Save info, done once in SweetyVD Exit() proc. Return -1 as ColorRequester()
     CloseWindow(hwnd)
     ProcedureReturn -1
   EndIf
 EndProcedure
 
+;Example: uncomment InitColorPrefs() and ExitColorPrefs()
 ; Define SelectedColor.i = FullColorRequester(100, 100)
 ; Debug ColorRequester()
 ; If SelectedColor = -1
