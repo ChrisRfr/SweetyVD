@@ -1,5 +1,5 @@
 # SweetyVD
-SweetyVD (Virtual Designer)
+SweetyVD (Visual Designer)
 
 A tiny Visual Designer Develop in PureBasic to create PureBasic interface
 
