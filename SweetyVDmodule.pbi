@@ -224,11 +224,11 @@ Module SVDesigner
     CompilerIf #PB_Compiler_OS = #PB_OS_Windows
       If IsGadget(gadget)
         If zorder = 0   ;Call with zorder=0 just after creating each gadget
-          SetWindowLong_(GadgetID(gadget), #GWL_STYLE, GetWindowLong_(GadgetID(gadget), #GWL_STYLE) | #WS_CLIPSIBLINGS)
+          SetWindowLongPtr_(GadgetID(gadget), #GWL_STYLE, GetWindowLongPtr_(GadgetID(gadget), #GWL_STYLE) | #WS_CLIPSIBLINGS)
         ElseIf zorder = 1   ;Call with zorder=1 to later bring a gadget to the top of the z-order
           SetWindowPos_(GadgetID (gadget), #HWND_BOTTOM, 0,0,0,0, #SWP_NOSIZE | #SWP_NOMOVE)
         ElseIf zorder = 9   ;Call with zorder=9 to remove #WS_CLIPSIBLINGS flags
-          SetWindowLong_(GadgetID(gadget), #GWL_STYLE, GetWindowLong_(GadgetID(gadget), #GWL_STYLE) & (#WS_CLIPSIBLINGS ! - 1))
+          SetWindowLongPtr_(GadgetID(gadget), #GWL_STYLE, GetWindowLongPtr_(GadgetID(gadget), #GWL_STYLE) & (#WS_CLIPSIBLINGS ! - 1))
         Else   ;Call with zorder=-1 to later bring a gadget to the bottom of the z-order
           SetWindowPos_(GadgetID(gadget), #HWND_TOP, 0, 0, 0, 0, #SWP_NOSIZE | #SWP_NOMOVE)
         EndIf
@@ -1815,8 +1815,8 @@ Module SVDesigner
         SetActiveGadget(\DragHandle)
         
         ;Example For testing on \Gadget or \DragHandle... #GWL_STYLE or/and #GWL_EXSTYLE (CompilerIf #PB_Compiler_OS = #PB_OS_Windows)
-        ;SetWindowLong_(GadgetID(\Gadget), #GWL_EXSTYLE, GetWindowLong_(GadgetID(\Gadget), #GWL_STYLE) | #WS_CLIPSIBLINGS)
-        ;SetWindowLong_(GadgetID(\Gadget), #GWL_EXSTYLE, GetWindowLong_(GadgetID(\Gadget), #GWL_STYLE) & (#WS_CLIPSIBLINGS ! - 1))
+        ;SetWindowLongPtr_(GadgetID(\Gadget), #GWL_EXSTYLE, GetWindowLongPtr_(GadgetID(\Gadget), #GWL_STYLE) | #WS_CLIPSIBLINGS)
+        ;SetWindowLongPtr_(GadgetID(\Gadget), #GWL_EXSTYLE, GetWindowLongPtr_(GadgetID(\Gadget), #GWL_STYLE) & (#WS_CLIPSIBLINGS ! - 1))
       EndIf
     EndWith
   EndProcedure
@@ -1958,7 +1958,7 @@ Module SVDesigner
                                                                                                                              ;OpenGadgetList(#ScrollDrawArea) : CloseGadgetList()   ;OpenGadgetList(#DrawArea)
                                                                                                                              ;SetGadgetZOrder(#DrawArea)
                                                                                                                              ;#WS_CLIPCHILDREN is Important in Draw Aera Canvas Container, to reduce Paint overlays and flickering
-      SetWindowLong_(GadgetID(#DrawArea), #GWL_STYLE, GetWindowLong_(GadgetID(#DrawArea), #GWL_STYLE) | #WS_CLIPCHILDREN)
+      SetWindowLongPtr_(GadgetID(#DrawArea), #GWL_STYLE, GetWindowLongPtr_(GadgetID(#DrawArea), #GWL_STYLE) | #WS_CLIPCHILDREN)
     CompilerElse
       CanvasGadget(#DrawArea, 0, 0, ScrollDrawAreaWidth, ScrollDrawAreaHeight, #PB_Canvas_Keyboard)
     CompilerEndIf
@@ -1996,7 +1996,7 @@ Module SVDesigner
       SetGadgetData(GadgetHandle(I), #PB_Ignore)
       SetGadgetAttribute(GadgetHandle(I), #PB_Canvas_Cursor, Mycursors)
       ;Example For testing on Gadget Handle Corner with #GWL_STYLE or/and #GWL_EXSTYLE (CompilerIf #PB_Compiler_OS = #PB_OS_Windows)
-      ;SetWindowLong_(GadgetID(GadgetHandle(I)), #GWL_STYLE, GetWindowLong_(GadgetID(GadgetHandle(I)), #GWL_STYLE) | #WS_CLIPSIBLINGS)
+      ;SetWindowLongPtr_(GadgetID(GadgetHandle(I)), #GWL_STYLE, GetWindowLongPtr_(GadgetID(GadgetHandle(I)), #GWL_STYLE) | #WS_CLIPSIBLINGS)
     Next
     
     DataSection
