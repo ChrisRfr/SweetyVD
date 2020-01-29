@@ -10,13 +10,16 @@ Linux:
 ![Alt text](/ScreenShot/SweetyVD_Linux.png?raw=true "SweetyVD_Linux")
 
 Author: ChrisR <br />
-Date: 2017-06-15 Updated in v2 2020-01-29 <br />
+Date: 2017-06-15 Updated in version 2: 2020-01-29 <br />
 Version: 2.0.1 <br />
 PB-Version: 5.60, 5.61,.., 5.71 (x86/x64) <br />
-   On Linux, use Purebasic 5.61 LTS, the Gadgets are not drawn over Canvas in following versions (5.62,.., 5.71) 
+   On Linux, use Purebasic 5.61 LTS, the Gadgets are not drawn over Canvas in following versions (5.62,.., 5.71) <br /> 
 OS: Windows, Linux , Mac <br />
 Credit: Stargâte Transformation of gadgets at runtime <br />
 Credit: Falsam Tiny Visual Designer (TVD) <br />
+Credit: blueb FullColorRequester <br />
+Credit: Zebuddi Add PreFix and SuFix for variable (eg: iButton_1.i) <br />
+
 Open _SweetyVD.pbp project, main source file SweetyVD.pb <br />
 
 English-Forum: http://www.purebasic.fr/english/viewtopic.php?f=27&t=68187 <br />
