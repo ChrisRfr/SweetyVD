@@ -9,12 +9,12 @@ Procedure.s GetPBIDE()
       ProcedureReturn #PB_Compiler_Home + #PB_IDE
     EndIf
   CompilerEndIf
-
+  
   IDEpath = GetEnvironmentVariable("PB_TOOL_IDE")   ;Runs as PB Customized tools
   If FileSize(IDEpath) > 0
     ProcedureReturn IDEpath
   EndIf
-
+  
   IDEpath = GetEnvironmentVariable("PUREBASIC_HOME")   ;From PB Home directory variable Environment
   If IDEpath
     If FindString("/\", Right(IDEpath,1),1) = 0
@@ -24,7 +24,7 @@ Procedure.s GetPBIDE()
       ProcedureReturn IDEpath + #PB_IDE
     EndIf
   EndIf
-
+  
   CompilerIf #PB_Compiler_OS = #PB_OS_Windows
     Protected PBRegKey.s, hKey1.l = 0, Type.l = 0, Res.l = -1, cbData.l = 1024, lpbData.l = AllocateMemory(cbData)   ;1024: The PB entry is really quite long!
     If lpbData
@@ -43,10 +43,10 @@ Procedure.s GetPBIDE()
       EndIf
     EndIf
   CompilerEndIf
-
+  
   ProcedureReturn ""
 EndProcedure
 
-; IDE Options = PureBasic 5.60 (Windows - x64)
+; IDE Options = PureBasic 5.71 LTS (Windows - x64)
 ; Folding = -
 ; EnableXP

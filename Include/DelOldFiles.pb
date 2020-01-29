@@ -23,6 +23,6 @@ Procedure DelOldFiles(Folder.s, Filtre.s = "*.*", NbDay.l = 365)
   EndIf
 EndProcedure
 
-; IDE Options = PureBasic 5.60 (Windows - x64)
+; IDE Options = PureBasic 5.71 LTS (Windows - x64)
 ; Folding = -
 ; EnableXP

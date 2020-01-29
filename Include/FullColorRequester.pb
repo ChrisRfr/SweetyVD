@@ -59,7 +59,7 @@ Procedure ExitColorPrefs()
       WritePreferenceInteger("COLORREF"+Str(I+1), ColorPref(I))
     Next
     ClosePreferences()
-   EndIf
+  EndIf
 EndProcedure
 
 Procedure FullColorRequester(X.i = 0, Y.i = 0)   ;Place CHOOSECOLOR Info into requester()
@@ -71,7 +71,7 @@ Procedure FullColorRequester(X.i = 0, Y.i = 0)   ;Place CHOOSECOLOR Info into re
   For I = 0 To 15
     COLORREF\RGB[I] = ColorPref(I)
   Next
-
+  
   CHOOSECOLOR\LStructSize = SizeOf(CHOOSECOLOR)
   If IsWindow(hwnd)   ;Window Owner
     CHOOSECOLOR\hwndOwner = WindowID(hwnd)
@@ -81,7 +81,7 @@ Procedure FullColorRequester(X.i = 0, Y.i = 0)   ;Place CHOOSECOLOR Info into re
   CHOOSECOLOR\rgbResult = 0   ;Nothing selected
   CHOOSECOLOR\lpCustColors = COLORREF
   CHOOSECOLOR\flags = #CC_ANYCOLOR | #CC_RGBINIT
-
+  
   If ChooseColor_(@CHOOSECOLOR)
     For I = 0 To 15
       ColorPref(I) = COLORREF\RGB[I]
@@ -90,7 +90,7 @@ Procedure FullColorRequester(X.i = 0, Y.i = 0)   ;Place CHOOSECOLOR Info into re
     CloseWindow(hwnd)
     ProcedureReturn CHOOSECOLOR\rgbResult
   Else   ;No color was selected
-    ;ExitColorPrefs()   ;Save info, done once in SweetyVD Exit() proc. Return -1 as ColorRequester()
+         ;ExitColorPrefs()   ;Save info, done once in SweetyVD Exit() proc. Return -1 as ColorRequester()
     CloseWindow(hwnd)
     ProcedureReturn -1
   EndIf
@@ -107,6 +107,6 @@ EndProcedure
 ;   Debug "RGB(" + Str(Red(SelectedColor)) + ", " + Str(Green(SelectedColor)) + ", " + Str(Blue(SelectedColor)) + ")"
 ; EndIf
 
-; IDE Options = PureBasic 5.60 (Windows - x64)
+; IDE Options = PureBasic 5.71 LTS (Windows - x64)
 ; Folding = -
 ; EnableXP
