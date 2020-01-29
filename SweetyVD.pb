@@ -1304,7 +1304,7 @@ CompilerIf #PB_Compiler_IsMainFile
     CompilerIf #PB_Compiler_OS = #PB_OS_MacOS
       PanelGadget(#PanelControls, 0, 4, PropertiesPanelWidth+10, 230)
       AddGadgetItem(#PanelControls, -1, " Create Controls ")
-      TreeGadget(#CreateControlsList, 0, 0, PropertiesPan elWidth-20, 184, #PB_Tree_NoLines | #PB_Tree_NoButtons)
+      TreeGadget(#CreateControlsList, 0, 0, PropertiesPanelWidth-20, 184, #PB_Tree_NoLines | #PB_Tree_NoButtons)
       AddGadgetItem(#PanelControls, -1, "  List Controls ")
       TreeGadget(#ListControls, 0, 0, PropertiesPanelWidth-20, 184, #PB_Tree_AlwaysShowSelection)
       CloseGadgetList()
@@ -2304,6 +2304,8 @@ CompilerIf #PB_Compiler_IsMainFile
 CompilerEndIf
 
 ; IDE Options = PureBasic 5.71 LTS (Windows - x64)
+; CursorPosition = 1306
+; FirstLine = 1294
 ; Folding = ------
 ; EnableXP
 ; UseIcon = Include\SweetyVD.ico
