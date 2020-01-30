@@ -1467,6 +1467,11 @@ CompilerIf #PB_Compiler_IsMainFile
         
       Case #PB_Event_Menu   ;-> Event Menu
         Select EventMenu()
+            CompilerIf #PB_Compiler_OS = #PB_OS_MacOS
+            Case #PB_Menu_Quit
+              Exit()
+            CompilerEndIf
+            
           Case 1 To ArraySize(ModelGadget())   ;Popup menu for creating gadgets
             Model = GetMenuItemText(#PopUpMenu, EventMenu())
             CreateGadgets(Model)
@@ -2304,8 +2309,6 @@ CompilerIf #PB_Compiler_IsMainFile
 CompilerEndIf
 
 ; IDE Options = PureBasic 5.71 LTS (Windows - x64)
-; CursorPosition = 1306
-; FirstLine = 1294
 ; Folding = ------
 ; EnableXP
 ; UseIcon = Include\SweetyVD.ico
