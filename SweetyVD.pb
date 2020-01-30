@@ -339,9 +339,6 @@ CompilerIf #PB_Compiler_IsMainFile
     Protected ZipFile.i, GadgetName.s, GadgetImageSize.i, *GadgetImage, GadgetImage, GadgetCtrlCount.l
     Define ZipFileTheme.s = GetCurrentDirectory() + "SilkTheme.zip"
     If FileSize(ZipFileTheme) < 1
-      ZipFileTheme = GetPathPart(PBIDEpath) + "themes\SilkTheme.zip"
-    EndIf
-    If FileSize(ZipFileTheme) < 1
       CompilerIf #PB_Compiler_OS = #PB_OS_Windows
         ZipFileTheme = GetPathPart(PBIDEpath) + "themes\SilkTheme.zip"
         If FileSize(ZipFileTheme) < 1
