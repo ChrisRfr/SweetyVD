@@ -337,12 +337,21 @@ CompilerIf #PB_Compiler_IsMainFile
   
   Procedure LoadControls()
     Protected ZipFile.i, GadgetName.s, GadgetImageSize.i, *GadgetImage, GadgetImage, GadgetCtrlCount.l
-    Define ZipFileTheme.s = GetCurrentDirectory()+"SilkTheme.zip"
+    Define ZipFileTheme.s = GetCurrentDirectory() + "SilkTheme.zip"
+    If FileSize(ZipFileTheme) < 1
+      ZipFileTheme = GetPathPart(PBIDEpath) + "themes\SilkTheme.zip"
+    EndIf
     If FileSize(ZipFileTheme) < 1
       CompilerIf #PB_Compiler_OS = #PB_OS_Windows
-        ZipFileTheme = #PB_Compiler_Home+"themes\SilkTheme.zip"
+        ZipFileTheme = GetPathPart(PBIDEpath) + "themes\SilkTheme.zip"
+        If FileSize(ZipFileTheme) < 1
+          ZipFileTheme = #PB_Compiler_Home+ " themes\SilkTheme.zip"
+        EndIf
       CompilerElse
-        ZipFileTheme = #PB_Compiler_Home+"themes/SilkTheme.zip"
+        ZipFileTheme = GetPathPart(PBIDEpath) + "../themes/SilkTheme.zip"
+        If FileSize(ZipFileTheme) < 1
+          ZipFileTheme = #PB_Compiler_Home + "themes/SilkTheme.zip"
+        EndIf
       CompilerEndIf
       If FileSize(ZipFileTheme) < 1
         MessageRequester("SweetyVD Error", "SilkTheme.zip Not found in the current directory" +#CRLF$+ "Or in PB_Compiler_Home\themes directory" +#CRLF$+#CRLF$+ "Exit now", #PB_MessageRequester_Error|#PB_MessageRequester_Ok)
