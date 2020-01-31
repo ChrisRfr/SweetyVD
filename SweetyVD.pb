@@ -351,7 +351,7 @@ CompilerIf #PB_Compiler_IsMainFile
         EndIf
       CompilerEndIf
       If FileSize(ZipFileTheme) < 1
-        MessageRequester("SweetyVD Error", "SilkTheme.zip Not found in the current directory" +#CRLF$+ "Or in PB_Compiler_Home\themes directory" +#CRLF$+#CRLF$+ "Exit now", #PB_MessageRequester_Error|#PB_MessageRequester_Ok)
+        MessageRequester("SweetyVD Error", "SilkTheme.zip Not found in the current directory" +#CRLF$+#CRLF$+ "Copy SilkTheme.zip in the Current Directory" +#CRLF$+ "Or " +#CRLF$+ "Set PUREBASIC_HOME Environment Variable" +#CRLF$+ "Or " +#CRLF$+ "Set PureBasic_Path in SweetyVD.ini" +#CRLF$+#CRLF$+ "Exit now", #PB_MessageRequester_Error|#PB_MessageRequester_Ok)
         End
       EndIf
     EndIf
@@ -779,15 +779,18 @@ CompilerIf #PB_Compiler_IsMainFile
   EndProcedure
   
   Procedure RemoveFont(FontID.i)
+    ;Called after the update of SVDListGadget()\FontID. If there is a font left, we keep it, otherwise we delete it
     Protected TmpFontID.i
-    ResetMap(SVDListGadget())
     With SVDListGadget()
+      PushMapPosition(SVDListGadget())
+      ResetMap(SVDListGadget())
       While NextMapElement(SVDListGadget())
         If \FontID = FontID
           TmpFontID = \FontID
           Break
         EndIf
       Wend
+      PopMapPosition(SVDListGadget())
     EndWith
     If TmpFontID = 0
       With FontStructArray()
@@ -803,7 +806,7 @@ CompilerIf #PB_Compiler_IsMainFile
   EndProcedure
   
   Procedure SelectFont(IdGadget.i)
-    Protected SelectedFont.i, iFontID.i, sFontName.s, iFontSize.i, iFontStyle.i, sFontString.s, I.i
+    Protected SelectedFont.i, iFontID.i, OldFontID.i, sFontName.s, iFontSize.i, iFontStyle.i, sFontString.s, I.i
     If FindMapElement(SVDListGadget(), Str(IdGadget))
       If SVDListGadget()\FontID <> 0
         With FontStructArray()
@@ -871,7 +874,11 @@ CompilerIf #PB_Compiler_IsMainFile
           EndIf
           
           If FindMapElement(SVDListGadget(), Str(IdGadget))
+            OldFontID = SVDListGadget()\FontID
             SVDListGadget()\FontID = iFontID
+            If OldFontID <> 0
+              RemoveFont(OldFontID)
+            EndIf
             sFontString = sFontName + " " + Str(iFontSize)
             If iFontStyle
               sFontString + " "
@@ -904,11 +911,13 @@ CompilerIf #PB_Compiler_IsMainFile
       EndIf
     EndIf
   EndProcedure
-  
+
   Procedure RemoveImage(sImagePath.s)
+    ;Called after the update of SVDListGadget()\Option1="#Imag:". If there is an image left, we keep it, otherwise we delete the image  
     Protected TmpImagePath.s
-    ResetMap(SVDListGadget())
     With SVDListGadget()
+      PushMapPosition(SVDListGadget())
+      ResetMap(SVDListGadget())
       While NextMapElement(SVDListGadget())
         If Left(\Option1, 5) = "#Imag" And Mid(\Option1, 7) = sImagePath
           If FileSize(sImagePath) > 1
@@ -920,8 +929,9 @@ CompilerIf #PB_Compiler_IsMainFile
           Break
         EndIf
       Wend
+      PopMapPosition(SVDListGadget())
     EndWith
-    If TmpImagePath = ""
+    If TmpImagePath = ""  
       With ImageBtnPathArray()
         ResetList(ImageBtnPathArray())
         While NextElement(ImageBtnPathArray())
@@ -973,9 +983,15 @@ CompilerIf #PB_Compiler_IsMainFile
         FreeImage(TmpImage)
         
         If FindMapElement(SVDListGadget(), Str(IdGadget))
+          If Left(SVDListGadget()\Option1, 5) = "#Imag"
+            OldImagePath = Mid(SVDListGadget()\Option1, 7)
+          EndIf
           SetGadgetText(#ImageString, ImagePath)
           SVDListGadget()\Option1 = "#Imag:" + ImagePath
           SVDListGadget()\Image = ImageBtn
+          If OldImagePath <> "" And OldImagePath <> "0"
+            RemoveImage(OldImagePath)
+          EndIf
           Select GadgetType(IdGadget)
             Case #PB_GadgetType_ButtonImage
               SetGadgetAttribute(IdGadget, #PB_Button_Image, ImageID(ImageBtn))
@@ -2137,7 +2153,11 @@ CompilerIf #PB_Compiler_IsMainFile
               SetSelectedGadget(IdGadget)
               
             Case #PBPathPick
-              PBIDEpath = OpenFileRequester("Select the Path to Purebasic.exe", PBIDEpath, "PureBasic Path (PureBasic.exe)|PureBasic.exe", 0)
+              CompilerIf #PB_Compiler_OS = #PB_OS_Windows
+                PBIDEpath = OpenFileRequester("Select the Path to Purebasic.exe", PBIDEpath, "PureBasic Path (PureBasic.exe)|PureBasic.exe", 0)
+              CompilerElse
+                PBIDEpath = OpenFileRequester("Select the Path to Purebasic", PBIDEpath, "PureBasic Path (purebasic)|purebasic", 0)
+              CompilerEndIf
               SetGadgetText(#PBPathString, PBIDEpath)
               If FileSize(PBIDEpath) > 1
                 SetGadgetState(#PBPathImage, ImageID(#Img_Valid))

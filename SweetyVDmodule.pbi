@@ -213,7 +213,7 @@ Module SVDesigner
         SendMessage_(GadgetID(Gadget),#WM_SETREDRAW,State,0)
         If State = #True
           ;InvalidateRect_(GadgetID(Gadget), #Null, State)
-          RedrawWindow_(GadgetID(Gadget), #Null, #Null, #RDW_INVALIDATE | #RDW_UPDATENOW)     ;#RDW_ERASE | #RDW_FRAME | #RDW_INVALIDATE | #RDW_ALLCHILDREN
+          RedrawWindow_(GadgetID(Gadget), #Null, #Null, #RDW_INVALIDATE|#RDW_ERASE|#RDW_ALLCHILDREN|#RDW_UPDATENOW)     ;#RDW_ERASE | #RDW_FRAME | #RDW_INVALIDATE | #RDW_ALLCHILDREN
         EndIf
       EndIf
     CompilerEndIf
@@ -1954,10 +1954,10 @@ Module SVDesigner
     
     ;Draw Grid on Canvas
     CompilerIf #PB_Compiler_OS = #PB_OS_Windows
-      CanvasGadget(#DrawArea, 0, 0, ScrollDrawAreaWidth, ScrollDrawAreaHeight, #PB_Canvas_Keyboard | #PB_Canvas_Container)   ;Resize with Handles does not work with #PB_Canvas_Keyboard
-                                                                                                                             ;OpenGadgetList(#ScrollDrawArea) : CloseGadgetList()   ;OpenGadgetList(#DrawArea)
-                                                                                                                             ;SetGadgetZOrder(#DrawArea)
-                                                                                                                             ;#WS_CLIPCHILDREN is Important in Draw Aera Canvas Container, to reduce Paint overlays and flickering
+      CanvasGadget(#DrawArea, 0, 0, ScrollDrawAreaWidth, ScrollDrawAreaHeight, #PB_Canvas_Keyboard | #PB_Canvas_Container)
+      ;OpenGadgetList(#ScrollDrawArea) : CloseGadgetList()   ;OpenGadgetList(#DrawArea)
+      ;SetGadgetZOrder(#DrawArea)
+      ;#WS_CLIPCHILDREN is Important in Draw Aera Canvas Container, to reduce Paint overlays and flickering
       SetWindowLongPtr_(GadgetID(#DrawArea), #GWL_STYLE, GetWindowLongPtr_(GadgetID(#DrawArea), #GWL_STYLE) | #WS_CLIPCHILDREN)
     CompilerElse
       CanvasGadget(#DrawArea, 0, 0, ScrollDrawAreaWidth, ScrollDrawAreaHeight, #PB_Canvas_Keyboard)
@@ -1969,6 +1969,7 @@ Module SVDesigner
     For I = 0 To CountGadget
       With GadgetDragHandleArray(I)
         GadgetDragHandleArray(I)\DragHandle = CanvasGadget(#PB_Any, 0, 0, 0, 0, #PB_Canvas_Keyboard)
+        ;SetGadgetZOrder(\DragHandle)
         HideGadget(\DragHandle,#True)
         SetGadgetData(\DragHandle, #PB_Ignore)
         CompilerIf #PB_Compiler_OS = #PB_OS_MacOS
@@ -1985,7 +1986,7 @@ Module SVDesigner
     Read.i Mycursors
     For I = 0 To 8
       GadgetHandle(I) = CanvasGadget(#PB_Any, 0, 0, #HandelSize, #HandelSize)
-      SetGadgetZOrder(GadgetHandle(I))
+      ;SetGadgetZOrder(GadgetHandle(I))
       HideGadget(GadgetHandle(I),#True)
       If I = 0      ;Position 0 used for the drawing area at bottom right
         DrawDragHandleBorder(GadgetHandle(I), #WinHandleColor)
