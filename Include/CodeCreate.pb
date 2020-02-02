@@ -349,10 +349,15 @@ Procedure CodeCreate(Dest.s = "")
       
       ResetList(ImageBtnPathArray())
       While NextElement(ImageBtnPathArray())
+        ;Relative Path. Could be a setting option
+        TmpImagePath = ImageBtnPathArray()\ImagePath
+        If Left(TmpImagePath, Len(GetCurrentDirectory())) = GetCurrentDirectory()
+          TmpImagePath = Mid(TmpImagePath, Len(GetCurrentDirectory())+1)
+        EndIf
         If CodeConstants
-          Code + "LoadImage(#Img_" + Mid(CodeGadgets(0)\Name, 2) + "_" + Str(ListIndex(ImageBtnPathArray())) + ", " + #DQUOTE$ + ImageBtnPathArray()\ImagePath + #DQUOTE$ + ")" +#CRLF$
+          Code + "LoadImage(#Img_" + Mid(CodeGadgets(0)\Name, 2) + "_" + Str(ListIndex(ImageBtnPathArray())) + ", " + #DQUOTE$ + TmpImagePath + #DQUOTE$ + ")" +#CRLF$
         Else
-          Code + "Global " + sPreF + "Img_" + Mid(CodeGadgets(0)\Name, 2) + "_" + Str(ListIndex(ImageBtnPathArray())) + sSuFF + " = LoadImage(#PB_Any, " + #DQUOTE$ + ImageBtnPathArray()\ImagePath + #DQUOTE$ + ")" +#CRLF$
+          Code + "Global " + sPreF + "Img_" + Mid(CodeGadgets(0)\Name, 2) + "_" + Str(ListIndex(ImageBtnPathArray())) + sSuFF + " = LoadImage(#PB_Any, " + #DQUOTE$ + TmpImagePath + #DQUOTE$ + ")" +#CRLF$
         EndIf
       Wend
       Code +#CRLF$
