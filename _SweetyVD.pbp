@@ -8,56 +8,56 @@
   <section name="data">
     <explorer view="Include\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2020-01-28 16:22" user="ChrisR" host="PC-CHRISR"/>
+    <lastopen date="2020-01-30 09:46" user="ChrisR" host="PC-CHRISR"/>
   </section>
   <section name="files">
     <file name="Include\CodeCreate.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="8c6cb565b1005883abc5e76fc9808708"/>
+      <fingerprint md5="f83acaa69565d1f4f3d4d7578228243c"/>
     </file>
     <file name="Include\DelOldFiles.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="6a0a30e639ed0e43c08d2385d3099461"/>
+      <fingerprint md5="425494bd3fa90879471d6ba27587ff8e"/>
     </file>
     <file name="Include\DrawingArea.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="a66344b6f636707c457d647a88bde262"/>
+      <fingerprint md5="0163310877f1bd6bdbca51fbf357e514"/>
     </file>
     <file name="Include\FullColorRequester.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="11a0bda0cbc7de33779d87d944a2ff99"/>
+      <fingerprint md5="aa891ff203c91ba50f73cd3154a267a4"/>
     </file>
     <file name="Include\GetPBIDE.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="ff3573f5f1b6c709833e1dfc924625f3"/>
+      <fingerprint md5="8deec361f4b4d5b26efefb56363561f4"/>
     </file>
     <file name="Include\LoadFontWML.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="8fecfeba74d196bac0fe72576955322c"/>
+      <fingerprint md5="8e9b631e7b97b8f85f84a1b54c6701c0"/>
     </file>
     <file name="Include\ModelGadget.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="356ffd3f049adbe30121a0ef80164e44"/>
+      <fingerprint md5="edc02dd1db5cce04504471684cb9517e"/>
     </file>
     <file name="Include\RenameVDGadget.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="b7350658c969bfb5c8926e556cf925c2"/>
+      <fingerprint md5="18d2d2197b59f7ccc72b72846cb619cf"/>
     </file>
     <file name="Include\SweetyVDPref.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="18543c4340253c8f9d849c10db1ceb97"/>
+      <fingerprint md5="cafb121c06775ea3b4f46281369e133d"/>
     </file>
     <file name="Include\TabBarGadget.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
-      <fingerprint md5="32348506fef8ebedf473d25f8bc5c8b8"/>
+      <fingerprint md5="fad12f575e4e72d02fb3b44ded2d0487"/>
     </file>
     <file name="SweetyVD.pb">
       <config load="1" scan="1" panel="1" warn="1" lastopen="1" panelstate="+"/>
-      <fingerprint md5="03394d65663778111b54075556be395a"/>
+      <fingerprint md5="63a0e1a677455da76e8f7bf8a1c10ac6"/>
     </file>
     <file name="SweetyVDmodule.pbi">
       <config load="1" scan="1" panel="1" warn="1" lastopen="1" panelstate="+"/>
-      <fingerprint md5="fb220c660226ccc9bd57ea263fb854f7"/>
+      <fingerprint md5="f88ef712474288fb2495f04dda72fadc"/>
     </file>
   </section>
   <section name="targets">

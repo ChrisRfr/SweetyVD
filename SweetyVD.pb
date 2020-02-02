@@ -653,7 +653,7 @@ CompilerIf #PB_Compiler_IsMainFile
   EndProcedure
   
   Procedure LoadGadgetProperties(IdGadget.i)
-    Protected TmpConstants.s, sFontString.s, I.i
+    Protected TmpConstants.s, TmpImagePath.s, sFontString.s, I.i
     InitProperties()
     With SVDListGadget()
       If FindMapElement(SVDListGadget(), Str(IdGadget))
@@ -693,7 +693,12 @@ CompilerIf #PB_Compiler_IsMainFile
             HideGadget(#MiniText, #False)
             HideGadget(#MiniString, #False)
           Case "#Imag"
-            SetGadgetText(#ImageString, Mid(\Option1, 7))
+            ;Relative Path. Could be a setting option
+            TmpImagePath = Mid(\Option1, 7)
+            If Left(TmpImagePath, Len(GetCurrentDirectory())) = GetCurrentDirectory()
+              TmpImagePath = Mid(TmpImagePath, Len(GetCurrentDirectory())+1)
+            EndIf
+            SetGadgetText(#ImageString, TmpImagePath)
             HideGadget(#ImageText, #False)
             HideGadget(#ImageString, #False)
             HideGadget(#ImagePick, #False)
@@ -948,7 +953,7 @@ CompilerIf #PB_Compiler_IsMainFile
   EndProcedure
   
   Procedure DrawSelectedImage(IdGadget.i)
-    Protected ImagePath.s, OldImagePath.s, TmpImage.i, ImageBtn.i, Rtn.i, I.i
+    Protected ImagePath.s, OldImagePath.s, TmpImagePath.s, TmpImage.i, ImageBtn.i, Rtn.i, I.i
     ImagePath = OpenFileRequester("Select image",GetCurrentDirectory(),"Picture (*.bmp; *.jpg; *.png)|*.bmp;*.jpg;*.png", 1)
     If ImagePath
       TmpImage = LoadImage(#PB_Any, ImagePath)
@@ -986,7 +991,12 @@ CompilerIf #PB_Compiler_IsMainFile
           If Left(SVDListGadget()\Option1, 5) = "#Imag"
             OldImagePath = Mid(SVDListGadget()\Option1, 7)
           EndIf
-          SetGadgetText(#ImageString, ImagePath)
+          ;Relative Path. Could be a setting option
+          TmpImagePath = ImagePath
+          If Left(TmpImagePath, Len(GetCurrentDirectory())) = GetCurrentDirectory()
+            TmpImagePath = Mid(TmpImagePath, Len(GetCurrentDirectory())+1)
+          EndIf
+          SetGadgetText(#ImageString, TmpImagePath)
           SVDListGadget()\Option1 = "#Imag:" + ImagePath
           SVDListGadget()\Image = ImageBtn
           If OldImagePath <> "" And OldImagePath <> "0"
@@ -1283,12 +1293,12 @@ CompilerIf #PB_Compiler_IsMainFile
     CatchImage(#Align_Left,?Align_Left)
     ButtonImageGadget(#Align_Left_Button, 511, 1, 22, 22,ImageID(#Align_Left))
     GadgetToolTip(#Align_Left_Button, "Align Left (Ctrl+Left)")
-    TextGadget(#Align_Left_Text, 532, 6, 34, 18, "Left")
+    TextGadget(#Align_Left_Text, 535, 6, 34, 18, "Left")
     
     CatchImage(#Align_Right,?Align_Right)
     ButtonImageGadget(#Align_Right_Button, 511, 24, 22, 22,ImageID(#Align_Right))
     GadgetToolTip(#Align_Right_Button, "Align Right (Ctrl+Right)")
-    TextGadget(#Align_Right_Text, 532, 28, 34, 18, "Right")
+    TextGadget(#Align_Right_Text, 535, 28, 34, 18, "Right")
     
     CatchImage(#Align_Top,?Align_Top)
     ButtonImageGadget(#Align_Top_Button,571, 1, 22, 22,ImageID(#Align_Top))
@@ -1406,7 +1416,7 @@ CompilerIf #PB_Compiler_IsMainFile
     TreeGadget(#Constants, 5, 510, PropertiesPanelWidth, 140, #PB_Tree_NoLines | #PB_Tree_NoButtons | #PB_Tree_CheckBoxes)
     
     ScrollAreaGadget(#ScrollDrawArea, PropertiesPanelWidth+10, SettingPanelHeight, WindowWidth(#MainWindow)-PropertiesPanelWidth, WindowHeight(#MainWindow)-SettingPanelHeight, ScrollArea_MaxWidth + 10, ScrollArea_MaxHeight + 10, 20, #PB_ScrollArea_Single)   ;InnerWidth,InnerHeight + 10 for the resize handle of the drawing window
-    
+    ;For testing ContainerGadget(#ScrollDrawArea, PropertiesPanelWidth+10, SettingPanelHeight, WindowWidth(#MainWindow)-PropertiesPanelWidth, WindowHeight(#MainWindow)-SettingPanelHeight)
     EnableGadgetDrop(#ScrollDrawArea, #PB_Drop_Text, #PB_Drag_Copy)
     
     ;All interface Objects must have #PB_Ignore as data. To not load them later when loading Designer
@@ -2337,7 +2347,7 @@ CompilerEndIf
 ; IDE Options = PureBasic 5.71 LTS (Windows - x64)
 ; Folding = ------
 ; EnableXP
-; UseIcon = Include\SweetyVD.ico
+; UseIcon = Images\SweetyVD.ico
 ; Executable = SweetyVD_x64.exe
 ; Compiler = PureBasic 5.71 LTS (Windows - x64)
 ; EnablePurifier

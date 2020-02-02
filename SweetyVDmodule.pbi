@@ -1494,6 +1494,7 @@ Module SVDesigner
               If X1 <> SavPosDim\X Or Y1 <> SavPosDim\Y Or Width1 <> SavPosDim\Width Or Height1 <> SavPosDim\Height
                 ;Do not use SetWinRedrawON False/True with WS_CLIPCHILDREN GWL_STYLE on the #DrawArea
                 ;SetWinRedrawON(#DrawArea, #False)
+
                 \X = X1 : \Y = Y1 : \Width = Width1 : \Height= Height1
                 If \DrawGadget = #False
                   ResizeGadget(\Gadget, \X, \Y, \Width, \Height)
@@ -1512,6 +1513,7 @@ Module SVDesigner
                     ResizeAllHandlesOfGadget(\Gadget)
                   EndIf
                 EndIf
+
                 ;Do not use SetWinRedrawON False/True with WS_CLIPCHILDREN GWL_STYLE on the #DrawArea
                 ;SetWinRedrawON(#DrawArea, #True)
                 SavPosDim\X = \X : SavPosDim\Y = \Y : SavPosDim\Width = \Width : SavPosDim\Height = \Height
