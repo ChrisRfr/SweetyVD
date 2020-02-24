@@ -4,18 +4,18 @@
 ;           Version: 1.0
 ;            Author: STARGÅTE
 ;     Modifications: Collectordave
-;    Translation by: 
+;    Translation by:
 ;       Create date: 20\12\2016
-; Previous releases: 
-; This Release Date: 
+; Previous releases:
+; This Release Date:
 ;  Operating system: Windows  [X]GUI
 ;  Compiler version: PureBasic 5.5 (x64)
 ;         Copyright: (C)2016
-;           License: 
-;         Libraries: 
-;     English Forum: 
-;      French Forum: 
-;      German Forum: 
+;           License:
+;         Libraries:
+;     English Forum:
+;      French Forum:
+;      German Forum:
 ;  Tested platforms: Windows
 ;       Description: Custom gadget Include File
 ; ====================================================
@@ -24,26 +24,26 @@
 
 UsePNGImageDecoder()
 DeclareModule OnOffButton
-  
+
   ;{ ==Gadget Event Enumerations=================================
 ;        Name/title: Enumerations
 ;       Description: Part of custom gadget template
-;                  : Enumeration of Custom Gagdet event constants 
+;                  : Enumeration of Custom Gagdet event constants
 ;                  : Started at 100 to Avoid Using 0
 ;                  : as creation events etc can still be recieved
 ;                  : in main event loop
 ; ================================================================
-;} 
+;}
   Enumeration 100
     #StateIsOn
     #StateIsOff
   EndEnumeration
-    
+
   ;Create the gadget procedure Only used by main gadget public procedure
   Declare CreateGadget(Gadget.i, x.i,y.i,width.i,height.i,Flags.i)
   Declare.i GetState(Gadget.i)
   Declare SetState(Gadget.i,State.i)
-  
+
 EndDeclareModule
 
 Module OnOffButton
@@ -64,53 +64,53 @@ Module OnOffButton
     Disabled.i
     Thread.i
     Quit.i
- EndStructure  
+ EndStructure
 
-  Global Dim MyGadgetArray.MyGadget(0) 
+  Global Dim MyGadgetArray.MyGadget(0)
   Global CurrentGadget.i
-  
+
   ;Required To Obtain Resize Events
   Enumeration #PB_EventType_FirstCustomValue
     #PB_EventType_Size
     #PB_EventType_Move
   EndEnumeration
-   
+
   Procedure.i SetCurrentGadget(Gadget.i)
   ;{ ==Procedure Header Comment==============================
 ;        Name/title: GetgadgetID
 ;       Description: Part of custom gadget template
-;                  : Procedure to return the MyGadgetArray() element number 
+;                  : Procedure to return the MyGadgetArray() element number
 ;                  : for the gadget on which the event occurred
-; 
+;
 ; ====================================================
-;}     
+;}
     Define iLoop.i
-    
+
     For iLoop = 0 To ArraySize(MyGadgetArray())
 
       If Gadget = MyGadgetArray(iLoop)\Gadget_ID
 
         CurrentGadget = iLoop
-        
+
       EndIf
-      
-    Next iLoop 
-    
+
+    Next iLoop
+
     ProcedureReturn CurrentGadget
-    
+
   EndProcedure
-  
+
   Procedure DrawGadget(Gadget.i)
   ;{ ==Procedure Header Comment==============================
   ;        Name/title: DrawGadget
   ;       Description: Procedure to draw the gadget on the canvas
-  ; 
+  ;
   ; ====================================================
-  ;}    
+  ;}
     If CurrentGadget <> Gadget
       SetCurrentGadget(Gadget)
     EndIf
-  
+
     If StartDrawing(CanvasOutput(MyGadgetArray(CurrentGadget)\Gadget_ID))
       ; Background
       If MyGadgetArray(CurrentGadget)\Disabled
@@ -124,29 +124,29 @@ Module OnOffButton
       DrawAlphaImage(ImageID(MyGadgetArray(CurrentGadget)\ButtonImage), MyGadgetArray(CurrentGadget)\Move, 0)
       StopDrawing()
     EndIf
-    
-  EndProcedure 
-    
+
+  EndProcedure
+
   Procedure IDGadget( GadgetID )
  ;{ ==Procedure Header Comment==============================
 ;        Name/title: IDGadget
 ;       Description: Part of custom gadget template
 ;                  : Required to capture resize events of the gadget canvas
-; 
+;
 ; ====================================================
-;}    
-     
-     
+;}
+
+
      CompilerSelect #PB_Compiler_OS
       CompilerCase #PB_OS_Windows
         ProcedureReturn GetProp_( GadgetID, "PB_GadgetID") - 1
-       
+
       CompilerCase #PB_OS_Linux
         g_object_get_data_( GadgetID, "PB_GadgetID") - 1
-       
+
     CompilerEndSelect
-  EndProcedure 
-    
+  EndProcedure
+
     CompilerSelect #PB_Compiler_OS
     CompilerCase #PB_OS_Windows
       Procedure Resize_CallBack(GadgetID, Msg, wParam, lParam)
@@ -156,24 +156,24 @@ Module OnOffButton
 ;                  : Required to capture resize events of the gadget canvas
 ;                  : when running on windows
 ; ====================================================
-;}           
+;}
         Protected *Func = GetProp_( GadgetID, "Resize_Event_CallBack")
-       
+
         Protected *Gadget = IDGadget( GadgetID )
-       
+
         Protected *Window = GetActiveWindow() ; GetProp_( GadgetID, "PB_WindowID") - 1
-       
+
         Select Msg
           Case #WM_SIZE : PostEvent( #PB_Event_Gadget, *Window, *Gadget , #PB_EventType_Size )
           Case #WM_MOVE : PostEvent( #PB_Event_Gadget, *Window, *Gadget , #PB_EventType_Move )
           Default
-           
+
             ProcedureReturn CallWindowProc_(*Func, GadgetID, Msg, wParam, lParam)
         EndSelect
-       
-       
+
+
       EndProcedure
-     
+
     CompilerCase #PB_OS_Linux
       ProcedureC Resize_CallBack( *Event.GdkEventAny, *Handle )
   ;{ ==Procedure Header Comment==============================
@@ -182,14 +182,14 @@ Module OnOffButton
 ;                  : Required to capture resize events of the gadget canvas
 ;                  : when running on Linux
 ; ====================================================
-;}       
+;}
         Protected *Widget.GtkWidget = gtk_get_event_widget_(*Event)
         ;Debug gdk_event_get_screen_ (*event)
-       
+
         If *Widget
           ;Debug PeekS( gtk_widget_get_name_( (*Widget)), -1, #PB_UTF8 ) + " " + Str(g_object_get_data_(*Widget, "PB_GadgetID") - 1)
         EndIf
-       
+
         If *Widget And *Widget = g_object_get_data_(*Widget, "Resize_Event_CallBack")
           Select *Event\type
             Case #GDK_2BUTTON_PRESS
@@ -206,7 +206,7 @@ Module OnOffButton
                 Case #GDK_SCROLL_DOWN
                   ;Debug "scrollDown"
               EndSelect
-             
+
             Case #GDK_KEY_PRESS
             Case #GDK_KEY_RELEASE
             Case #GDK_FOCUS_CHANGE
@@ -215,68 +215,68 @@ Module OnOffButton
             Case #GDK_DELETE
             Case #GDK_EXPOSE
             Case #GDK_UNMAP
-             
+
               gdk_event_handler_set_( 0, 0, 0 )
             Default
-             
+
               gtk_main_do_event_( *Event )
           EndSelect
         Else
           gtk_main_do_event_( *Event )
         EndIf
       EndProcedure
-     
+
   CompilerEndSelect
-    
+
   Procedure SetIDGadget( Gadget )
  ;{ ==Procedure Header Comment==============================
 ;        Name/title: SetIDGadget
 ;       Description: Part of custom gadget template
 ;                  : Required to capture resize events of the gadget canvas
 ; ====================================================
-;}    
+;}
     CompilerSelect #PB_Compiler_OS
-        
+
       CompilerCase #PB_OS_Windows
         If GetProp_( GadgetID( Gadget ), "PB_GadgetID" ) = 0
           ProcedureReturn SetProp_( GadgetID( Gadget ), "PB_GadgetID", Gadget + (1))
         EndIf
-       
+
       CompilerCase #PB_OS_Linux
         If g_object_get_data_( GadgetID( Gadget ), "PB_GadgetID" ) = 0
           ProcedureReturn g_object_set_data_( GadgetID( Gadget ), "PB_GadgetID", Gadget + (1))
         EndIf
-       
+
     CompilerEndSelect
-    
+
   EndProcedure
-    
+
   Procedure ResizeGadgetEvents(Gadget)
-    
+
     Protected GadgetID, GadgetID1, GadgetID2, GadgetID3, GadgetID4
-   
-    If IsGadget( Gadget ) 
+
+    If IsGadget( Gadget )
       SetIDGadget( Gadget )
       GadgetID = GadgetID( Gadget )
-     
+
       CompilerSelect #PB_Compiler_OS
-          
+
         CompilerCase #PB_OS_Linux
           g_object_set_data_( GadgetID, "PB_GadgetID", Gadget + 1 )
           g_object_set_data_( GadgetID, "Resize_Event_CallBack", GadgetID )
           gdk_event_handler_set_( @Resize_CallBack(), GadgetID, 0 )
-         
+
         CompilerCase #PB_OS_Windows
           If GadgetID  And GetProp_( GadgetID,  "Resize_Event_CallBack") = #False
-            SetProp_( GadgetID, "Resize_Event_CallBack", SetWindowLong_(GadgetID, #GWL_WNDPROC, @Resize_CallBack()))
+            SetProp_( GadgetID, "Resize_Event_CallBack", SetWindowLongPtr_(GadgetID, #GWL_WNDPROC, @Resize_CallBack()))
           EndIf
-         
+
       CompilerEndSelect
-      
+
     EndIf
-    
+
   EndProcedure
-    
+
   Procedure AddGadget(ThisWindow.i,ThisGadget.i)
  ;{ ==Procedure Header Comment==============================
 ;        Name/title: AddGadget
@@ -288,46 +288,46 @@ Module OnOffButton
     MyGadgetArray(ArraySize(MyGadgetArray()))\Window_ID = ThisWindow
     MyGadgetArray(ArraySize(MyGadgetArray()))\Gadget_ID = ThisGadget
     ReDim MyGadgetArray(ArraySize(MyGadgetArray())+1)
-  
+
   EndProcedure
-  
+
   Procedure SendEvents(Event.i)
 ;{ ==Procedure Header Comment==============================
 ;        Name/title: SendEvents
 ;       Description: Part of custom gadget template
 ;                  : Used to send custom events to the main event loop
 ; ====================================================
-;}   
+;}
 
     PostEvent(#PB_Event_Gadget, MyGadgetArray(CurrentGadget)\Window_ID, MyGadgetArray(CurrentGadget)\Gadget_ID, #PB_Event_FirstCustomValue,Event)
-    
+
  EndProcedure
- 
+
   Procedure.i GetState(Gadget.i)
-   
+
     SetCurrentGadget(Gadget)
 
     ProcedureReturn MyGadgetArray(CurrentGadget)\State
-   
+
  EndProcedure
- 
+
   Procedure SetState(Gadget.i,State.i)
-   
+
     SetCurrentGadget(Gadget)
 
     If State = #True
       MyGadgetArray(CurrentGadget)\State = #True
-      MyGadgetArray(CurrentGadget)\Move = 39     
+      MyGadgetArray(CurrentGadget)\Move = 39
     Else
       MyGadgetArray(CurrentGadget)\State = #False
-      MyGadgetArray(CurrentGadget)\Move = -1        
+      MyGadgetArray(CurrentGadget)\Move = -1
     EndIf
     Drawgadget(Gadget)
-    
+
  EndProcedure
- 
+
   Procedure MoveGadget()
-   
+
     Protected Quit.i = #False
     Repeat
 
@@ -335,21 +335,21 @@ Module OnOffButton
        MyGadgetArray(CurrentGadget)\Move + 2
        If MyGadgetArray(CurrentGadget)\Move => 38
          Quit = #True
-         MyGadgetArray(CurrentGadget)\Move = 38 
+         MyGadgetArray(CurrentGadget)\Move = 38
        EndIf
      ElseIf MyGadgetArray(CurrentGadget)\State = #False And MyGadgetArray(CurrentGadget)\Move > 0
        MyGadgetArray(CurrentGadget)\Move - 2
        If MyGadgetArray(CurrentGadget)\Move =< 0
          Quit = #True
-         MyGadgetArray(CurrentGadget)\Move = 0 
-       EndIf      
+         MyGadgetArray(CurrentGadget)\Move = 0
+       EndIf
      EndIf
      DrawGadget(CurrentGadget)
      Delay(10)
    Until Quit = #True
-  
+
   EndProcedure
-  
+
   Procedure GadgetEvents()
   ;{ ==Procedure Header Comment==============================
 ;        Name/title: GadgetEvents
@@ -357,78 +357,78 @@ Module OnOffButton
 ;                  : Handles all events for this custom gadget
 ; ====================================================
 ;}
-   
+
     SetCurrentGadget(EventGadget())
-    
+
     Select EventType()
-       
+
       Case #PB_EventType_MouseEnter
 
         MyGadgetArray(CurrentGadget)\Hover = #True
         DrawGadget(CurrentGadget)
-        
-      Case #PB_EventType_MouseLeave 
-       
-        MyGadgetArray(CurrentGadget)\Hover = #False 
+
+      Case #PB_EventType_MouseLeave
+
+        MyGadgetArray(CurrentGadget)\Hover = #False
         DrawGadget(CurrentGadget)
-        
-      Case #PB_EventType_MouseMove 
-        
-        ;Debug "MouseMove On Gadget " + Str(CurrentGadget)        
-        
+
+      Case #PB_EventType_MouseMove
+
+        ;Debug "MouseMove On Gadget " + Str(CurrentGadget)
+
       Case #PB_EventType_MouseWheel
-        
-        ;Debug "MouseWheel  On Gadget " + Str(CurrentGadget)           
-        
+
+        ;Debug "MouseWheel  On Gadget " + Str(CurrentGadget)
+
       Case #PB_EventType_LeftButtonDown
-        
-        ;Debug "LeftButtonDown On Gadget " + Str(CurrentGadget)        
-        
+
+        ;Debug "LeftButtonDown On Gadget " + Str(CurrentGadget)
+
       Case #PB_EventType_LeftButtonUp
-        
-        ;Debug "LeftButtonUp On Gadget " + Str(CurrentGadget)        
-        
-      Case #PB_EventType_LeftClick 
- 
+
+        ;Debug "LeftButtonUp On Gadget " + Str(CurrentGadget)
+
+      Case #PB_EventType_LeftClick
+
         If MyGadgetArray(CurrentGadget)\State = #True
           MyGadgetArray(CurrentGadget)\State = #False
           SendEvents(#StateIsOff)
         Else
           MyGadgetArray(CurrentGadget)\State = #True
-          SendEvents(#StateIsOn)         
+          SendEvents(#StateIsOn)
         EndIf
         MoveGadget()
-        
+
       Case #PB_EventType_LeftDoubleClick
-        
-        ;Debug "LeftDoubleClick On Gadget " + Str(CurrentGadget)           
-        
+
+        ;Debug "LeftDoubleClick On Gadget " + Str(CurrentGadget)
+
       Case #PB_EventType_RightButtonDown
-        
-        ;Debug "RightButtonDown On Gadget " + Str(CurrentGadget)        
-         
+
+        ;Debug "RightButtonDown On Gadget " + Str(CurrentGadget)
+
        Case #PB_EventType_RightButtonUp
-        
-        ;Debug "RightButtonUp On Gadget " + Str(CurrentGadget)        
-        
+
+        ;Debug "RightButtonUp On Gadget " + Str(CurrentGadget)
+
       Case #PB_EventType_RightClick
-        
-        ;Debug "RightClick On Gadget " + Str(CurrentGadget)           
-        
+
+        ;Debug "RightClick On Gadget " + Str(CurrentGadget)
+
       Case #PB_EventType_RightDoubleClick
-        
-        ;Debug "RightDoubleClick On Gadget " + Str(CurrentGadget)           
-        
+
+        ;Debug "RightDoubleClick On Gadget " + Str(CurrentGadget)
+
       Case #PB_EventType_MiddleButtonDown
-        
-        ;Debug "MiddleButtonDown On Gadget " + Str(CurrentGadget)         
-        
+
+        ;Debug "MiddleButtonDown On Gadget " + Str(CurrentGadget)
+
       Case #PB_EventType_MiddleButtonUp
-        
-        ;Debug "MiddleButtonUp On Gadget " + Str(CurrentGadget) 
-        
+
+        ;Debug "MiddleButtonUp On Gadget " + Str(CurrentGadget)
+
       Case #PB_EventType_Size
-          
+
         ;Fixed Size Gadget No resize
         If GadgetHeight(MyGadgetArray(CurrentGadget)\Gadget_ID) <> 32
           ResizeGadget(MyGadgetArray(CurrentGadget)\Gadget_ID,#PB_Ignore,#PB_Ignore,#PB_Ignore,32)
@@ -436,40 +436,40 @@ Module OnOffButton
         If GadgetHeight(MyGadgetArray(CurrentGadget)\Gadget_ID) <> 96
           ResizeGadget(MyGadgetArray(CurrentGadget)\Gadget_ID,#PB_Ignore,#PB_Ignore,96,#PB_Ignore)
         EndIf
-       
+
       Case    #PB_EventType_Focus
-        
-        ;Debug "Got Focus On Gadget " + Str(CurrentGadget)   
-        
+
+        ;Debug "Got Focus On Gadget " + Str(CurrentGadget)
+
       Case      #PB_EventType_LostFocus
-        
-        ;Debug "lost Focus On Gadget " + Str(CurrentGadget)   
-        
+
+        ;Debug "lost Focus On Gadget " + Str(CurrentGadget)
+
       Case      #PB_EventType_KeyDown
-        
-        ;Debug "Key down On Gadget " + Str(CurrentGadget)   
-        
+
+        ;Debug "Key down On Gadget " + Str(CurrentGadget)
+
       Case      #PB_EventType_KeyUp
-        
-        ;Debug "Key Up On Gadget " + Str(CurrentGadget)   
-        
-      Case      #PB_EventType_Input 
-        
-        ;Debug "Input On Gadget " + Str(CurrentGadget)   + "= " +   Chr(GetGadgetAttribute(MyGadgetArray(CurrentGadget)\Gadget_ID, #PB_Canvas_Input ))     
-        
+
+        ;Debug "Key Up On Gadget " + Str(CurrentGadget)
+
+      Case      #PB_EventType_Input
+
+        ;Debug "Input On Gadget " + Str(CurrentGadget)   + "= " +   Chr(GetGadgetAttribute(MyGadgetArray(CurrentGadget)\Gadget_ID, #PB_Canvas_Input ))
+
     EndSelect
-    
+
   EndProcedure
-  
+
   Procedure CreateGadget(Gadget.i, x.i,y.i,width.i,height.i,Flags.i)
     ;{ ==Procedure Header Comment==============================
 ;        Name/title: CreateGadget
 ;       Description: Part of custom gadget template
 ;                  : procedure to create the canvas used for the gadget
 ; ====================================================
-;}  
+;}
     Define ThisWindow.i,ThisGadget.i
-    
+
     ;minimum height for the button
     If Height <> 32
       Height = 32
@@ -477,7 +477,7 @@ Module OnOffButton
     If Width <> 96
       Width = 96
     EndIf
-    
+
     ;Create The Canvas For The Gadget
     If Gadget = #PB_Any
       ThisGadget = CanvasGadget(#PB_Any, x,y,width,height,Flags)
@@ -485,35 +485,35 @@ Module OnOffButton
       ThisGadget = Gadget
       CanvasGadget(Gadget, x,y,width,height,Flags)
     EndIf
-  
+
     ;Bind This Gadgets Events
     BindGadgetEvent(ThisGadget, @GadgetEvents())
-    
+
     ;The Window On Which It Is Created
     ThisWindow = UseGadgetList(0)
-    
+
     ;Add To The Custom Gadget Array
     AddGadget(ThisWindow,ThisGadget)
-  
+
     ;Add Resize Event
     ResizeGadgetEvents( ThisGadget )
-    
+
     SetCurrentGadget(ThisGadget)
-    
+
     ;Grab Images For The Gadget
     MyGadgetArray(CurrentGadget)\Image = CatchImage(#PB_Any, ?Image_OnOff)
     MyGadgetArray(CurrentGadget)\HoverImage = CatchImage(#PB_Any, ?Image_OnOffHover)
     MyGadgetArray(CurrentGadget)\ButtonImage = CatchImage(#PB_Any, ?Image_OnOffButton)
     MyGadgetArray(CurrentGadget)\DisabledImage = CatchImage(#PB_Any, ?Image_OnOffDisabled)
-    
+
     ;Draw the actual gadget
     DrawGadget(CurrentGadget)
-    
-    ProcedureReturn ThisGadget 
-    
-  EndProcedure 
-  
-  
+
+    ProcedureReturn ThisGadget
+
+  EndProcedure
+
+
 DataSection
    Image_OnOff:
    Data.q $0A1A0A0D474E5089,$524448490D000000,$2000000060000000,$7DC0ED0000000608,$4942730400000054
@@ -735,7 +735,7 @@ DataSection
    Data.q $C3162C414514228A,$625ACC5EF5EAEAEA,$FFC00CB3F0BE587E,$E598C8F97600FF1B,$4900000000456325
    Data.q $00826042AE444E45
 EndDataSection
-  
+
 EndModule
 
 Procedure.i OnOffButton(Gadget.i, x.i,y.i,width.i,height.i,Flags.i = 0)
@@ -744,25 +744,25 @@ Procedure.i OnOffButton(Gadget.i, x.i,y.i,width.i,height.i,Flags.i = 0)
 ;       Description: Part of custom gadget template
 ;                  : Public procedure to add this custom gadget to a window
 ; ====================================================
-;}  
+;}
   Define ThisGadget.i
-  
+
   ThisGadget = OnOffButton::CreateGadget(Gadget.i, x.i,y.i,width.i,height.i,Flags.i)
-  
-  ProcedureReturn ThisGadget  
-  
+
+  ProcedureReturn ThisGadget
+
 EndProcedure
 
 Procedure.i GetOnOffButtonState(Gadget.i)
-  
+
   ProcedureReturn OnOffButton::GetState(Gadget)
-  
+
 EndProcedure
 
 Procedure.i SetOnOffButtonState(Gadget.i,State)
-  
+
   OnOffButton::SetState(Gadget,State)
-  
+
 EndProcedure
 ; IDE Options = PureBasic 5.50 (Windows - x64)
 ; CursorPosition = 77
