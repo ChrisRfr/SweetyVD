@@ -36,6 +36,7 @@ EndStructure
 ; Needed for preferences file.
 Global.i Dim ColorPref(15)
 
+;In SweetyVD InitColorPrefs() is not called. The same is done in SweetyVDPref.pb Procedure StartPrefs(). To use SweetyVD.ini rather than GetUserColors.prefs and have all the settings in the same place.
 Procedure InitColorPrefs()   ;Color Preference file - Storage information in GetCurrentDirectory for SweetyVD instead of GetTemporaryDirectory()
   Protected I.l
   If OpenPreferences(GetCurrentDirectory() + "GetUserColors.prefs") = 0 ; Does not exist, "GetUserColors.prefs" is erased. So create it with Default values
@@ -52,6 +53,7 @@ Procedure InitColorPrefs()   ;Color Preference file - Storage information in Get
   EndIf
 EndProcedure
 
+;In SweetyVD InitColorPrefs() is not called. The same is done in SweetyVDPref.pb Procedure ExitPrefs(). To use SweetyVD.ini rather than GetUserColors.prefs and have all the settings in the same place.
 Procedure ExitColorPrefs()
   Protected I.l
   If OpenPreferences(GetCurrentDirectory() + "GetUserColors.prefs")

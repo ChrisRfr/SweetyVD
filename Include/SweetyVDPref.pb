@@ -187,6 +187,7 @@ EndProcedure
 Procedure StartPrefs()
   Global Designer_Width.i = 960
   Global Designer_Height.i = 620
+  Protected I.i
   UserScreen_Width.i = 640
   UserScreen_Height.i = 480
   ShowGrid = #True
@@ -247,6 +248,13 @@ Procedure StartPrefs()
     WritePreferenceLong("Suffix_Enabled", 1)
     WritePreferenceLong("Space_Indentation", 2)
     WritePreferenceLong("Tab_Indentation", 0)
+    ;FullColorRequester
+    CompilerIf #PB_Compiler_OS = #PB_OS_Windows
+      PreferenceGroup("GetUserColors")    
+      For I = 0 To 15
+        WritePreferenceInteger("COLORREF"+Str(I+1), ColorPref(I))
+      Next
+    CompilerEndIf
     ;Default Title Block
     PreferenceGroup("TitleBlock")
     PreferenceComment("Use FormatDate (%yyyy, %yy, %mm, %dd + Separator) to format the current date, variable: %Date%")
@@ -312,6 +320,13 @@ Procedure StartPrefs()
       If FileSize(PBIDEpath) < 1 : PBIDEpath = "" : EndIf
       WritePreferenceString("PureBasic_Path", PBIDEpath)
     EndIf
+    ;FullColorRequester
+    CompilerIf #PB_Compiler_OS = #PB_OS_Windows
+      PreferenceGroup("GetUserColors")
+      For I = 0 To 15
+        ColorPref(I) = ReadPreferenceInteger("COLORREF"+Str(I+1), ColorPref(I))
+      Next
+    CompilerEndIf
     ClosePreferences()
   EndIf
 EndProcedure
@@ -347,7 +362,7 @@ Procedure SavePrefs()
 EndProcedure
 
 Procedure ExitPrefs()
-  Protected Designer_Maximize.b
+  Protected Designer_Maximize.b, I.i
   CompilerIf #PB_Compiler_OS <> #PB_OS_Windows   ;To be sure. Required on Linux and MacOS to keep the mouse focus
     DisplayHandleCornerOnMove = #True
   CompilerEndIf
@@ -372,6 +387,13 @@ Procedure ExitPrefs()
       WritePreferenceString("PureBasic_Path", PBIDEpath)
       WritePreferenceLong("Save_Code_Progress", SaveProgress)
       WritePreferenceLong("Save_Code_Progress_Sec", SaveProgressSec)
+      ;FullColorRequester
+      CompilerIf #PB_Compiler_OS = #PB_OS_Windows
+        PreferenceGroup("GetUserColors")
+        For I = 0 To 15
+          WritePreferenceInteger("COLORREF"+Str(I+1), ColorPref(I))
+        Next
+      CompilerEndIf
       ClosePreferences()
     EndIf
   EndIf

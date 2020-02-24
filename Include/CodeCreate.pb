@@ -4,7 +4,7 @@
 ;     dependency: CodeCreate.pb (Sweety Visual Designer Code Form and Code creation)
 ;         Author: ChrisR
 ;           Date: 2017-05-25
-;        Version: 2.1.0.0
+;        Version: 2.1.2.0
 ;     PB-Version: 5.60 (x86/x64)
 ;             OS: Windows, Linux, Mac
 ;         Credit: Stargâte: Transformation of gadgets at runtime
@@ -15,6 +15,32 @@
 ;   French-Forum: http://www.purebasic.fr/french/viewtopic.php?f=3&t=16527
 ;         Github: https://github.com/ChrisRfr/SweetyVD
 ; ---------------------------------------------------------------------------------------
+
+Structure StructureGadget       ;Structure of gadgets. Gadget 0 for OpenWindow
+  Gadget.i                      ;gadget Id
+  Model.s                       ;Gadget Model (ButtonGadget, TextGadget ........)
+  Type.i                        ;Type
+  Name.s                        ;Name
+  Vname.s                       ;Variable Name Prefix and Post Fix
+  X.i                           ;Pos X
+  Y.i                           ;Pos Y
+  Width.i                       ;Dim Width
+  Height.i                      ;Dim Height
+  Caption.s                     ;Caption Or Gadget content
+  ToolTip.s                     ;ToolTip
+  Option1.s                     ;Option1
+  Option2.s                     ;Option2
+  Option3.s                     ;Option2
+  FontID.i                      ;Font ID
+  FrontColor.s                  ;FrontColor
+  BackColor.s                   ;FrontColor
+  Constants.s                   ;Available Constants (Ex: "#PB_Text_Center,#PB_Text_Right,#PB_Text_Border")
+  Hide.b                        ;Hide Gadget
+  Disable.b                     ;Disable Gadget
+  Lock.b                        ;Lock Gadget
+  ModelType.i                   ;0=Window, 2=Gadget, 9=Gadget Deleted
+  Key.s                         ;ModelType + GadgetY(IdGadget) + GadgetX(IdGadget)
+EndStructure
 
 Declare.s sStringToLength(sString.s, iLength.i)
 Declare.s GetTempFilename(BaseName.s, NbRamdomLetter.l, ext.s)
@@ -56,17 +82,17 @@ Procedure CodeCreate(Dest.s = "")
   Protected WinName.s, sPreF.s, sSuFF.s = ".i", iVarNameLength.i
   Protected sFilePath.s, hFile.i, CompilerPath.s, ProgramName.s
   Protected Compiler.i, LastProgramString.s, SavTitle.s
-  
+
   If MapSize(SVDListGadget()) <= 1   ;At least one Gadget
     MessageRequester("SweetyVD Information", "Let me play with at least one Gadget. Please  ;)", #PB_MessageRequester_Warning|#PB_MessageRequester_Ok)
     ProcedureReturn 1
   EndIf
-  
+
   If FileSize(PBIDEpath) < 1
     MessageRequester("SweetyVD Warning", "Define the PureBasic path beforehand", #PB_MessageRequester_Warning|#PB_MessageRequester_Ok)
     ProcedureReturn 1
   EndIf
-  
+
   If OpenPreferences("SweetyVD.ini", #PB_Preference_GroupSeparator)
     PreferenceGroup("Designer")
     DisplayHandleCornerOnMove    = ReadPreferenceLong("Display_Handle_Corner_On_Move", DisplayHandleCornerOnMove)
@@ -89,7 +115,7 @@ Procedure CodeCreate(Dest.s = "")
     EndIf
     ClosePreferences()
   EndIf
-  
+
   I = 0
   ReDim CodeGadgets(MapSize(SVDListGadget())-1)
   ResetMap(SVDListGadget())
@@ -132,7 +158,7 @@ Procedure CodeCreate(Dest.s = "")
       I + 1
     Wend
   EndWith
-  
+
   If AddMenu   ;Status Bar Enumeration length
     If Len(sPreF + "MainMenu") > iVarNameLength
       iVarNameLength = Len(sPreF + "MainMenu")
@@ -153,13 +179,13 @@ Procedure CodeCreate(Dest.s = "")
       iVarNameLength = Len(sPreF + "StatusBar")
     EndIf
   EndIf
-  
+
   For I = 0 To ArraySize(CodeGadgets())
     CodeGadgets(I)\Vname = sStringToLength(CodeGadgets(I)\Vname, iVarNameLength)   ; Expand all gadget names to max name length
   Next
-  
+
   SortStructuredArray(CodeGadgets(), #PB_Sort_Ascending, OffsetOf(StructureGadget\Key), TypeOf(StructureGadget\Key))
-  
+
   If Code_TitleBlock = #True   ;-Include Title block
     If OpenPreferences("SweetyVD.ini", #PB_Preference_GroupSeparator)
       PreferenceGroup("TitleBlock")
@@ -175,16 +201,16 @@ Procedure CodeCreate(Dest.s = "")
     EndIf
   EndIf
   Code + #CRLF$
-  
+
   If CodeEnumeration = #True
     Code + "EnableExplicit" +#CRLF$+#CRLF$
   EndIf
-  
+
   If CodeCustomAddition
     TmpCode = CustomAddition("CustomAddition_Include")
     If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
   EndIf
-  
+
   For I=0 To ArraySize(CodeGadgets())   ;XIncludeFile "TabBarGadget.pbi" if used
     With CodeGadgets(I)
       Select \Type
@@ -217,7 +243,7 @@ Procedure CodeCreate(Dest.s = "")
   If IncludeFileAdded <> ""
     Code +#CRLF$
   EndIf
-  
+
   If CodeCustomAddition
     TmpCode = CustomAddition("CustomAddition_Constante")
     If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
@@ -230,7 +256,7 @@ Procedure CodeCreate(Dest.s = "")
     TmpCode = CustomAddition("CustomAddition_Variable")
     If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
   EndIf
-  
+
   ;window global declaration code
   If CodeEnumeration = #True   ;-Include Enumeration
     With CodeGadgets(0)
@@ -242,7 +268,7 @@ Procedure CodeCreate(Dest.s = "")
         Code + "Global " + Trim(\Vname) + sSuFF +#CRLF$+#CRLF$
       EndIf
     EndWith
-    
+
     If CodeConstants = #True And (AddMenu + AddPopupMenu + AddToolBar + AddStatusBar) > 0
       Code + "Enumeration" +#CRLF$
     EndIf
@@ -264,7 +290,7 @@ Procedure CodeCreate(Dest.s = "")
         Code +#CRLF$
       EndIf
     EndIf
-    
+
     If CodeConstants
       Code + "Enumeration Gadgets" +#CRLF$
     EndIf
@@ -282,7 +308,7 @@ Procedure CodeCreate(Dest.s = "")
     Else
       Code +#CRLF$
     EndIf
-    
+
     If ListSize(ImageBtnPathArray()) > 0   ;Image Enumeration
       If CodeConstants : Code + "Enumeration FormImage"+#CRLF$ :EndIf
       ResetList(ImageBtnPathArray())
@@ -299,7 +325,7 @@ Procedure CodeCreate(Dest.s = "")
         Code +#CRLF$
       EndIf
     EndIf
-    
+
     If ListSize(FontStructArray()) > 0   ;Font Enumeration
       If CodeConstants : Code + "Enumeration FormFont"+#CRLF$ :EndIf
       ResetList(FontStructArray())
@@ -317,12 +343,12 @@ Procedure CodeCreate(Dest.s = "")
       EndIf
     EndIf
   EndIf
-  
+
   If CodeConstants And CodeCustomAddition
     TmpCode = CustomAddition("CustomAddition_Structure")
     If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
   EndIf
-  
+
   If AddToolBar = #True
     Code + "UsePNGImageDecoder()" +#CRLF$
     ImageExtFullPath + "*.png" + ";"
@@ -346,7 +372,7 @@ Procedure CodeCreate(Dest.s = "")
       If ImageExtFullPath <> ""
         Code +#CRLF$
       EndIf
-      
+
       ResetList(ImageBtnPathArray())
       While NextElement(ImageBtnPathArray())
         ;Relative Path. Could be a setting option
@@ -362,7 +388,7 @@ Procedure CodeCreate(Dest.s = "")
       Wend
       Code +#CRLF$
     EndIf
-    
+
     If ListSize(FontStructArray()) > 0   ;LoadFont(#Font_MainWindow_2,"Arial", 8, #PB_Font_Bold)
       ResetList(FontStructArray())
       While NextElement(FontStructArray())
@@ -394,38 +420,38 @@ Procedure CodeCreate(Dest.s = "")
       Wend
       Code +#CRLF$
     EndIf
-    
+
   EndIf
-  
+
   If CodeConstants And CodeCustomAddition
     TmpCode = CustomAddition("CustomAddition_Variable")
     If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
   EndIf
-  
+
   If CodeEnumeration = #True
     Code + "Define iEvent.i" +#CRLF$+#CRLF$
   EndIf
-  
+
   If CodeCustomAddition
     TmpCode = CustomAddition("CustomAddition_Declare")
     If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
   EndIf
-  
+
   ;-Create Window
   With CodeGadgets(0)
     If CodeConstants : Name = \Name : Else : Name = \Vname : EndIf
     Width = Str(SetDrawWidth) : Height = Str(SetDrawHeight)
     Caption = Mid(\Caption, 7)
-    
+
     Code + "Declare Open_"+Mid(\Name,2)+"(X = 0, Y = 0, Width = "+Width+", Height = "+Height+")" +#CRLF$+#CRLF$
-    
+
     If CodeCustomAddition
       TmpCode = CustomAddition("CustomAddition_Procedure")
       If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
     EndIf
-    
+
     Code + "Procedure Open_"+Mid(\Name,2)+"(X = 0, Y = 0, Width = "+Width+", Height = "+Height+")" +#CRLF$
-    
+
     WinName = Trim(Name)
     If CodeConstants
       Code +INDENT$+ "If OpenWindow(" + Name + ", X, Y, Width, Height, "
@@ -433,7 +459,7 @@ Procedure CodeCreate(Dest.s = "")
       Code +INDENT$+ Trim(Name) + " = OpenWindow(#PB_Any, X, Y, Width, Height, "
     EndIf
     Code + #DQUOTE$ + Caption + #DQUOTE$   ;For window model, Caption=#Text:blabla => "blabla", or ""
-    
+
     If \Constants <> ""   ;Are there any Constants for the window
       FirstPass.b = #False
       For I=1 To CountString(\Constants, "|") + 1
@@ -449,10 +475,10 @@ Procedure CodeCreate(Dest.s = "")
         EndIf
       Next
     EndIf
-    
+
     Code + ")" +#CRLF$   ;End of generation of the window code
     If CodeConstants = #False : Code +INDENT$+ "If " + Name +#CRLF$ :EndIf
-    
+
     If Left(\BackColor, 5) <> "#Nooo" And \BackColor <> ""   ;Background window color
       TmpColor = Val(\BackColor)
       If Hexa_Color = 1
@@ -462,7 +488,7 @@ Procedure CodeCreate(Dest.s = "")
       EndIf
     EndIf
   EndWith
-  
+
   If AddMenu   ;-Add Menu
     If CodeConstants = #True
       Code +#CRLF$+INDENT$+INDENT$+ "If CreateMenu(#MainMenu, WindowID(" + WinName + "))" +#CRLF$
@@ -535,7 +561,7 @@ Procedure CodeCreate(Dest.s = "")
   If (AddMenu + AddPopupMenu + AddToolBar + AddStatusBar) > 0
     Code +#CRLF$
   EndIf
-  
+
   ;-Create Gadgets
   For I=1 To ArraySize(CodeGadgets())
     With CodeGadgets(I)
@@ -547,11 +573,11 @@ Procedure CodeCreate(Dest.s = "")
       Width = Str(\Width) : Height = Str(\Height)
       Caption = Mid(\Caption, 7)
       SavCodeImageID = "0"
-      
+
       If Model = "ScintillaGadget"   ;Specific ScintillaGadget: If InitScintilla() : ScintillaGadget(xxx) : EndIf
         Code +#CRLF$+INDENT$+INDENT$+ "If InitScintilla()" +#CRLF$+INDENT$
       EndIf
-      
+
       If CodeConstants
         Code +INDENT$+INDENT$+ Model + "(" + Name + ", " + X + ", " + Y + ", " + Width + ", " + Height   ;Common part
       Else
@@ -561,7 +587,7 @@ Procedure CodeCreate(Dest.s = "")
           Code +INDENT$+INDENT$+ Name +INDENT$+ " = " + Model + "(#PB_Any, " + X + ", " + Y + ", " + Width + ", " + Height   ;Common part
         EndIf
       EndIf
-      
+
       Select Left(\Caption, 5)   ;- > Properties Text, Date, Image...
         Case "#Text"
           If Model <> "CanvasGadget"   ;Draw the Text Later for Canvas Gadget
@@ -576,7 +602,7 @@ Procedure CodeCreate(Dest.s = "")
           Code + ", " + #DQUOTE$ + Caption + #DQUOTE$
         Case "#Url$" : Code + ", " + #DQUOTE$ + Caption + #DQUOTE$   ;It should be a valid Url
       EndSelect
-      
+
       Select Left(\Option1, 5)
         Case "#Mini" : Code + ", " + Mid(\Option1, 7)
         Case "#InrW" : Code + ", " + Mid(\Option1, 7)
@@ -603,20 +629,20 @@ Procedure CodeCreate(Dest.s = "")
             Code + ", " +SavCodeImageID
           EndIf
       EndSelect
-      
+
       Select Left(\Option2, 5)
         Case "#Maxi" : Code + ", " + Mid(\Option2, 7)
         Case "#InrH" : Code + ", " + Mid(\Option2, 7)
         Case "#Widh" : Code + ", " + Mid(\Option2, 7)
       EndSelect
-      
+
       ;Specific addition
       Select Model
         Case "ScrollBarGadget" : Code + ", 0"                      ;Specific ScrollBarGadget: Page length
         Case "ScrollAreaGadget" : Code + ", " + Mid(\Option3, 7)   ;Specific ScrollAreaGadget: Displacement Value
-          
+
       EndSelect
-      
+
       If \Constants <> ""   ;- > Constants
         FirstPass.b = #False
         For J=1 To CountString(\Constants, "|") + 1
@@ -639,14 +665,14 @@ Procedure CodeCreate(Dest.s = "")
           EndIf
         Next
       EndIf
-      
+
       If Model = "TabBarGadget"   ;Specific TabBar Gadget
         If FirstPass = #False : Code + ", 0" :EndIf
         If CodeConstants : Code + ", " + CodeGadgets(0)\Name : Else : Code + ", " + sPreF + Mid(CodeGadgets(0)\Name,2) : EndIf
       EndIf
-      
+
       Code + ")" +#CRLF$   ;End of generation of the gadget code
-      
+
       ;- > Specific addition AddGadgetItem...
       Select Model
         Case "CanvasGadget"
@@ -673,7 +699,7 @@ Procedure CodeCreate(Dest.s = "")
             Code +INDENT$+INDENT$+INDENT$+INDENT$+ "StopDrawing()" +#CRLF$
             Code +INDENT$+INDENT$+INDENT$+ "EndIf" +#CRLF$
           EndIf
-          
+
         Case "ComboBoxGadget"
           Code +INDENT$+INDENT$+INDENT$+ "AddGadgetItem("+ Trim(Name) + ", -1, " + #DQUOTE$ + Mid(\Name,2) + #DQUOTE$ + ")" +#CRLF$
           Code +INDENT$+INDENT$+INDENT$+ "SetGadgetState("+ Trim(Name) + ", 0)" +#CRLF$
@@ -713,7 +739,7 @@ Procedure CodeCreate(Dest.s = "")
         Case "TabBarGadget"
           Code +INDENT$+INDENT$+INDENT$+ "AddTabBarGadgetItem("+ Trim(Name) + ", #PB_Default, " + #DQUOTE$ + Caption + #DQUOTE$ + ")" +#CRLF$
       EndSelect
-      
+
       If Left(\FrontColor, 5) <> "#Nooo" And \FrontColor <> ""
         TmpColor = Val(\FrontColor)
         If Hexa_Color = 1
@@ -732,11 +758,11 @@ Procedure CodeCreate(Dest.s = "")
         EndIf
         ;Code +INDENT$+INDENT$+INDENT$+ "SetGadgetColor(" + Trim(Name) + ", #PB_Gadget_BackColor, " + \BackColor + ")" +#CRLF$
       EndIf
-      
+
       If \ToolTip <> "#Nooo" And \ToolTip <> ""
         Code +INDENT$+INDENT$+INDENT$+ "GadgetToolTip(" + Trim(Name) + ", " + #DQUOTE$ + \ToolTip + #DQUOTE$ + ")" +#CRLF$
       EndIf
-      
+
       If \FontID <> 0 And \Model <> "CanvasGadget"
         ResetList(FontStructArray())
         While NextElement(FontStructArray())
@@ -750,42 +776,42 @@ Procedure CodeCreate(Dest.s = "")
           EndIf
         Wend
       EndIf
-      
+
       If \Hide = #PB_Checkbox_Checked
         Code +INDENT$+INDENT$+INDENT$+ "HideGadget(" + Trim(Name) + ", #True)" +#CRLF$
       EndIf
       If \Disable = #PB_Checkbox_Checked
         Code +INDENT$+INDENT$+INDENT$+ "DisableGadget(" + Trim(Name) + ", #True)" +#CRLF$
       EndIf
-      
+
       Select Model
         Case "ContainerGadget", "PanelGadget", "ScrollAreaGadget"
           Code +INDENT$+INDENT$+INDENT$+ "CloseGadgetList()" +#CRLF$
       EndSelect
-      
+
     EndWith
   Next
-  
+
   Code +INDENT$+ "EndIf" +#CRLF$
   Code + "EndProcedure" +#CRLF$+#CRLF$
-  
+
   If CodeCustomAddition
     TmpCode = CustomAddition("CustomAddition_Init")
     If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
   EndIf
-  
+
   Code + "Open_" + Mid(CodeGadgets(0)\Name,2) + "()" +#CRLF$+#CRLF$
-  
+
   If CodeCustomAddition
     TmpCode = CustomAddition("CustomAddition_Main")
     If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
   EndIf
-  
+
   If CodeEventLoop = #True   ;-Include Event Loop
     Code + "Repeat" +#CRLF$
     Code +INDENT$+ "iEvent = WaitWindowEvent()" +#CRLF$
     Code +INDENT$+ "Select iEvent" +#CRLF$
-    
+
     CompilerIf #PB_Compiler_OS = #PB_OS_Windows
       If AddPopupMenu
         Code +INDENT$+INDENT$+ "Case #WM_RBUTTONDOWN   ;Windows right click" +#CRLF$
@@ -796,7 +822,7 @@ Procedure CodeCreate(Dest.s = "")
         EndIf
       EndIf
     CompilerEndIf
-    
+
     ;- > #PB_Event_Menu
     Code +INDENT$+INDENT$+ "Case #PB_Event_Menu" +#CRLF$
     Code +INDENT$+INDENT$+INDENT$+ "Select EventMenu()" +#CRLF$
@@ -822,7 +848,7 @@ Procedure CodeCreate(Dest.s = "")
       Code +INDENT$+INDENT$+INDENT$+INDENT$+INDENT$+ "MessageRequester(" + #DQUOTE$ + "Information" + #DQUOTE$ + ", " + #DQUOTE$ + "ToolBar Or Menu ID: " + #DQUOTE$ + " + Str(EventMenu()), 0)" +#CRLF$
     EndIf
     Code +INDENT$+INDENT$+INDENT$+ "EndSelect" +#CRLF$+#CRLF$
-    
+
     ;- > #PB_Event_Gadget
     Code +INDENT$+INDENT$+ "Case #PB_Event_Gadget" +#CRLF$
     Code +INDENT$+INDENT$+INDENT$+ "Select EventGadget()" +#CRLF$
@@ -849,20 +875,20 @@ Procedure CodeCreate(Dest.s = "")
       EndWith
     Next
     Code +INDENT$+INDENT$+INDENT$+ "EndSelect" +#CRLF$+#CRLF$
-    
+
     Code +INDENT$+INDENT$+ "Case #PB_Event_CloseWindow" +#CRLF$
     Code +INDENT$+INDENT$+INDENT$+ "End" +#CRLF$
     Code +INDENT$+ "EndSelect" +#CRLF$
     Code + "ForEver" +#CRLF$
   EndIf
-  
+
   If CodeCustomAddition
     TmpCode = CustomAddition("CustomAddition_Exit")
     If TmpCode <> "" : Code +#CRLF$ + TmpCode : EndIf
   EndIf
-  
+
   FreeArray(CodeGadgets())
-  
+
   If SaveProgress = #True   ;Save In Progress, On Timer or at the same time as another request
     sFilePath = GetCurrentDirectory() + "SweetyVD_InProgress.pb"
     hFile = CreateFile(#PB_Any, sFilePath)
@@ -876,18 +902,18 @@ Procedure CodeCreate(Dest.s = "")
       ProcedureReturn 1
     EndIf
   EndIf
-  
+
   ;- Save to Destination
   Select Dest
     Case "Play"
       CompilerIf #PB_Compiler_OS = #PB_OS_Linux
         CompilerPath = GetPathPart(PBIDEpath) + "pbcompiler"
       CompilerElseIf #PB_Compiler_OS = #PB_OS_MacOS   ;Not tested
-        CompilerPath = GetPathPart(PBIDEpath) + "pbcompiler.exe"   ;Not tested  
+        CompilerPath = GetPathPart(PBIDEpath) + "pbcompiler.exe"   ;Not tested
       CompilerElse
         CompilerPath = GetPathPart(PBIDEpath) + "Compilers\pbcompiler.exe"
       CompilerEndIf
-      
+
       If FileSize(CompilerPath)
         sFilePath  = GetTempFilename("~SweetyVD_", 6, ".pb")
         hFile = CreateFile(#PB_Any, sFilePath)
@@ -895,7 +921,7 @@ Procedure CodeCreate(Dest.s = "")
           WriteStringFormat(hFile, #PB_UTF8)
           WriteStringN(hFile, Code)
           CloseFile(hFile)
-          
+
           SavTitle = GetWindowTitle(#MainWindow)
           SetWindowTitle(#MainWindow, SavTitle + "     *****  Compiling in progress  *****")
           CompilerIf #PB_Compiler_OS = #PB_OS_Linux
@@ -938,7 +964,7 @@ Procedure CodeCreate(Dest.s = "")
       Else
         MessageRequester("SweetyVD Warning", "pbcompiler.exe was Not Found in Compilers Folder", #PB_MessageRequester_Warning|#PB_MessageRequester_Ok)
       EndIf
-      
+
     Case "NewTab"
       sFilePath  = GetTempFilename("~SweetyVD_", 6, ".pb")
       hFile = CreateFile(#PB_Any, sFilePath)
@@ -956,7 +982,7 @@ Procedure CodeCreate(Dest.s = "")
         SetClipboardText(Code)
         MessageRequester("SweetyVD Information", "The Created Code is copied to the Clipboard  :)", #PB_MessageRequester_Info|#PB_MessageRequester_Ok)
       EndIf
-      
+
     Case "Save"
       sFilePath = SaveFileRequester("Save As", "", "PureBasic (*.pb) (*.pbf)|*.pb;*.pbf", 0)
       If sFilePath
@@ -968,7 +994,7 @@ Procedure CodeCreate(Dest.s = "")
           CloseFile(hFile)
         EndIf
       EndIf
-      
+
     Case "Clipboard"
       SetClipboardText(Code)   ;Copy the code to the clipboard
       MessageRequester("SweetyVD Information", "The Created Code is copied to the Clipboard  :)", #PB_MessageRequester_Info|#PB_MessageRequester_Ok)
