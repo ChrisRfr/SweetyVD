@@ -4,9 +4,9 @@
 ;     dependency: SweetyVDmodule.pbi (Sweety Visual Designer Module)
 ;         Author: ChrisR
 ;           Date: 2017-05-25
-;        Version: 2.1.0.0
-;     PB-Version: 5.60, 5.61,.., 5.71 (x86/x64) 
-;                 On Linux Use PB 5.60 or 5.61, The gadgets are not Drawn over the Canvas with the following versions 5.62, 5.70, 5.71, otherwise it works   
+;        Version: 2.1.2.0
+;     PB-Version: 5.60, 5.61,.., 5.71 (x86/x64)
+;                 On Linux Use PB 5.60 or 5.61, The gadgets are not Drawn over the Canvas with the following versions 5.62, 5.70, 5.71, otherwise it works
 ;             OS: Windows, Linux, Mac
 ;         Credit: Stargâte: Transformation of gadgets at runtime
 ;                 Falsam: Tiny Visual Designer (TVD)
@@ -23,9 +23,9 @@
 
 CompilerIf #PB_Compiler_IsMainFile
   EnableExplicit
-  
-  #BuildVersion = "2.1.0.0"
-  
+
+  #BuildVersion = "2.1.2.0"
+
   ;Import internal function
   CompilerSelect #PB_Compiler_OS
     CompilerCase #PB_OS_Windows
@@ -52,7 +52,7 @@ CompilerIf #PB_Compiler_IsMainFile
   PB_Window_Objects.i
   PB_Gadget_Objects.i
   EndImport
-  
+
   Enumeration
     #MainWindow
     #TimerId
@@ -156,10 +156,10 @@ CompilerIf #PB_Compiler_IsMainFile
     ;JSON Gadget templates file
     #JSONFile
   EndEnumeration
-  
+
   ;Enumeration FormAbout
   ;EndEnumeration
-  
+
   Enumeration 300 ;Rename Gadget Form
     #RenameForm
     #RenameGadgetFrom
@@ -172,7 +172,7 @@ CompilerIf #PB_Compiler_IsMainFile
     ;Others, Not Gadget
     #RenameGadgetSharp
   EndEnumeration
-  
+
   Enumeration 400 ;Preference Form
     #PrefsForm
     #CodeGeneralText
@@ -220,7 +220,7 @@ CompilerIf #PB_Compiler_IsMainFile
     #AboutClose
     #Licence
   EndEnumeration
-  
+
   Enumeration FormImage
     #Img_Designer
     #Img_CreateCode
@@ -243,19 +243,19 @@ CompilerIf #PB_Compiler_IsMainFile
     #Make_Same_Height
     #Vd_Unknow
   EndEnumeration
-  
+
   Structure GadgetCtrl
     GadgetCtrlImage.i
     GadgetCtrlName.s
   EndStructure
   Global Dim GadgetCtrlArray.GadgetCtrl(0)
-  
+
   Structure ImageBtnPath
     ImageBtn.i
     ImagePath.s
   EndStructure
   Global NewList ImageBtnPathArray.ImageBtnPath()
-  
+
   Structure FontStruct
     FontID.i
     FontName.s
@@ -263,40 +263,14 @@ CompilerIf #PB_Compiler_IsMainFile
     FontStyle.i
   EndStructure
   Global NewList FontStructArray.FontStruct()
-  
-  Structure StructureGadget       ;Structure of gadgets. Gadget 0 for OpenWindow
-    Gadget.i                      ;gadget Id
-    Model.s                       ;Gadget Model (ButtonGadget, TextGadget ........)
-    Type.i                        ;Type
-    Name.s                        ;Name
-    Vname.s                       ;Variable Name Prefix and Post Fix
-    X.i                           ;Pos X
-    Y.i                           ;Pos Y
-    Width.i                       ;Dim Width
-    Height.i                      ;Dim Height
-    Caption.s                     ;Caption Or Gadget content
-    ToolTip.s                     ;ToolTip
-    Option1.s                     ;Option1
-    Option2.s                     ;Option2
-    Option3.s                     ;Option2
-    FontID.i                      ;Font ID
-    FrontColor.s                  ;FrontColor
-    BackColor.s                   ;FrontColor
-    Constants.s                   ;Available Constants (Ex: "#PB_Text_Center,#PB_Text_Right,#PB_Text_Border")
-    Hide.b                        ;Hide Gadget
-    Disable.b                     ;Disable Gadget
-    Lock.b                        ;Lock Gadget
-    ModelType.i                   ;0=Window, 2=Gadget, 9=Gadget Deleted
-    Key.s                         ;ModelType + GadgetY(IdGadget) + GadgetX(IdGadget)
-  EndStructure
-  
+
   Global bDrawContainerGadget.b = #True
   Global DesignerON.b = #True, CountImageBtn.i, CountFontID.i, IdDrawGadgets.i = 1000000000
   Global SaveProgress.b, SaveProgressSec.i
   Global MonitorRenameFormFocus.b, MonitorPrefsFormFocus.b
   Global SetDrawWidth.i, SetDrawHeight.i
   Global PosX.i, PosY.i
-  
+
   Declare LoadControls()
   Declare CreateGadgets(Model.s)
   Declare InitWindowSelected()
@@ -314,13 +288,13 @@ CompilerIf #PB_Compiler_IsMainFile
   Declare OpenMainWindow(Designer_Width, Designer_Height, X = 0, Y = 0)
   Declare Init()
   Declare Exit()
-  
+
   UsePNGImageDecoder()
   UseJPEGImageDecoder()
-  
+
   ;-Dependency: SweetyVD Module
   XIncludeFile "SweetyVDmodule.pbi" : UseModule SVDesigner
-  
+
   IncludePath "Include"
   XIncludeFile "GetPBIDE.pb"
   XIncludeFile "LoadFontWML.pb"
@@ -334,7 +308,7 @@ CompilerIf #PB_Compiler_IsMainFile
   XIncludeFile "TabBarGadget.pbi"
   ;Code Create Form and Code creation
   XIncludeFile "CodeCreate.pb"
-  
+
   Procedure LoadControls()
     Protected ZipFile.i, GadgetName.s, GadgetImageSize.i, *GadgetImage, GadgetImage, GadgetCtrlCount.l
     Define ZipFileTheme.s = GetCurrentDirectory() + "SilkTheme.zip"
@@ -358,16 +332,16 @@ CompilerIf #PB_Compiler_IsMainFile
     CompilerIf #PB_Compiler_Version > 522
       UseZipPacker()
     CompilerEndIf
-    
+
     GadgetImage = CatchImage(#PB_Any,?Vd_Unknow)
     GadgetCtrlArray(GadgetCtrlCount)\GadgetCtrlImage=GadgetImage
     GadgetCtrlArray(GadgetCtrlCount)\GadgetCtrlName="Unknow"
-    
+
     ZipFile = OpenPack(#PB_Any, ZipFileTheme, #PB_PackerPlugin_Zip)
     If ZipFile
       If ExaminePack(ZipFile)
         While NextPackEntry(ZipFile)
-          
+
           GadgetName = PackEntryName(ZipFile)
           GadgetName = ReplaceString(GadgetName,"chart_bar","vd_tabbargadget")   ;use chart_bar png for TabBarGadget
           GadgetName = ReplaceString(GadgetName,"page_white_edit","vd_scintillagadget")   ;vd_scintillagadget.png not found. Use page_white_edit.png instead
@@ -380,7 +354,7 @@ CompilerIf #PB_Compiler_IsMainFile
             GadgetName = LCase(GadgetName)
             GadgetName = ReplaceString(GadgetName,".png","")
             GadgetName = ReplaceString(GadgetName,"vd_","")
-            
+
             Select PackEntryType(ZipFile)
               Case #PB_Packer_File
                 If GadgetImage
@@ -390,7 +364,7 @@ CompilerIf #PB_Compiler_IsMainFile
                   GadgetCtrlArray(GadgetCtrlCount)\GadgetCtrlName=GadgetName
                 EndIf
             EndSelect
-            
+
             FreeMemory(*GadgetImage)
           EndIf
         Wend
@@ -398,18 +372,18 @@ CompilerIf #PB_Compiler_IsMainFile
       ClosePack(ZipFile)
     EndIf
   EndProcedure
-  
+
   Procedure CreateGadgets(Model.s)
     Protected IdGadget.i, ModelType.i, DrawGadget.b, TmpCaption.s, Mini.i, Maxi.i, StepValue.i, I.i
     Protected iDftWidth.i, iDftHeight.i
     InitProperties()
-    OpenGadgetList(#ScrollDrawArea)   ;Required when changing apps(ex: test generated code) to reopen the GadgetList
+    OpenGadgetList(#DrawArea)   ;Required when changing apps(ex: test generated code) to reopen the GadgetList
     For I=0 To ArraySize(ModelGadget())
       If ModelGadget(I)\Model = Model
         With ModelGadget(I)
-          
+
           \CountGadget=\CountGadget+1   ;Updating the gadget counter by model
-          
+
           ParentPosDim()   ;#ScrollDrawArea
           PosX = GridMatch(PosX, DragSpace, MinX, MaxX-\DftWidth)   ;Align on Grid and remains inside the grid
           PosY = GridMatch(PosY, DragSpace, MinY, MaxY-\DftHeight)
@@ -433,7 +407,7 @@ CompilerIf #PB_Compiler_IsMainFile
           EndSelect
           ModelType=2
           DrawGadget=#False
-          
+
           Select Model   ;Create Gadget depending on model
             Case "ButtonGadget"
               IdGadget=ButtonGadget(#PB_Any, PosX, PosY, iDftWidth, iDftHeight, TmpCaption)
@@ -554,7 +528,7 @@ CompilerIf #PB_Compiler_IsMainFile
                 EndIf
               EndIf
           EndSelect
-          
+
           CompilerIf #PB_Compiler_OS = #PB_OS_MacOS
             If DrawGadget = #False : DisableGadget(IdGadget, #True) : EndIf
           CompilerEndIf
@@ -581,7 +555,7 @@ CompilerIf #PB_Compiler_IsMainFile
             Case "#TabN" : SVDListGadget()\Caption = "#TabN:" + TmpCaption
             Default : SVDListGadget()\Caption=\Caption
           EndSelect
-          
+
           SVDListGadget()\Option1=\Option1
           SVDListGadget()\Option2=\Option2
           SVDListGadget()\Option3=\Option3
@@ -589,15 +563,15 @@ CompilerIf #PB_Compiler_IsMainFile
           SVDListGadget()\BackColor=\BackColor
           SVDListGadget()\ToolTip=\ToolTip
           SVDListGadget()\Constants=\Constants
-          
+
           SVDListGadget()\ModelType=ModelType
           SVDListGadget()\DrawGadget=DrawGadget
-          
+
           ;Add Gadget to List Gadgets ComboBox with IdGadget as Data. Element 0 is reserved for Window Draw Area
           AddGadgetItem(#ListGadgets, -1, Mid(SVDListGadget()\Name, 2))
           SetGadgetState(#ListGadgets, CountGadgetItems(#ListGadgets)-1)
           SetGadgetItemData(#ListGadgets, CountGadgetItems(#ListGadgets)-1, IdGadget)
-          
+
           AddGadgetItem(#ListControls, -1, Mid(SVDListGadget()\Name, 2), ImageID(\Image), 1)
           SetGadgetState(#ListControls, CountGadgetItems(#ListControls)-1)
           SetGadgetItemData(#ListControls, CountGadgetItems(#ListControls)-1, IdGadget)
@@ -612,7 +586,7 @@ CompilerIf #PB_Compiler_IsMainFile
       EndIf
     Next
   EndProcedure
-  
+
   Procedure InitWindowSelected()
     SetGadgetState(#ListGadgets, #MainWindow)
     SetGadgetState(#ListControls, #MainWindow)
@@ -626,7 +600,7 @@ CompilerIf #PB_Compiler_IsMainFile
     HideGadget(#FontText, #True) : HideGadget(#FontString, #True) : HideGadget(#FontPick, #True)
     ;HideGadget(#AddMenu, #False) : HideGadget(#AddPopupMenu, #False) : HideGadget(#AddToolBar, #False) : HideGadget(#AddStatusBar, #False)
   EndProcedure
-  
+
   Procedure InitProperties()
     ;HideGadget(#AddMenu, #True) : HideGadget(#AddPopupMenu, #True) : HideGadget(#AddToolBar, #True) : HideGadget(#AddStatusBar, #True)
     DisableGadget(#CaptionString,#True)
@@ -635,15 +609,15 @@ CompilerIf #PB_Compiler_IsMainFile
     HideGadget(#HideGadget, #False) : HideGadget(#DisableGadget, #False) : HideGadget(#LockGadget, #False)
     ;HideGadget(#ParentText, #False) : HideGadget(#ParentString, #False) : HideGadget(#ParentPick, #False)
     HideGadget(#ParentText, #True) : HideGadget(#ParentString, #True) : HideGadget(#ParentPick, #True)
-    
+
     HideGadget(#MiniText, #True) : HideGadget(#MiniString, #True)
     HideGadget(#MaxiText, #True) : HideGadget(#MaxiString, #True)
     HideGadget(#ImageText, #True) : HideGadget(#ImageString, #True) : HideGadget(#ImagePick, #True)
     HideGadget(#FontText, #False) : HideGadget(#FontString, #False) : HideGadget(#FontPick, #False)
-    
+
     HideGadget(#FrontColorText, #True) : HideGadget(#FrontColorPick, #True)
     HideGadget(#BackColorText, #True) : HideGadget(#BackColorPick, #True)
-    
+
     SetGadgetText(#CaptionText, "") : SetGadgetText(#CaptionString, "")
     SetGadgetText(#ToolTipText, "ToolTip") : SetGadgetText(#ToolTipString, "")
     SetGadgetText(#MiniText, "Mini") : SetGadgetText(#MaxiText, "Maxi")
@@ -651,7 +625,7 @@ CompilerIf #PB_Compiler_IsMainFile
     SetGadgetText(#ImageString, "")
     ClearGadgetItems(#Constants)
   EndProcedure
-  
+
   Procedure LoadGadgetProperties(IdGadget.i)
     Protected TmpConstants.s, TmpImagePath.s, sFontString.s, I.i
     InitProperties()
@@ -661,7 +635,7 @@ CompilerIf #PB_Compiler_IsMainFile
         SetGadgetState(#DisableGadget, \Disable)
         SetGadgetState(#LockGadget, \Lock)
         DisableGadget(#PosGadgetX, \Lock) : DisableGadget(#PosGadgetY, \Lock) : DisableGadget(#PosGadgetWidth, \Lock) : DisableGadget(#PosGadgetHeight, \Lock)
-        
+
         Select Left(\Caption, 5)
           Case "#Text"
             SetGadgetText(#CaptionText, "Text")
@@ -679,7 +653,7 @@ CompilerIf #PB_Compiler_IsMainFile
             SetGadgetText(#CaptionText, "Tab name")
             SetGadgetText(#CaptionString, Mid(\Caption, 7)) : DisableGadget(#CaptionString,#False)
         EndSelect
-        
+
         If \Model = "ScrollAreaGadget" : SetGadgetText(#MiniText, "InnerW") : SetGadgetText(#MaxiText, "InnerH") : EndIf
         If Left(\ToolTip, 5) = "#Nooo"
           SetGadgetText(#ToolTipText, "")
@@ -709,7 +683,7 @@ CompilerIf #PB_Compiler_IsMainFile
             HideGadget(#MaxiText, #False)
             HideGadget(#MaxiString, #False)
         EndSelect
-        
+
         If \FontID = 0
           SetGadgetText(#FontString, "")
         Else
@@ -740,7 +714,7 @@ CompilerIf #PB_Compiler_IsMainFile
             EndIf
           Wend
         EndIf
-        
+
         If Left(\FrontColor, 5) <> "#Nooo"
           If \FrontColor = ""
             SetGadgetAttribute(#FrontColorPick, #PB_Button_Image, 0)
@@ -782,7 +756,7 @@ CompilerIf #PB_Compiler_IsMainFile
       EndIf
     EndWith
   EndProcedure
-  
+
   Procedure RemoveFont(FontID.i)
     ;Called after the update of SVDListGadget()\FontID. If there is a font left, we keep it, otherwise we delete it
     Protected TmpFontID.i
@@ -809,7 +783,7 @@ CompilerIf #PB_Compiler_IsMainFile
       EndWith
     EndIf
   EndProcedure
-  
+
   Procedure SelectFont(IdGadget.i)
     Protected SelectedFont.i, iFontID.i, OldFontID.i, sFontName.s, iFontSize.i, iFontStyle.i, sFontString.s, I.i
     If FindMapElement(SVDListGadget(), Str(IdGadget))
@@ -827,7 +801,7 @@ CompilerIf #PB_Compiler_IsMainFile
         EndWith
       EndIf
       SelectedFont = FontRequester(sFontName, iFontSize, 0, 0, iFontStyle)
-      
+
       If SelectedFont = 0
         If FindMapElement(SVDListGadget(), Str(IdGadget))
           iFontID = SVDListGadget()\FontID
@@ -877,7 +851,7 @@ CompilerIf #PB_Compiler_IsMainFile
               \FontStyle = iFontStyle
             EndWith
           EndIf
-          
+
           If FindMapElement(SVDListGadget(), Str(IdGadget))
             OldFontID = SVDListGadget()\FontID
             SVDListGadget()\FontID = iFontID
@@ -918,7 +892,7 @@ CompilerIf #PB_Compiler_IsMainFile
   EndProcedure
 
   Procedure RemoveImage(sImagePath.s)
-    ;Called after the update of SVDListGadget()\Option1="#Imag:". If there is an image left, we keep it, otherwise we delete the image  
+    ;Called after the update of SVDListGadget()\Option1="#Imag:". If there is an image left, we keep it, otherwise we delete the image
     Protected TmpImagePath.s
     With SVDListGadget()
       PushMapPosition(SVDListGadget())
@@ -936,7 +910,7 @@ CompilerIf #PB_Compiler_IsMainFile
       Wend
       PopMapPosition(SVDListGadget())
     EndWith
-    If TmpImagePath = ""  
+    If TmpImagePath = ""
       With ImageBtnPathArray()
         ResetList(ImageBtnPathArray())
         While NextElement(ImageBtnPathArray())
@@ -951,7 +925,7 @@ CompilerIf #PB_Compiler_IsMainFile
       EndWith
     EndIf
   EndProcedure
-  
+
   Procedure DrawSelectedImage(IdGadget.i)
     Protected ImagePath.s, OldImagePath.s, TmpImagePath.s, TmpImage.i, ImageBtn.i, Rtn.i, I.i
     ImagePath = OpenFileRequester("Select image",GetCurrentDirectory(),"Picture (*.bmp; *.jpg; *.png)|*.bmp;*.jpg;*.png", 1)
@@ -986,7 +960,7 @@ CompilerIf #PB_Compiler_IsMainFile
           ImageBtnPathArray()\ImagePath=ImagePath
         EndIf
         FreeImage(TmpImage)
-        
+
         If FindMapElement(SVDListGadget(), Str(IdGadget))
           If Left(SVDListGadget()\Option1, 5) = "#Imag"
             OldImagePath = Mid(SVDListGadget()\Option1, 7)
@@ -1010,7 +984,7 @@ CompilerIf #PB_Compiler_IsMainFile
             Case #PB_GadgetType_Image
               SetGadgetState(IdGadget, ImageID(ImageBtn))
           EndSelect
-          
+
         EndIf
       Else
         If FindMapElement(SVDListGadget(), Str(IdGadget))
@@ -1035,7 +1009,7 @@ CompilerIf #PB_Compiler_IsMainFile
       EndIf
     Else
       If FindMapElement(SVDListGadget(), Str(IdGadget))
-        
+
         If Left(SVDListGadget()\Option1, 5) = "#Imag"
           OldImagePath = Mid(SVDListGadget()\Option1, 7)
         EndIf
@@ -1056,12 +1030,12 @@ CompilerIf #PB_Compiler_IsMainFile
       EndIf
     EndIf
   EndProcedure
-  
+
   Procedure ResizeDrawArea(Width.i, Height.i)
     DrawAreaSize(Width, Height)   ;For UserScreen_Width(Height) and UserScreen handle for resizing
     DrawFullDrawingArea()
   EndProcedure
-  
+
   Procedure PreviewDesigner()
     RemoveWindowTimer(#MainWindow, #TimerId)
     UnbindEvent(#PB_Event_Timer, @CodeCreateOnTimer())
@@ -1080,7 +1054,7 @@ CompilerIf #PB_Compiler_IsMainFile
     DesignerON = #False
     DisableSVD()
   EndProcedure
-  
+
   Procedure BackDesigner()
     If SaveProgress = #True
       AddWindowTimer(#MainWindow, #TimerId, SaveProgressSec*1000)   ;Timer 60 s
@@ -1099,10 +1073,10 @@ CompilerIf #PB_Compiler_IsMainFile
     DesignerON = #True
     EnableSVD()
   EndProcedure
-  
+
   Procedure HideGroupButton()
     Protected HideButton.i = #False
-    If GroupGadget = #False
+    If GroupSelectedGadget = #False
       HideButton.i = #True
       RemoveKeyboardShortcut(#MainWindow, #PB_Shortcut_Control|#PB_Shortcut_G)
       RemoveKeyboardShortcut(#MainWindow, #PB_Shortcut_Control|#PB_Shortcut_Shift|#PB_Shortcut_G)
@@ -1139,7 +1113,7 @@ CompilerIf #PB_Compiler_IsMainFile
     HideGadget(#Make_Same_Height_Text, HideButton)
     HideGadget(#Separator6, HideButton)
   EndProcedure
-  
+
   Procedure WindowSize()
     Protected DrawMaxWidth.i, DrawMaxHeight.i, ScrollMargin.i = 20, HeightControlsFlags.i, PosY.i
     ;Adjust width and height of the scroll drawing area according to window size
@@ -1163,14 +1137,14 @@ CompilerIf #PB_Compiler_IsMainFile
       EndIf
       ResizeGadget(#ScrollDrawArea, #PB_Ignore, #PB_Ignore, DrawMaxWidth, DrawMaxHeight)
       ResizeGadget(#PrefsForm, WindowWidth(#MainWindow)-GadgetWidth(#PrefsForm)-5, #PB_Ignore, #PB_Ignore, WindowHeight(#MainWindow)-GadgetHeight(#ContainerSetting)-10)
-      
+
       ResizeGadget(#ContainerSetting, #PB_Ignore, #PB_Ignore, WindowWidth(#MainWindow) - GadgetX(#ContainerSetting), #PB_Ignore)
       ResizeGadget(#SVDSetting, WindowWidth(#MainWindow) - GadgetX(#ContainerSetting) - GadgetWidth(#SVDSetting), #PB_Ignore, #PB_Ignore, #PB_Ignore)
-      
+
       ; Size: position of Controls, Size, Properties and Flags
       ;  5       Controls       30      Size    5   Properties    5      Flags     10
       ; |-|-------------------|---|------------|-|---------------|-|--------------|--|
-      
+
       HeightControlsFlags = WindowHeight(#MainWindow) - GadgetY(#PanelControls) - 30 - GadgetHeight(#ContainerSize) - 5 - GadgetHeight(#ContainerProperties) - 5 - 10
       ; --- Tree Create and List Controls ---
       CompilerIf #PB_Compiler_OS = #PB_OS_MacOS
@@ -1192,12 +1166,12 @@ CompilerIf #PB_Compiler_IsMainFile
       ResizeGadget(#ContainerProperties, #PB_Ignore, PosY, #PB_Ignore, #PB_Ignore)
       PosY = PosY + GadgetHeight(#ContainerProperties) + 5
       ResizeGadget(#Constants, #PB_Ignore, PosY, #PB_Ignore, WindowHeight(#MainWindow) - PosY - 10)
-      
+
       ResizePaintAllGadgetAndDragHandle()
       ResizePaintHandleCorner()
     EndIf
   EndProcedure
-  
+
   Procedure OpenMainWindow(Designer_Width, Designer_Height, X = 0, Y = 0)
     Protected GadgetObj.i, PropertiesPanelWidth.i = 210, SettingPanelHeight.i = 48, Designer_Maximize.b = 0, ScrollArea_MaxWidth.l = 1920, ScrollArea_MaxHeight.l = 1020
     Protected Flags.i = #PB_Window_SizeGadget | #PB_Window_MinimizeGadget | #PB_Window_MaximizeGadget | #PB_Window_ScreenCentered | #PB_Window_SystemMenu
@@ -1209,129 +1183,129 @@ CompilerIf #PB_Compiler_IsMainFile
       ClosePreferences()
     EndIf
     If Designer_Maximize = 1 : Flags = Flags | #PB_Window_Maximize : EndIf
-    
+
     OpenWindow(#MainWindow, x, y, Designer_Width, Designer_Height, "SweetyVD (Visual Designer) " + #BuildVersion, Flags)
     WindowBounds(#MainWindow, 960, 620, #PB_Ignore, #PB_Ignore)
     CreatePopupImageMenu(#PopUpMenu)
-    
+
     ;    CatchImage(#Img_Designer,?Img_Designer)
     ButtonGadget(#BackDesigner, 30, 12, 140, 20, "Back to Designer")
     HideGadget(#BackDesigner, #True)
-    
+
     ; --- Setting ---
     ContainerGadget(#ContainerSetting, PropertiesPanelWidth+10, 0, 780, SettingPanelHeight, #PB_Container_BorderLess)
     CanvasGadget(#Separator0, 0, 3, 1, 42, #PB_Canvas_Border) : DisableGadget(#Separator0, #True)
     If StartDrawing(CanvasOutput(#Separator0)) : Box(0, 0, OutputWidth(), OutputHeight(), $B0B0B0) : StopDrawing() : EndIf
-    
+
     AddKeyboardShortcut(#MainWindow, #PB_Shortcut_F5, #Shortcut_F5_Play)
     AddKeyboardShortcut(#MainWindow, #PB_Shortcut_F6, #Shortcut_F6_Preview)
     AddKeyboardShortcut(#MainWindow, #PB_Shortcut_F7, #Shortcut_F7_NewTab)
     AddKeyboardShortcut(#MainWindow, #PB_Shortcut_Control|#PB_Shortcut_S, #Shortcut_CtrlS_Save)
     AddKeyboardShortcut(#MainWindow, #PB_Shortcut_F8, #Shortcut_F8_Clipboard)
-    
+
     CatchImage(#Img_Designer,?Img_Designer)
     ButtonImageGadget(#CodeCreatePlay, 8, 1, 26, 22,ImageID(#Img_Designer))
     GadgetToolTip(#CodeCreatePlay, "Play Design (F5)")
-    
+
     CatchImage(#Img_Preview,?Img_Preview)
     ButtonImageGadget(#PreviewDesigner, 8, 24, 26, 22, ImageID(#Img_Preview))
     GadgetToolTip(#PreviewDesigner, "Preview Design (F6)")
-    
+
     ;I didn't look any further but I have problems on Linux and probably MacOS when I come back from the Preview (Procedure EnableSVD()). Better to hide that option.
-    CompilerIf #PB_Compiler_OS <> #PB_OS_Windows 
+    CompilerIf #PB_Compiler_OS <> #PB_OS_Windows
       HideGadget(#PreviewDesigner, #True)
     CompilerEndIf
-    
+
     CanvasGadget(#Separator1, 42, 3, 1, 42, #PB_Canvas_Border) : DisableGadget(#Separator1, #True)
     If StartDrawing(CanvasOutput(#Separator1)) : Box(0, 0, OutputWidth(), OutputHeight(), $B0B0B0) : StopDrawing() : EndIf
-    
+
     TextGadget(#CodeCreateText, 62, 6, 85, 18, "Create Code")
     SetGadgetColor(#CodeCreateText, #PB_Gadget_FrontColor, $282850)
     ;SetGadgetFont(#CodeCreateText, FontID(#FontBWML))
-    
+
     CatchImage(#Img_CreateSave,?Img_CreateSave)
     ButtonImageGadget(#CodeCreateSave, 148, 1, 22, 22, ImageID(#Img_CreateSave))
     GadgetToolTip(#CodeCreateSave, "Save Code As (Ctrl+S)")
-    
+
     ;     CatchImage(#Img_CreateCode,?Img_CreateCode)
     ButtonGadget(#CodeCreateNewTab, 50, 24, 65, 20, "New Tab")
     GadgetToolTip(#CodeCreateNewTab, "Open the Code in a New PureBasic Tab (F7)")
-    
+
     ;		  CatchImage(#Img_Clipboard,?Img_Clipboard)
     ButtonGadget(#CodeCreateClipboard, 120, 24, 65, 20, "ClipBoard")
     GadgetToolTip(#CodeCreateClipboard, "Copy the Code to the Clipboard (F8)")
-    
+
     CanvasGadget(#Separator2, 193, 3, 1, 42, #PB_Canvas_Border) : DisableGadget(#Separator2, #True)
     If StartDrawing(CanvasOutput(#Separator2)) : Box(0, 0, OutputWidth(), OutputHeight(), $B0B0B0) : StopDrawing() : EndIf
-    
+
     CheckBoxGadget(#AddMenu, 201, 4, 55, 20, "Menu")
     CheckBoxGadget(#AddPopupMenu, 201, 24, 55, 20, "Popup")
     CheckBoxGadget(#AddToolBar, 261, 4, 65, 20, "ToolBar")
     CheckBoxGadget(#AddStatusBar, 261, 24, 82, 20, "StatusBar")
-    
+
     CanvasGadget(#Separator3, 344, 3, 1, 42, #PB_Canvas_Border) : DisableGadget(#Separator3, #True)
     If StartDrawing(CanvasOutput(#Separator3)) : Box(0, 0, OutputWidth(), OutputHeight(), $B0B0B0) : StopDrawing() : EndIf
-    
+
     CheckBoxGadget(#ShowGrid, 352, 4, 52, 20, "Grid") : SetGadgetState(#ShowGrid, ShowGrid)
-    SpinGadget(#GridSize, 409, 4, 50, 20, 1, 50, #PB_Spin_Numeric) : SetGadgetState(#GridSize, GridSize)
+    SpinGadget(#GridSize, 409, 4, 50, 20, 5, 50, #PB_Spin_Numeric) : SetGadgetState(#GridSize, GridSize)
     CheckBoxGadget(#SnapGrid, 352, 24, 90, 20, "Snap to grid") : SetGadgetState(#SnapGrid, SnapGrid)
-    
+
     CanvasGadget(#Separator4, 463, 3, 1, 42, #PB_Canvas_Border) : DisableGadget(#Separator4, #True)
     If StartDrawing(CanvasOutput(#Separator4)) : Box(0, 0, OutputWidth(), OutputHeight(), $B0B0B0) : StopDrawing() : EndIf
-    
+
     CatchImage(#Img_Group,?Img_Group)
     ButtonImageGadget(#Group_Button, 473, 1, 22, 22,ImageID(#Img_Group))
     GadgetToolTip(#Group_Button, "Group the Selected Gadgets  (Ctrl+G)")
-    
+
     CatchImage(#Img_UnGroup,?Img_UnGroup)
     ButtonImageGadget(#UnGroup_Button, 473, 24, 22, 22,ImageID(#Img_UnGroup))
     GadgetToolTip(#UnGroup_Button, "Ungroup All Gadgets Grouped with the Active Gadget (Ctrl+Shift+G)")
-    
+
     CanvasGadget(#Separator5, 503, 3, 1, 42, #PB_Canvas_Border) : DisableGadget(#Separator5, #True)
     If StartDrawing(CanvasOutput(#Separator5)) : Box(0, 0, OutputWidth(), OutputHeight(), $B0B0B0) : StopDrawing() : EndIf
-    
+
     CatchImage(#Align_Left,?Align_Left)
     ButtonImageGadget(#Align_Left_Button, 511, 1, 22, 22,ImageID(#Align_Left))
     GadgetToolTip(#Align_Left_Button, "Align Left (Ctrl+Left)")
     TextGadget(#Align_Left_Text, 535, 6, 34, 18, "Left")
-    
+
     CatchImage(#Align_Right,?Align_Right)
     ButtonImageGadget(#Align_Right_Button, 511, 24, 22, 22,ImageID(#Align_Right))
     GadgetToolTip(#Align_Right_Button, "Align Right (Ctrl+Right)")
     TextGadget(#Align_Right_Text, 535, 28, 34, 18, "Right")
-    
+
     CatchImage(#Align_Top,?Align_Top)
     ButtonImageGadget(#Align_Top_Button,571, 1, 22, 22,ImageID(#Align_Top))
     GadgetToolTip(#Align_Top_Button, "Align Top (Ctrl+Top)")
     TextGadget(#Align_Top_Text, 595, 6, 45, 18, "Top")
-    
+
     CatchImage(#Align_Bottom,?Align_Bottom)
     ButtonImageGadget(#Align_Bottom_Button, 571, 24, 22, 22,ImageID(#Align_Bottom))
     GadgetToolTip(#Align_Bottom_Button, "Align Bottom (Ctrl+Bottom)")
     TextGadget(#Align_Bottom_Text, 595, 28, 45, 18, "Bottom")
-    
+
     CatchImage(#Make_Same_Width,?Make_Same_Width)
     ButtonImageGadget(#Make_Same_Width_Button, 642, 1, 22, 22,ImageID(#Make_Same_Width))
     GadgetToolTip(#Make_Same_Width_Button, "Make Same Width (Ctrl+W)")
     TextGadget(#Make_Same_Width_Text, 666, 6, 42, 18, "Width")
-    
+
     CatchImage(#Make_Same_Height,?Make_Same_Height)
     ButtonImageGadget(#Make_Same_Height_Button, 642, 24, 22, 22,ImageID(#Make_Same_Height))
     GadgetToolTip(#Make_Same_Height_Button, "Make Same Height (Ctrl+H)")
     TextGadget(#Make_Same_Height_Text, 666, 28, 42, 18, "Height")
-    
+
     CanvasGadget(#Separator6, 716, 3, 1, 42, #PB_Canvas_Border) : DisableGadget(#Separator6, #True)
     If StartDrawing(CanvasOutput(#Separator6)) : Box(0, 0, OutputWidth(), OutputHeight(), $B0B0B0) : StopDrawing() : EndIf
-    
+
     HideGroupButton()
-    
+
     CatchImage(#Img_Setting,?Img_Setting)
     ButtonImageGadget(#SVDSetting, 744, 16, 30, 32, ImageID(#Img_Setting), #PB_Button_Toggle) : SetGadgetState(#SVDSetting, 0)
     GadgetToolTip(#SVDSetting, "Setting Panel (Esc=Close)")
     CloseGadgetList()
-    
+
     PrefsForm()
-    
+
     ; --- Tree Create and List Controls ---
     CompilerIf #PB_Compiler_OS = #PB_OS_MacOS
       PanelGadget(#PanelControls, 0, 4, PropertiesPanelWidth+10, 230)
@@ -1348,7 +1322,7 @@ CompilerIf #PB_Compiler_IsMainFile
       TreeGadget(#ListControls, 0, 0, PropertiesPanelWidth-5, 194, #PB_Tree_AlwaysShowSelection)
       CloseGadgetList()
     CompilerEndIf
-    
+
     ; --- Gadget List Size ---
     ContainerGadget(#ContainerSize, 5, 228, PropertiesPanelWidth, 108, #PB_Container_Raised)
     ComboBoxGadget(#ListGadgets, 2, 2, 154, 22)
@@ -1368,63 +1342,63 @@ CompilerIf #PB_Compiler_IsMainFile
     StringGadget(#PosGadgetWidth, 139, 64, 60, 20, "", #PB_String_Numeric) : SetGadgetAttribute(#PosGadgetWidth, #PB_String_MaximumLength, 4)
     StringGadget(#PosGadgetHeight, 74, 79, 60, 20, "", #PB_String_Numeric) : SetGadgetAttribute(#PosGadgetHeight, #PB_String_MaximumLength, 4)
     CloseGadgetList()
-    
+
     RenameGadgetForm()
-    
+
     ; --- #Properties (Caption,Tooltip...) ---
     ContainerGadget(#ContainerProperties, 5, 357, PropertiesPanelWidth, 148, #PB_Container_Raised)
     ;StringGadget(#CaptionText, 0, 2, 65, 22, "Caption", #PB_String_ReadOnly)
     TextGadget(#CaptionText, 0, 4, 65, 22, "Caption")
-    StringGadget(#CaptionString, 65, 2, 141, 22, "")
-    
+    StringGadget(#CaptionString, 65, 2, 139, 22, "")
+
     ;StringGadget(#ToolTipText, 0, 25, 65, 22, "ToolTip", #PB_String_ReadOnly)
     TextGadget(#ToolTipText, 0, 27, 65, 22, "ToolTip")
-    StringGadget(#ToolTipString, 65, 25, 141, 22, "")
-    
+    StringGadget(#ToolTipString, 65, 25, 139, 22, "")
+
     ;StringGadget(#FontText, 0, 48, 65, 22, "Font", #PB_String_ReadOnly)
     TextGadget(#FontText, 0, 50, 65, 22, "Font")
     StringGadget(#FontString, 65, 48, 114, 22, "", #PB_String_ReadOnly)
     ButtonGadget(#FontPick, 179, 48, 26, 22, "...")
-    
+
     ;StringGadget(#MiniText, 0, 71, 44, 22, "Mini", #PB_String_ReadOnly)   ;+4
-    TextGadget(#MiniText, 0, 73, 36, 22, "Mini")
-    StringGadget(#MiniString, 65, 71, 50, 22, "0", #PB_String_Numeric)
+    TextGadget(#MiniText, 0, 73, 45, 22, "Mini")
+    StringGadget(#MiniString, 65, 71, 44, 22, "0", #PB_String_Numeric)
     ;StringGadget(#MaxiText, 112, 71, 44, 22, "Maxi", #PB_String_ReadOnly)
-    TextGadget(#MaxiText, 120, 73, 36, 22, "Maxi")
-    StringGadget(#MaxiString, 156, 71, 50, 22, "100", #PB_String_Numeric)
-    
+    TextGadget(#MaxiText, 114, 73, 45, 22, "Maxi")
+    StringGadget(#MaxiString, 160, 71, 44, 22, "100", #PB_String_Numeric)
+
     ;StringGadget(#ImageText, 0, 71, 65, 22, "Image", #PB_String_ReadOnly)
     TextGadget(#ImageText, 0, 73, 65, 22, "Image")
     StringGadget(#ImageString, 65, 71, 114, 22, "C:\xxxx\PB.jpg", #PB_String_ReadOnly)
     ButtonGadget(#ImagePick, 179, 71, 26, 22, "...") : HideGadget(#ImagePick, #True)
-    
+
     TextGadget(#FrontColorText, 0, 98, 66, 22, "FrontColor")   ;+5
     ButtonImageGadget(#FrontColorPick, 66, 96, 22, 18, 0)
     CreateImage(#FrontColorImg, 22, 18)
-    
+
     TextGadget(#BackColorText, 111, 98, 66, 22, "BackColor")
     ButtonImageGadget(#BackColorPick, 177, 96, 22, 18, 0)
     CreateImage(#BackColorImg, 22, 18)
-    
+
     ;StringGadget(#ParentText, 0, 117, 65, 22, "Parent", #PB_String_ReadOnly)   ;+6
     TextGadget(#ParentText, 0, 119, 65, 22, "Parent")
     StringGadget(#ParentString, 65, 117, 114, 22, "", #PB_String_ReadOnly)
     ButtonGadget(#ParentPick, 179, 117, 26, 22, "...")
     CloseGadgetList()
-    
+
     ; --- Flags or Constant ---
     TreeGadget(#Constants, 5, 510, PropertiesPanelWidth, 140, #PB_Tree_NoLines | #PB_Tree_NoButtons | #PB_Tree_CheckBoxes)
-    
+
     ScrollAreaGadget(#ScrollDrawArea, PropertiesPanelWidth+10, SettingPanelHeight, WindowWidth(#MainWindow)-PropertiesPanelWidth, WindowHeight(#MainWindow)-SettingPanelHeight, ScrollArea_MaxWidth + 10, ScrollArea_MaxHeight + 10, 20, #PB_ScrollArea_Single)   ;InnerWidth,InnerHeight + 10 for the resize handle of the drawing window
-    ;For testing ContainerGadget(#ScrollDrawArea, PropertiesPanelWidth+10, SettingPanelHeight, WindowWidth(#MainWindow)-PropertiesPanelWidth, WindowHeight(#MainWindow)-SettingPanelHeight)
+    ;ContainerGadget(#ScrollDrawArea, PropertiesPanelWidth+10, SettingPanelHeight, WindowWidth(#MainWindow)-PropertiesPanelWidth, WindowHeight(#MainWindow)-SettingPanelHeight)
     EnableGadgetDrop(#ScrollDrawArea, #PB_Drop_Text, #PB_Drag_Copy)
-    
+
     ;All interface Objects must have #PB_Ignore as data. To not load them later when loading Designer
     PB_Object_EnumerateStart(PB_Gadget_Objects)
     While PB_Object_EnumerateNext(PB_Gadget_Objects, @GadgetObj)
       SetGadgetData(GadgetObj, #PB_Ignore)
     Wend
-    
+
     If GetGadgetState(#ShowGrid) = #PB_Checkbox_Checked And DesignerON = #True
       ShowGrid = #True
     Else
@@ -1435,11 +1409,11 @@ CompilerIf #PB_Compiler_IsMainFile
     Else
       DragSpace = 1
     EndIf
-    
+
     ;*** Important *** Call InitSVD just after the ScrollArea and before creating Gadets on it: default param CountGadget.i = 144
     InitSVD()
   EndProcedure
-  
+
   Procedure Init()
     DelOldFiles(GetTemporaryDirectory(), "~SweetyVD*.pb", 2)   ;Cleaning, Keep 2 days temporary files
     StartPrefs()
@@ -1465,19 +1439,19 @@ CompilerIf #PB_Compiler_IsMainFile
   Define Model.s, ModelImage.i, GadgetsListElement.i
   Define DeleteGadgetSelected.b
   Define SetGadgetX.i, SetGadgetY.i, SetGadgetWidth.i, SetGadgetHeight.i
-  
+
   Init()
   OpenMainWindow(Designer_Width, Designer_Height)
   SmartWindowRefresh(#MainWindow, #True)
   WindowSize()
-  
+
   If FileSize("SweetyVD.json") = -1
     InitModelgadget()   ;Initializing Gadget Model Templates from Datasection + Save JSON file
   Else
     InitJSONModelGadget()   ;Initializing Gadget Model Templates from JSON file
   EndIf
   BindEvent(#PB_Event_SizeWindow, @WindowSize())
-  
+
   InitWindowSelected()
   EnableSVD()
   DrawFullDrawingArea()
@@ -1485,29 +1459,29 @@ CompilerIf #PB_Compiler_IsMainFile
     AddWindowTimer(#MainWindow, #TimerId, SaveProgressSec*1000)
     BindEvent(#PB_Event_Timer, @CodeCreateOnTimer())
   EndIf
-  
+
   Repeat   ;- Event Loop
     Select WaitWindowEvent()
       Case #PB_Event_CloseWindow
         Exit()
-        
+
       Case #PB_Event_GadgetDrop
         If EventGadget() = #ScrollDrawArea
           PosX=WindowMouseX(#MainWindow)-GadgetX(#ScrollDrawArea) + GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_X) : PosY=WindowMouseY(#MainWindow)-GadgetY(#ScrollDrawArea) + GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_Y)  ;Keep the coordinates of the mouse before creating the gadget
           CreateGadgets(EventDropText())
         EndIf
-        
+
       Case #PB_Event_Menu   ;-> Event Menu
         Select EventMenu()
             CompilerIf #PB_Compiler_OS = #PB_OS_MacOS
             Case #PB_Menu_Quit
               Exit()
             CompilerEndIf
-            
+
           Case 1 To ArraySize(ModelGadget())   ;Popup menu for creating gadgets
             Model = GetMenuItemText(#PopUpMenu, EventMenu())
             CreateGadgets(Model)
-            
+
           Case #Shortcut_Delete   ;AddKeyboardShortcut is added on #PB_EventType_Focus and RemoveKeyboardShortcut on #PB_EventType_LostFocus in module, proc SVD_Callback
             DeleteGadgetSelected.b = #False   ;double check - RemoveKeyboardShortcut(0, #PB_Shortcut_Delete) is done on #PB_EventType_LostFocus
             If GetGadgetState(#ListGadgets) > 0
@@ -1543,10 +1517,10 @@ CompilerIf #PB_Compiler_IsMainFile
                 RemoveKeyboardShortcut(0, #PB_Shortcut_Delete)   ;Windows: SendInput_(1, @InputData(n), SizeOf(INPUT)) - #VK_DELETE
               EndIf
             EndIf
-            
+
           Case #Shortcut_F2_Rename
             RenameFormFocus()
-            
+
           Case #Shortcut_F5_Play
             CodeCreate("Play")
           Case #Shortcut_F6_Preview
@@ -1558,7 +1532,7 @@ CompilerIf #PB_Compiler_IsMainFile
             CodeCreate("Save")
           Case #Shortcut_F8_Clipboard
             CodeCreate("Clipboard")
-            
+
           Case #Shortcut_Ctrl_Group
             If GetGadgetState(#ListGadgets) > 0
               IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
@@ -1599,7 +1573,7 @@ CompilerIf #PB_Compiler_IsMainFile
               IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
               Make_Same_Height(IdGadget)
             EndIf
-            
+
           Case #Shortcut_Escape
             If MonitorRenameFormFocus = #True
               RenameFormLostFocus()
@@ -1607,37 +1581,44 @@ CompilerIf #PB_Compiler_IsMainFile
             If MonitorPrefsFormFocus = #True
               PrefsFormLostFocus()
             EndIf
-            
+
           Case #Shortcut_Return
             If MonitorRenameFormFocus = #True   ;RenameFormLostFocus()
               GadgetsListElement = GetGadgetState(#ListGadgets)
               IdGadget=GetGadgetItemData(#ListGadgets, GadgetsListElement)
               RenameGadget(IdGadget)   ;Check, Update and  call RenameFormLostFocus()
             EndIf
-            
+
           Case #SaveProgressSec
             ;Allows to Lostfocus on #SaveProgressSec. With Remove Enter Shorcut, SaveProgressSec and stop/start timer If SaveProgress = #True
             SetActiveGadget(#PrefsForm)
             ;Optional, resume Focus to Change the value again
             ;SetActiveGadget(#SaveProgressSec)
-            
+
             ;Allows to Lostfocus = Update Value and Resize Draw Area or Gadget. Remove Enter Shorcut and SetActiveGadget same Gadget or in clockwise direction
           Case #PosGadgetX
-            ;SetActiveGadget(#PosGadgetY)
-            SetActiveGadget(#ContainerSize) : SetActiveGadget(#PosGadgetX)
+            SetActiveGadget(#PosGadgetY)
+            ;SetActiveGadget(#ContainerSize) : SetActiveGadget(#PosGadgetX)
           Case #PosGadgetY
-            ;SetActiveGadget(#PosGadgetWidth)
-            SetActiveGadget(#ContainerSize) : SetActiveGadget(#PosGadgetY)
+            SetActiveGadget(#PosGadgetWidth)
+            ;SetActiveGadget(#ContainerSize) : SetActiveGadget(#PosGadgetY)
           Case #PosGadgetWidth
-            ;SetActiveGadget(#PosGadgetHeight)
-            SetActiveGadget(#ContainerSize) : SetActiveGadget(#PosGadgetWidth)
+            SetActiveGadget(#PosGadgetHeight)
+            ;SetActiveGadget(#ContainerSize) : SetActiveGadget(#PosGadgetWidth)
           Case #PosGadgetHeight
-            ;If GetGadgetState(#ListGadgets) = 0 : SetActiveGadget(#PosGadgetWidth): Else : SetActiveGadget(#PosGadgetX) : EndIf
-            SetActiveGadget(#ContainerSize) : SetActiveGadget(#PosGadgetHeight)
-            
+            If GetGadgetState(#ListGadgets) = 0 : SetActiveGadget(#PosGadgetWidth): Else : SetActiveGadget(#PosGadgetX) : EndIf
+            ;SetActiveGadget(#ContainerSize) : SetActiveGadget(#PosGadgetHeight)
+
+          Case #MiniString
+            SetActiveGadget(#MaxiString)
+            ;SetActiveGadget(#ContainerSize) : SetActiveGadget(#MiniString)
+          Case #MaxiString
+            SetActiveGadget(#MiniString)
+            ;SetActiveGadget(#ContainerSize) : SetActiveGadget(#MaxiString)
+
         EndSelect
-        
-        
+
+
         ;-> Event Gadget
       Case #PB_Event_Gadget
         ; Lost Focus on Rename Form (GadgetData <> #RenameForm). EventType() added for others Canvas Gadget (MouseMove, MouseEnter, MouseLeave and LostFocus)
@@ -1646,10 +1627,10 @@ CompilerIf #PB_Compiler_IsMainFile
           ;Debug "Gadget " + EventGadget() + " EventType " + Str(EventType()) + " Parent Gadget(Data) "+Str(GetGadgetData(EventGadget())) + " ActiveGadget " + GetActiveGadget()
           RenameFormLostFocus()
         EndIf
-        
+
         If EventWindow()=#MainWindow
           Select EventGadget()
-              
+
             Case #CodeCreatePlay
               CodeCreate("Play")
             Case #CodeCreateNewTab   ;Générate code Included in CodeCreate.pb
@@ -1658,13 +1639,13 @@ CompilerIf #PB_Compiler_IsMainFile
               CodeCreate("Clipboard")
             Case #CodeCreateSave
               CodeCreate("Save")
-              
+
             Case #PreviewDesigner
               PreviewDesigner()
-              
+
             Case #BackDesigner
               BackDesigner()
-              
+
             Case #SVDSetting
               If GetGadgetState(#SVDSetting) = 1
                 If IsWindow(#AboutForm) : CloseWindow(#AboutForm) : EndIf
@@ -1673,7 +1654,7 @@ CompilerIf #PB_Compiler_IsMainFile
                 If IsWindow(#AboutForm) : CloseWindow(#AboutForm) : EndIf
                 PrefsFormLostFocus()
               EndIf
-              
+
             Case #ListGadgets
               If GetGadgetState(#ListGadgets) = 0
                 InitWindowSelected()
@@ -1682,7 +1663,7 @@ CompilerIf #PB_Compiler_IsMainFile
                 IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
                 SetSelectedGadget(IdGadget)
               EndIf
-              
+
             Case #ListControls
               If EventType() = #PB_EventType_Change   ;To do once could be done also with EventType() = #PB_EventType_LeftClick or #PB_EventType_RightClick
                 If GetGadgetState(#ListControls) = 0
@@ -1693,18 +1674,18 @@ CompilerIf #PB_Compiler_IsMainFile
                   SetSelectedGadget(IdGadget)
                 EndIf
               EndIf
-              
+
             Case #RenameGadgetButton
               RenameFormFocus()
-              
+
             Case #RenameGadgetCancel
               RenameFormLostFocus()
-              
+
             Case #RenameGadgetOK
               GadgetsListElement = GetGadgetState(#ListGadgets)
               IdGadget=GetGadgetItemData(#ListGadgets, GadgetsListElement)
               RenameGadget(IdGadget)
-              
+
             Case #DeleteGadgetButton
               If GetGadgetState(#ListGadgets) > 0
                 GadgetsListElement = GetGadgetState(#ListGadgets)
@@ -1726,7 +1707,7 @@ CompilerIf #PB_Compiler_IsMainFile
                 If TmpFontID <> 0 : RemoveFont(TmpFontID) : EndIf
                 InitWindowSelected()
               EndIf
-              
+
             Case #CreateControlsList   ;Element beging at 0 -> Element+1
               Select EventType()
                 Case #PB_EventType_LeftDoubleClick
@@ -1740,9 +1721,9 @@ CompilerIf #PB_Compiler_IsMainFile
                   ;ModelImage = GetGadgetItemData(#CreateControlsList, GetGadgetState(#CreateControlsList))
                   DragText(Model)
               EndSelect
-              
+
             Case #ShowGrid : ShowGrid = GetGadgetState(#ShowGrid) : DrawFullDrawingArea()
-              
+
             Case #GridSize
               GridSize = GetGadgetState(#GridSize)
               If GetGadgetState(#SnapGrid) = #True
@@ -1753,7 +1734,7 @@ CompilerIf #PB_Compiler_IsMainFile
               If ShowGrid = #True And DesignerON = #True   ;Not to call it the first time on Linux
                 DrawFullDrawingArea()
               EndIf
-              
+
             Case #SnapGrid
               SnapGrid = GetGadgetState(#SnapGrid)
               If SnapGrid = #True
@@ -1761,67 +1742,67 @@ CompilerIf #PB_Compiler_IsMainFile
               Else
                 DragSpace = 1
               EndIf
-              
+
             Case #Group_Button
               If GetGadgetState(#ListGadgets) > 0
                 IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
                 Group_Selected()
               EndIf
-              
+
             Case #UnGroup_Button
               If GetGadgetState(#ListGadgets) > 0
                 IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
                 UnGroup_Selected(IdGadget)
               EndIf
-              
+
             Case #Align_Left_Button
               If GetGadgetState(#ListGadgets) > 0
                 IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
                 Align_Left(IdGadget)
               EndIf
-              
+
             Case #Align_Right_Button
               If GetGadgetState(#ListGadgets) > 0
                 IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
                 Align_Right(IdGadget)
               EndIf
-              
+
             Case #Align_Top_Button
               If GetGadgetState(#ListGadgets) > 0
                 IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
                 Align_Top(IdGadget)
               EndIf
-              
+
             Case #Align_Bottom_Button
               If GetGadgetState(#ListGadgets) > 0
                 IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
                 Align_Bottom(IdGadget)
               EndIf
-              
+
             Case #Make_Same_Width_Button
               If GetGadgetState(#ListGadgets) > 0
                 IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
                 Make_Same_Width(IdGadget)
               EndIf
-              
+
             Case #Make_Same_Height_Button
               If GetGadgetState(#ListGadgets) > 0
                 IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
                 Make_Same_Height(IdGadget)
               EndIf
-              
+
             Case #AddMenu : AddMenu = GetGadgetState(#AddMenu) : DrawFullDrawingArea()
             Case #AddPopupMenu : AddPopupMenu = GetGadgetState(#AddPopupMenu)
             Case #AddToolBar : AddToolBar = GetGadgetState(#AddToolBar) : DrawFullDrawingArea()
             Case #AddStatusBar : AddStatusBar = GetGadgetState(#AddStatusBar) : DrawFullDrawingArea()
-              
+
             Case #HideGadget
               IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
               If FindMapElement(SVDListGadget(), Str(IdGadget))
                 SVDListGadget()\Hide = GetGadgetState(#HideGadget)
                 HideSVDGadget(IdGadget)
               EndIf
-              
+
             Case #DisableGadget
               IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
               If FindMapElement(SVDListGadget(), Str(IdGadget))
@@ -1831,7 +1812,7 @@ CompilerIf #PB_Compiler_IsMainFile
                 CompilerEndIf
                 SetSelectedGadget(IdGadget)
               EndIf
-              
+
             Case #LockGadget
               IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
               If FindMapElement(SVDListGadget(), Str(IdGadget))
@@ -1841,7 +1822,7 @@ CompilerIf #PB_Compiler_IsMainFile
                 DisableGadget(#PosGadgetWidth, SVDListGadget()\Lock)
                 DisableGadget(#PosGadgetHeight, SVDListGadget()\Lock)
               EndIf
-              
+
             Case #PosGadgetX
               If EventType() = #PB_EventType_Focus
                 AddKeyboardShortcut(#MainWindow, #PB_Shortcut_Return, #PosGadgetX)
@@ -1857,7 +1838,7 @@ CompilerIf #PB_Compiler_IsMainFile
                 EndIf
                 SetGadgetText(#PosGadgetX, Str(SetGadgetX))
               EndIf
-              
+
             Case #PosGadgetY
               If EventType() = #PB_EventType_Focus
                 AddKeyboardShortcut(#MainWindow, #PB_Shortcut_Return, #PosGadgetY)
@@ -1877,7 +1858,7 @@ CompilerIf #PB_Compiler_IsMainFile
                 EndIf
                 SetGadgetText(#PosGadgetY, Str(SetGadgetY))
               EndIf
-              
+
             Case #PosGadgetWidth
               If EventType() = #PB_EventType_Focus
                 AddKeyboardShortcut(#MainWindow, #PB_Shortcut_Return, #PosGadgetWidth)
@@ -1898,7 +1879,7 @@ CompilerIf #PB_Compiler_IsMainFile
                 EndIf
                 SetGadgetText(#PosGadgetWidth, Str(SetGadgetWidth))
               EndIf
-              
+
             Case #PosGadgetHeight
               If EventType() = #PB_EventType_Focus
                 AddKeyboardShortcut(#MainWindow, #PB_Shortcut_Return, #PosGadgetHeight)
@@ -1919,10 +1900,10 @@ CompilerIf #PB_Compiler_IsMainFile
                 EndIf
                 SetGadgetText(#PosGadgetHeight, Str(SetGadgetHeight))
               EndIf
-              
+
             Case #ParentPick
               MessageRequester("SweetyVD Information", "Todo, If (and when) free time will allow" +#CRLF$+#CRLF$+ "Source is opened for any contribution ;)", #PB_MessageRequester_Info|#PB_MessageRequester_Ok)
-              
+
               ;-> > Event Gadget Properties
             Case #CaptionString
               If EventType() = #PB_EventType_Change
@@ -1945,7 +1926,7 @@ CompilerIf #PB_Compiler_IsMainFile
                         Else
                           SetDrawGadgetAttribute(IdGadget)
                         EndIf
-                        
+
                         If SVDListGadget()\Type = 50  ;Custom Gadget
                           If StartDrawing(CanvasOutput(IdGadget))
                             ;Box(0, 0, OutputWidth(), OutputHeight(), $FFFFFF)
@@ -1958,7 +1939,7 @@ CompilerIf #PB_Compiler_IsMainFile
                           DrawCanvasGadget(SVDListGadget()\Gadget)
                           ;PostEvent(#PB_Event_Gadget, 0, SVDListGadget()\Gadget, #PB_EventType_Resize)
                         EndIf
-                        
+
                       Case "#Date"
                         SVDListGadget()\Caption = "#Date:" + GetGadgetText(#CaptionString)
                         If SVDListGadget()\DrawGadget = #False
@@ -1966,7 +1947,7 @@ CompilerIf #PB_Compiler_IsMainFile
                         Else
                           SetDrawGadgetAttribute(IdGadget)
                         EndIf
-                        
+
                       Case "#Dir$"
                         SVDListGadget()\Caption = "#Dir$:" + GetGadgetText(#CaptionString)
                         If SVDListGadget()\DrawGadget = #False
@@ -1974,7 +1955,7 @@ CompilerIf #PB_Compiler_IsMainFile
                         Else
                           SetDrawGadgetAttribute(IdGadget)
                         EndIf
-                        
+
                       Case "#Url$"
                         SVDListGadget()\Caption = "#Url$:" + GetGadgetText(#CaptionString)
                         If SVDListGadget()\DrawGadget = #False
@@ -1982,7 +1963,7 @@ CompilerIf #PB_Compiler_IsMainFile
                         Else
                           SetDrawGadgetAttribute(IdGadget)
                         EndIf
-                        
+
                       Case "#TabN"
                         SVDListGadget()\Caption = "#TabN:" + GetGadgetText(#CaptionString)
                         If SVDListGadget()\Type = 40   ;Specific TabBar Gadget
@@ -1998,7 +1979,7 @@ CompilerIf #PB_Compiler_IsMainFile
                   EndIf
                 EndIf
               EndIf
-              
+
             Case #ToolTipString
               If EventType() = #PB_EventType_Change
                 IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
@@ -2006,63 +1987,95 @@ CompilerIf #PB_Compiler_IsMainFile
                   SVDListGadget()\ToolTip = GetGadgetText(#ToolTipString)
                 EndIf
               EndIf
-              
+
             Case #MiniString
-              If EventType() = #PB_EventType_Change
+              If EventType() = #PB_EventType_Focus
+                AddKeyboardShortcut(#MainWindow, #PB_Shortcut_Return, #MiniString)
+              EndIf
+              If EventType() =  #PB_EventType_LostFocus
+                RemoveKeyboardShortcut(#MainWindow, #PB_Shortcut_Return)
                 IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
                 If FindMapElement(SVDListGadget(), Str(IdGadget))
-                  SVDListGadget()\Option1 = "#Mini:" + GetGadgetText(#MiniString)
+                  If SVDListGadget()\Model <> "ScrollAreaGadget" And Val(GetGadgetText(#MiniString)) > Val(GetGadgetText(#MaxiString))
+                    SetGadgetText(#MiniString, GetGadgetText(#MaxiString))
+                  EndIf
+                  If SVDListGadget()\Model = "ScrollAreaGadget"
+                    SVDListGadget()\Option1 = "#InrW:" + GetGadgetText(#MiniString)
+                  Else
+                    SVDListGadget()\Option1 = "#Mini:" + GetGadgetText(#MiniString)
+                  EndIf
                   If SVDListGadget()\DrawGadget = #False
-                    SetGadgetAttribute(IdGadget, #PB_Spin_Minimum, Val(GetGadgetText(#MiniString)))
-                    If SVDListGadget()\Model = "ProgressBarGadget" Or SVDListGadget()\Model = "SpinGadget" Or SVDListGadget()\Model = "TrackBarGadget"
-                      SetGadgetState(IdGadget, Val(GetGadgetText(#MiniString))+(Val(GetGadgetText(#MaxiString))-Val(GetGadgetText(#MiniString)))*2/3)
-                    EndIf
+                    Select SVDListGadget()\Model
+                      Case "ProgressBarGadget"
+                        SetGadgetAttribute(IdGadget, #PB_ProgressBar_Minimum, Val(GetGadgetText(#MiniString)))
+                        SetGadgetState(IdGadget, Val(GetGadgetText(#MiniString))+(Val(GetGadgetText(#MaxiString))-Val(GetGadgetText(#MiniString)))*2/3)
+                      Case "ScrollAreaGadget"
+                        SetGadgetAttribute(IdGadget, #PB_ScrollArea_InnerWidth, Val(GetGadgetText(#MiniString)))
+                      Case "ScrollBarGadget"
+                        SetGadgetAttribute(IdGadget, #PB_ScrollBar_Minimum, Val(GetGadgetText(#MiniString)))
+                        SetGadgetState(IdGadget, 0)
+                      Case "SpinGadget"
+                        SetGadgetAttribute(IdGadget, #PB_Spin_Minimum, Val(GetGadgetText(#MiniString)))
+                        SetGadgetState(IdGadget, Val(GetGadgetText(#MiniString))+(Val(GetGadgetText(#MaxiString))-Val(GetGadgetText(#MiniString)))*2/3)
+                      Case "TrackBarGadget"
+                        SetGadgetAttribute(IdGadget, #PB_TrackBar_Minimum, Val(GetGadgetText(#MiniString)))
+                        SetGadgetState(IdGadget, Val(GetGadgetText(#MiniString))+(Val(GetGadgetText(#MaxiString))-Val(GetGadgetText(#MiniString)))*2/3)
+                    EndSelect
                   Else
                     SetDrawGadgetAttribute(IdGadget)
                   EndIf
                 EndIf
               EndIf
-              ;If EventType() = #PB_EventType_LostFocus   ;No control for easy entry, with Maxi = 0)
-              ;If Val(GetGadgetText(#MiniString)) > Val(GetGadgetText(#MaxiString)) : SetGadgetText(#MiniString, GetGadgetText(#MaxiString)) : EndIf
-              ;EndIf
-              
+
             Case #MaxiString
-              If EventType() = #PB_EventType_Change
+              If EventType() = #PB_EventType_Focus
+                AddKeyboardShortcut(#MainWindow, #PB_Shortcut_Return, #MaxiString)
+              EndIf
+              If EventType() =  #PB_EventType_LostFocus
+                RemoveKeyboardShortcut(#MainWindow, #PB_Shortcut_Return)
                 IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
                 If FindMapElement(SVDListGadget(), Str(IdGadget))
-                  SVDListGadget()\Option2 = "#Maxi:"+GetGadgetText(#MaxiString)
-                  If SVDListGadget()\DrawGadget = #False
-                    SetGadgetAttribute(IdGadget, #PB_Spin_Maximum, Val(GetGadgetText(#MaxiString)))
-                    If SVDListGadget()\Model = "ProgressBarGadget" Or SVDListGadget()\Model = "SpinGadget" Or SVDListGadget()\Model = "TrackBarGadget"
-                      SetGadgetState(IdGadget, Val(GetGadgetText(#MiniString))+(Val(GetGadgetText(#MaxiString))-Val(GetGadgetText(#MiniString)))*2/3)
-                    EndIf
-                  Else
-                    SetDrawGadgetAttribute(IdGadget)
-                  EndIf
-                EndIf
-              EndIf
-              
-              If EventType() = #PB_EventType_LostFocus
-                If Val(GetGadgetText(#MaxiString)) < Val(GetGadgetText(#MiniString))
-                  SVDListGadget()\Option2 = "#Maxi:"+GetGadgetText(#MiniString)
-                  If SVDListGadget()\DrawGadget = #False
+                  If SVDListGadget()\Model <> "ScrollAreaGadget" And Val(GetGadgetText(#MaxiString)) < Val(GetGadgetText(#MiniString))
                     SetGadgetText(#MaxiString, GetGadgetText(#MiniString))
+                  EndIf
+                  If SVDListGadget()\Model = "ScrollAreaGadget"
+                    SVDListGadget()\Option2 = "#InrH:" + GetGadgetText(#MaxiString)
+                  Else
+                    SVDListGadget()\Option2 = "#Maxi:" + GetGadgetText(#MaxiString)
+                  EndIf
+                  If SVDListGadget()\DrawGadget = #False
+                    Select SVDListGadget()\Model
+                      Case "ProgressBarGadget"
+                        SetGadgetAttribute(IdGadget, #PB_ProgressBar_Maximum, Val(GetGadgetText(#MaxiString)))
+                        SetGadgetState(IdGadget, Val(GetGadgetText(#MiniString))+(Val(GetGadgetText(#MaxiString))-Val(GetGadgetText(#MiniString)))*2/3)
+                      Case "ScrollAreaGadget"
+                        SetGadgetAttribute(IdGadget, #PB_ScrollArea_InnerHeight, Val(GetGadgetText(#MaxiString)))
+                      Case "ScrollBarGadget"
+                        SetGadgetAttribute(IdGadget, #PB_ScrollBar_Maximum, Val(GetGadgetText(#MaxiString)))
+                        SetGadgetState(IdGadget, 0)
+                      Case "SpinGadget"
+                        SetGadgetAttribute(IdGadget, #PB_Spin_Maximum, Val(GetGadgetText(#MaxiString)))
+                        SetGadgetState(IdGadget, Val(GetGadgetText(#MiniString))+(Val(GetGadgetText(#MaxiString))-Val(GetGadgetText(#MiniString)))*2/3)
+                      Case "TrackBarGadget"
+                        SetGadgetAttribute(IdGadget, #PB_TrackBar_Maximum, Val(GetGadgetText(#MaxiString)))
+                        SetGadgetState(IdGadget, Val(GetGadgetText(#MiniString))+(Val(GetGadgetText(#MaxiString))-Val(GetGadgetText(#MiniString)))*2/3)
+                    EndSelect
                   Else
                     SetDrawGadgetAttribute(IdGadget)
                   EndIf
                 EndIf
               EndIf
-              
+
             Case #ImagePick
               IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
               ;FindMapElement(SVDListGadget(), Str(IdGadget))
               If IsGadget(IdGadget) : DrawSelectedImage(IdGadget) : EndIf
               SetSelectedGadget(IdGadget)
-              
+
             Case #FontPick
               IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
               SelectFont(IdGadget)
-              
+
             Case #FrontColorPick
               IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
               CompilerIf #PB_Compiler_OS = #PB_OS_Windows
@@ -2094,7 +2107,7 @@ CompilerIf #PB_Compiler_IsMainFile
                   EndIf
                 EndIf
               EndIf
-              
+
             Case #BackColorPick
               IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
               CompilerIf #PB_Compiler_OS = #PB_OS_Windows
@@ -2134,7 +2147,7 @@ CompilerIf #PB_Compiler_IsMainFile
                   EndIf
                 EndIf
               EndIf
-              
+
             Case #Constants
               If EventType() = #PB_EventType_Change
                 IdGadget=GetGadgetItemData(#ListGadgets, GetGadgetState(#ListGadgets))
@@ -2152,16 +2165,16 @@ CompilerIf #PB_Compiler_IsMainFile
                   SVDListGadget()\Constants = TmpConstants
                 EndIf
               EndIf
-              
+
               ;-> Preference Form
             Case #HandlesOnMove
               DisplayHandleCornerOnMove = GetGadgetState(#HandlesOnMove)
-              
+
             Case #UnselectItemsBorder
               DisplayUnselectedItemsBorder = GetGadgetState(#UnselectItemsBorder)
               IdGadget=GetGadgetItemData(#ListControls, GetGadgetState(#ListControls))
               SetSelectedGadget(IdGadget)
-              
+
             Case #PBPathPick
               CompilerIf #PB_Compiler_OS = #PB_OS_Windows
                 PBIDEpath = OpenFileRequester("Select the Path to Purebasic.exe", PBIDEpath, "PureBasic Path (PureBasic.exe)|PureBasic.exe", 0)
@@ -2174,7 +2187,7 @@ CompilerIf #PB_Compiler_IsMainFile
               Else
                 SetGadgetState(#PBPathImage, ImageID(#Img_Fail))
               EndIf
-              
+
             Case #ExportConfigButton
               SaveJSONModelGadget()
               If FileSize("SweetyVD.json") > 1
@@ -2182,7 +2195,7 @@ CompilerIf #PB_Compiler_IsMainFile
               Else
                 MessageRequester("SweetyVD Warning", "Failed to Export Template Configuration to SweetyVD.json", #PB_MessageRequester_Warning|#PB_MessageRequester_Ok)
               EndIf
-              
+
             Case #SaveProgress
               SaveProgress = GetGadgetState(#SaveProgress)
               If SaveProgress = #True
@@ -2192,7 +2205,7 @@ CompilerIf #PB_Compiler_IsMainFile
                 RemoveWindowTimer(#MainWindow, #TimerId)
                 UnbindEvent(#PB_Event_Timer, @CodeCreateOnTimer())
               EndIf
-              
+
             Case #SaveProgressSec
               If EventType() = #PB_EventType_Focus
                 AddKeyboardShortcut(#MainWindow, #PB_Shortcut_Return, #SaveProgressSec)
@@ -2211,7 +2224,7 @@ CompilerIf #PB_Compiler_IsMainFile
                   BindEvent(#PB_Event_Timer, @CodeCreateOnTimer())
                 EndIf
               EndIf
-              
+
             Case #CodeCancel
               PrefsFormLostFocus()
             Case #CodePlay
@@ -2225,17 +2238,17 @@ CompilerIf #PB_Compiler_IsMainFile
             Case #AboutButton
               PrefsFormLostFocus()
               AboutForm()
-              
+
           EndSelect   ;#PB_Event_Gadget #MainWindow
         EndIf
-        
+
         If EventWindow()=#AboutForm   ;-> About Form window
           Select EventGadget()
             Case #AboutClose
               CloseWindow(#AboutForm)
           EndSelect
         EndIf
-        
+
         Select EventType()   ;-> Receives Module Events
           Case #SVD_Gadget_Focus
             *PosDim = EventData()
@@ -2257,9 +2270,9 @@ CompilerIf #PB_Compiler_IsMainFile
             SetGadgetText(#PosGadgetWidth, Str(*PosDim\Width))
             SetGadgetText(#PosGadgetHeight, Str(*PosDim\Height))
             LoadGadgetProperties(EventGadget())
-            
+
           Case #SVD_Gadget_LostFocus
-            
+
           Case #SVD_Gadget_Resize
             If DesignerON = #True   ;Designer mode. The TabBar Gadget is resized on click on the preview mode. Thanks JHPJHP
               *PosDim = EventData()
@@ -2272,12 +2285,12 @@ CompilerIf #PB_Compiler_IsMainFile
               SetGadgetText(#PosGadgetWidth, Str(*PosDim\Width))
               SetGadgetText(#PosGadgetHeight, Str(*PosDim\Height))
             EndIf
-            
+
           Case  #SVD_Window_Focus
             If DesignerON = #True ;And MouseOverDrawArea() = #True
               InitWindowSelected()
             EndIf
-            
+
           Case #SVD_Window_ReSize
             *PosDim = EventData()
             SetDrawWidth  = *PosDim\Width
@@ -2287,35 +2300,32 @@ CompilerIf #PB_Compiler_IsMainFile
               SetGadgetText(#PosGadgetHeight, Str(SetDrawHeight))
             EndIf
             ResizeDrawArea(SetDrawWidth, SetDrawHeight)
-            
+
           Case #SVD_DrawArea_RightClick
             If DesignerON = #True And  MouseOverDrawArea() = #True
               PosX=WindowMouseX(#MainWindow)-GadgetX(#ScrollDrawArea) + GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_X) : PosY=WindowMouseY(#MainWindow)-GadgetY(#ScrollDrawArea) + GetGadgetAttribute(#ScrollDrawArea, #PB_ScrollArea_Y)  ;Keep the coordinates of the mouse before creating the gadget
               DisplayPopupMenu(#PopUpMenu, WindowID(#MainWindow))
             EndIf
-            
+
           Case #SVD_DrawArea_Focus
             If DesignerON = #True ;And MouseOverDrawArea() = #True
               InitWindowSelected()
             EndIf
-            
+
           Case #SVD_Group
             HideGroupButton()
-            
+
         EndSelect   ;EventType()
     EndSelect
   ForEver
-  
+
   Procedure Exit()
-    CompilerIf #PB_Compiler_OS = #PB_OS_Windows
-      ExitColorPrefs()
-    CompilerEndIf
     RemoveWindowTimer(#MainWindow, #TimerId)
     FreeArray(ModelGadget())
     ExitPrefs()
     End
   EndProcedure
-  
+
   DataSection   ;- Include Images
     IncludePath "Images"
     Img_Designer:     : IncludeBinary "Designer.png"
@@ -2340,7 +2350,7 @@ CompilerIf #PB_Compiler_IsMainFile
     Vd_Unknow:        : IncludeBinary "Vd_Unknow.png"
     Vd_Custom:        : IncludeBinary "Vd_Custom.png"
     Vd_Window:        : IncludeBinary "Vd_Window.png"
-    
+
   EndDataSection
 CompilerEndIf
 
