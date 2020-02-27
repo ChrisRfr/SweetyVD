@@ -18,9 +18,9 @@ Procedure.s GetPBIDE()
   IDEpath = GetEnvironmentVariable("PUREBASIC_HOME")   ;From PB Home directory variable Environment
   If IDEpath
     CompilerIf #PB_Compiler_OS = #PB_OS_Windows
-      If FindString("/", Right(IDEpath,1),1) = 0 : IDEpath + "/" : EndIf
+      If Right(IDEpath, 1) <> "\" : IDEpath + "\" : EndIf
     CompilerElse
-      If FindString("\", Right(IDEpath,1),1) = 0 : IDEpath + "\" : EndIf
+      If Right(IDEpath, 1) <> "/" : IDEpath + "/" : EndIf
     CompilerEndIf
     If FileSize(IDEpath + #PB_IDE) > 0
       ProcedureReturn IDEpath + #PB_IDE
