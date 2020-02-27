@@ -807,7 +807,9 @@ Procedure CodeCreate(Dest.s = "")
     If TmpCode <> "" : Code + TmpCode +#CRLF$ : EndIf
   EndIf
 
-  If CodeEventLoop = #True   ;-Include Event Loop
+  If CodeEventLoop = #False   ;-Include Event Loop
+    Code + "Repeat : Until WaitWindowEvent() = #PB_Event_CloseWindow" +#CRLF$
+  Else
     Code + "Repeat" +#CRLF$
     Code +INDENT$+ "iEvent = WaitWindowEvent()" +#CRLF$
     Code +INDENT$+ "Select iEvent" +#CRLF$
